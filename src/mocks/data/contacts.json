@@ -1,0 +1,112 @@
+[
+  {
+    "id": "c001",
+    "firstName": "민수",
+    "lastName": "김",
+    "phone": "+821012345678",
+    "email": "ms@example.com",
+    "region": "서울",
+    "tags": ["지지자", "자원봉사"],
+    "optIn": true,
+    "createdAt": "2025-01-03T09:00:00+09:00"
+  },
+  {
+    "id": "c002",
+    "firstName": "서연",
+    "lastName": "박",
+    "phone": "+82105551234",
+    "email": "sy@example.com",
+    "region": "부산",
+    "tags": ["후원자"],
+    "optIn": true,
+    "createdAt": "2025-01-05T14:22:00+09:00"
+  },
+  {
+    "id": "c003",
+    "firstName": "지후",
+    "lastName": "이",
+    "phone": null,
+    "email": "jh@example.com",
+    "region": "대구",
+    "tags": ["스윙보터"],
+    "optIn": false,
+    "createdAt": "2025-01-07T08:11:00+09:00"
+  },
+  {
+    "id": "c004",
+    "firstName": "하린",
+    "lastName": "최",
+    "phone": "+82107778899",
+    "email": null,
+    "region": "인천",
+    "tags": ["지지자"],
+    "optIn": true,
+    "createdAt": "2025-01-07T10:01:00+09:00"
+  },
+  {
+    "id": "c005",
+    "firstName": "도윤",
+    "lastName": "정",
+    "phone": "+82103334455",
+    "email": "dy@example.com",
+    "region": "광주",
+    "tags": ["자원봉사"],
+    "optIn": true,
+    "createdAt": "2025-01-08T12:30:00+09:00"
+  },
+  {
+    "id": "c006",
+    "firstName": "예준",
+    "lastName": "강",
+    "phone": "+821099998888",
+    "email": "yj@example.com",
+    "region": "서울",
+    "tags": ["지지자", "후원자"],
+    "optIn": true,
+    "createdAt": "2025-01-08T15:45:00+09:00"
+  },
+  {
+    "id": "c007",
+    "firstName": "수아",
+    "lastName": "윤",
+    "phone": "+821088887777",
+    "email": "sa@example.com",
+    "region": "경기",
+    "tags": ["지지자"],
+    "optIn": true,
+    "createdAt": "2025-01-09T09:20:00+09:00"
+  },
+  {
+    "id": "c008",
+    "firstName": "시우",
+    "lastName": "장",
+    "phone": "+821077776666",
+    "email": "sw@example.com",
+    "region": "대전",
+    "tags": ["스윙보터", "자원봉사"],
+    "optIn": true,
+    "createdAt": "2025-01-09T11:30:00+09:00"
+  },
+  {
+    "id": "c009",
+    "firstName": "지아",
+    "lastName": "임",
+    "phone": "+821066665555",
+    "email": "ja@example.com",
+    "region": "울산",
+    "tags": ["후원자"],
+    "optIn": true,
+    "createdAt": "2025-01-09T14:00:00+09:00"
+  },
+  {
+    "id": "c010",
+    "firstName": "준서",
+    "lastName": "한",
+    "phone": "+821055554444",
+    "email": "js@example.com",
+    "region": "부산",
+    "tags": ["지지자", "자원봉사"],
+    "optIn": true,
+    "createdAt": "2025-01-10T08:00:00+09:00"
+  }
+]

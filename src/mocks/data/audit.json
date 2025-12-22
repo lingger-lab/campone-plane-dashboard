@@ -1,0 +1,109 @@
+[
+  {
+    "id": "log001",
+    "userId": "user001",
+    "userName": "김관리",
+    "action": "create",
+    "module": "Hub",
+    "target": "세그먼트: 서울 지지자",
+    "details": {
+      "segmentId": "s001",
+      "size": 1240
+    },
+    "createdAt": "2025-01-08T09:00:00+09:00"
+  },
+  {
+    "id": "log002",
+    "userId": "user002",
+    "userName": "박매니저",
+    "action": "update",
+    "module": "Studio",
+    "target": "연설문 초안 v2",
+    "details": {
+      "field": "content",
+      "changeType": "edit"
+    },
+    "createdAt": "2025-01-08T11:30:00+09:00"
+  },
+  {
+    "id": "log003",
+    "userId": "user001",
+    "userName": "김관리",
+    "action": "send",
+    "module": "Hub",
+    "target": "캠페인: 공약 안내",
+    "details": {
+      "campaignId": "cmp002",
+      "recipients": 1500,
+      "channel": "kakao"
+    },
+    "createdAt": "2025-01-05T14:00:00+09:00"
+  },
+  {
+    "id": "log004",
+    "userId": "user003",
+    "userName": "이스태프",
+    "action": "create",
+    "module": "Studio",
+    "target": "SNS 카드: 청년 정책",
+    "details": {
+      "assetId": "a006",
+      "template": "카드 템플릿 A"
+    },
+    "createdAt": "2025-01-09T15:20:00+09:00"
+  },
+  {
+    "id": "log005",
+    "userId": "user002",
+    "userName": "박매니저",
+    "action": "approve",
+    "module": "Policy",
+    "target": "공약: 청년 일자리 정책",
+    "details": {
+      "policyId": "p003",
+      "status": "approved"
+    },
+    "createdAt": "2025-01-09T16:45:00+09:00"
+  },
+  {
+    "id": "log006",
+    "userId": "user001",
+    "userName": "김관리",
+    "action": "update",
+    "module": "System",
+    "target": "채널 링크: YouTube",
+    "details": {
+      "field": "url",
+      "oldValue": "https://youtube.com/@oldhong",
+      "newValue": "https://youtube.com/@hongdemo"
+    },
+    "createdAt": "2025-01-10T09:15:00+09:00"
+  },
+  {
+    "id": "log007",
+    "userId": "user003",
+    "userName": "이스태프",
+    "action": "create",
+    "module": "Ops",
+    "target": "태스크: 출정식 현수막 디자인",
+    "details": {
+      "taskId": "t006",
+      "assignee": "staff1",
+      "due": "2025-01-15"
+    },
+    "createdAt": "2025-01-10T10:00:00+09:00"
+  },
+  {
+    "id": "log008",
+    "userId": "user002",
+    "userName": "박매니저",
+    "action": "delete",
+    "module": "Hub",
+    "target": "연락처: 테스트 계정",
+    "details": {
+      "contactId": "c_test",
+      "reason": "중복 제거"
+    },
+    "createdAt": "2025-01-10T10:30:00+09:00"
+  }
+]

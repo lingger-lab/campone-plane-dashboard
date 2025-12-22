@@ -1,0 +1,1 @@
+export { ModulePoster } from './ModulePoster';

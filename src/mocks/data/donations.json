@@ -1,0 +1,58 @@
+[
+  {
+    "id": "d001",
+    "donorId": "c002",
+    "amount": 100000,
+    "method": "card",
+    "createdAt": "2025-01-06T10:00:00+09:00"
+  },
+  {
+    "id": "d002",
+    "donorId": "c005",
+    "amount": 50000,
+    "method": "bank",
+    "createdAt": "2025-01-07T12:30:00+09:00"
+  },
+  {
+    "id": "d003",
+    "donorId": "c006",
+    "amount": 200000,
+    "method": "card",
+    "createdAt": "2025-01-08T09:15:00+09:00"
+  },
+  {
+    "id": "d004",
+    "donorId": "c009",
+    "amount": 30000,
+    "method": "card",
+    "createdAt": "2025-01-08T16:20:00+09:00"
+  },
+  {
+    "id": "d005",
+    "donorId": "c002",
+    "amount": 150000,
+    "method": "bank",
+    "createdAt": "2025-01-09T11:00:00+09:00"
+  },
+  {
+    "id": "d006",
+    "donorId": "c001",
+    "amount": 50000,
+    "method": "card",
+    "createdAt": "2025-01-09T14:30:00+09:00"
+  },
+  {
+    "id": "d007",
+    "donorId": "c006",
+    "amount": 100000,
+    "method": "card",
+    "createdAt": "2025-01-10T08:45:00+09:00"
+  },
+  {
+    "id": "d008",
+    "donorId": "c010",
+    "amount": 80000,
+    "method": "bank",
+    "createdAt": "2025-01-10T10:00:00+09:00"
+  }
+]

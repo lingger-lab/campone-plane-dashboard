@@ -1,0 +1,72 @@
+[
+  {
+    "id": "a001",
+    "name": "로고 수평형",
+    "type": "image/png",
+    "url": "/assets/logo.png",
+    "tags": ["브랜딩"]
+  },
+  {
+    "id": "a002",
+    "name": "카드 템플릿 A",
+    "type": "image/png",
+    "url": "/assets/cardA.png",
+    "tags": ["템플릿"]
+  },
+  {
+    "id": "a003",
+    "name": "로고 세로형",
+    "type": "image/png",
+    "url": "/assets/logo-vertical.png",
+    "tags": ["브랜딩"]
+  },
+  {
+    "id": "a004",
+    "name": "후보 프로필 사진",
+    "type": "image/jpeg",
+    "url": "/assets/candidate-profile.jpg",
+    "tags": ["브랜딩", "프로필"]
+  },
+  {
+    "id": "a005",
+    "name": "카드 템플릿 B",
+    "type": "image/png",
+    "url": "/assets/cardB.png",
+    "tags": ["템플릿"]
+  },
+  {
+    "id": "a006",
+    "name": "SNS 배너 템플릿",
+    "type": "image/png",
+    "url": "/assets/sns-banner.png",
+    "tags": ["템플릿", "SNS"]
+  },
+  {
+    "id": "a007",
+    "name": "현수막 템플릿 가로형",
+    "type": "image/png",
+    "url": "/assets/banner-horizontal.png",
+    "tags": ["템플릿", "현수막"]
+  },
+  {
+    "id": "a008",
+    "name": "홍보 영상 썸네일",
+    "type": "image/jpeg",
+    "url": "/assets/video-thumb.jpg",
+    "tags": ["영상", "썸네일"]
+  },
+  {
+    "id": "a009",
+    "name": "캠페인 슬로건 이미지",
+    "type": "image/png",
+    "url": "/assets/slogan.png",
+    "tags": ["브랜딩", "슬로건"]
+  },
+  {
+    "id": "a010",
+    "name": "공약 인포그래픽",
+    "type": "image/png",
+    "url": "/assets/policy-infographic.png",
+    "tags": ["공약", "인포그래픽"]
+  }
+]

@@ -1,0 +1,62 @@
+[
+  {
+    "id": "e001",
+    "title": "타운홀 미팅",
+    "type": "오프라인",
+    "location": "서울시청",
+    "start": "2025-01-12T19:00:00+09:00",
+    "end": "2025-01-12T20:30:00+09:00",
+    "attendeeTarget": 500,
+    "status": "scheduled"
+  },
+  {
+    "id": "e002",
+    "title": "출정식",
+    "type": "오프라인",
+    "location": "부산 광장",
+    "start": "2025-01-20T14:00:00+09:00",
+    "end": "2025-01-20T15:00:00+09:00",
+    "attendeeTarget": 2000,
+    "status": "planning"
+  },
+  {
+    "id": "e003",
+    "title": "온라인 정책토론회",
+    "type": "온라인",
+    "location": "YouTube Live",
+    "start": "2025-01-15T20:00:00+09:00",
+    "end": "2025-01-15T21:30:00+09:00",
+    "attendeeTarget": 5000,
+    "status": "scheduled"
+  },
+  {
+    "id": "e004",
+    "title": "청년 간담회",
+    "type": "오프라인",
+    "location": "대구 컨벤션센터",
+    "start": "2025-01-25T14:00:00+09:00",
+    "end": "2025-01-25T16:00:00+09:00",
+    "attendeeTarget": 300,
+    "status": "planning"
+  },
+  {
+    "id": "e005",
+    "title": "경제 정책 발표회",
+    "type": "하이브리드",
+    "location": "서울 프레스센터",
+    "start": "2025-01-28T10:00:00+09:00",
+    "end": "2025-01-28T12:00:00+09:00",
+    "attendeeTarget": 200,
+    "status": "planning"
+  },
+  {
+    "id": "e006",
+    "title": "자원봉사자 교육",
+    "type": "오프라인",
+    "location": "캠프 본부",
+    "start": "2025-01-08T10:00:00+09:00",
+    "end": "2025-01-08T12:00:00+09:00",
+    "attendeeTarget": 50,
+    "status": "completed"
+  }
+]

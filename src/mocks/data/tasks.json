@@ -1,0 +1,82 @@
+[
+  {
+    "id": "t001",
+    "title": "연설문 점검",
+    "assignee": "manager1",
+    "due": "2025-01-09",
+    "status": "in_progress",
+    "module": "Studio"
+  },
+  {
+    "id": "t002",
+    "title": "타운홀 리스크 체크",
+    "assignee": "staff3",
+    "due": "2025-01-10",
+    "status": "todo",
+    "module": "Ops"
+  },
+  {
+    "id": "t003",
+    "title": "SNS 콘텐츠 제작",
+    "assignee": "staff1",
+    "due": "2025-01-11",
+    "status": "in_progress",
+    "module": "Studio"
+  },
+  {
+    "id": "t004",
+    "title": "경제 공약 검토",
+    "assignee": "manager2",
+    "due": "2025-01-12",
+    "status": "todo",
+    "module": "Policy"
+  },
+  {
+    "id": "t005",
+    "title": "자원봉사자 연락",
+    "assignee": "staff2",
+    "due": "2025-01-08",
+    "status": "done",
+    "module": "Hub"
+  },
+  {
+    "id": "t006",
+    "title": "출정식 현수막 디자인",
+    "assignee": "staff1",
+    "due": "2025-01-15",
+    "status": "todo",
+    "module": "Studio"
+  },
+  {
+    "id": "t007",
+    "title": "후원금 정산",
+    "assignee": "manager1",
+    "due": "2025-01-10",
+    "status": "in_progress",
+    "module": "Ops"
+  },
+  {
+    "id": "t008",
+    "title": "여론 조사 분석",
+    "assignee": "manager2",
+    "due": "2025-01-11",
+    "status": "todo",
+    "module": "Insights"
+  },
+  {
+    "id": "t009",
+    "title": "캠페인 메시지 A/B 테스트",
+    "assignee": "staff2",
+    "due": "2025-01-09",
+    "status": "done",
+    "module": "Hub"
+  },
+  {
+    "id": "t010",
+    "title": "정책 브리핑 자료 작성",
+    "assignee": "staff3",
+    "due": "2025-01-14",
+    "status": "todo",
+    "module": "Policy"
+  }
+]

@@ -1,0 +1,62 @@
+[
+  {
+    "id": "alert001",
+    "type": "system",
+    "severity": "info",
+    "title": "시스템 점검 예정",
+    "message": "1월 15일 오전 2시~4시 시스템 점검이 예정되어 있습니다.",
+    "read": false,
+    "pinned": false,
+    "createdAt": "2025-01-10T09:00:00+09:00"
+  },
+  {
+    "id": "alert002",
+    "type": "workflow",
+    "severity": "warning",
+    "title": "메시지 발송 승인 대기",
+    "message": "타운홀 초대 메시지가 승인 대기 중입니다.",
+    "read": false,
+    "pinned": true,
+    "createdAt": "2025-01-09T14:30:00+09:00"
+  },
+  {
+    "id": "alert003",
+    "type": "workflow",
+    "severity": "success",
+    "title": "캠페인 발송 완료",
+    "message": "공약 안내 캠페인이 성공적으로 발송되었습니다. (1,480명)",
+    "read": true,
+    "pinned": false,
+    "createdAt": "2025-01-05T14:05:00+09:00"
+  },
+  {
+    "id": "alert004",
+    "type": "system",
+    "severity": "error",
+    "title": "API 연결 오류",
+    "message": "Naver 트렌드 API 연결에 실패했습니다. 재시도 중...",
+    "read": false,
+    "pinned": false,
+    "createdAt": "2025-01-10T08:45:00+09:00"
+  },
+  {
+    "id": "alert005",
+    "type": "workflow",
+    "severity": "info",
+    "title": "새 태스크 할당",
+    "message": "출정식 현수막 디자인 태스크가 할당되었습니다.",
+    "read": false,
+    "pinned": false,
+    "createdAt": "2025-01-10T10:00:00+09:00"
+  },
+  {
+    "id": "alert006",
+    "type": "workflow",
+    "severity": "warning",
+    "title": "여론 급증 감지",
+    "message": "SNS 멘션이 전일 대비 25% 증가했습니다. 확인이 필요합니다.",
+    "read": false,
+    "pinned": true,
+    "createdAt": "2025-01-10T07:30:00+09:00"
+  }
+]

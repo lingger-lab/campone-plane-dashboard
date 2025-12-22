@@ -1,0 +1,82 @@
+[
+  {
+    "date": "2025-01-01",
+    "google": 48,
+    "naver": 55,
+    "snsMentions": 820,
+    "snsPos": 420,
+    "snsNeg": 230
+  },
+  {
+    "date": "2025-01-02",
+    "google": 50,
+    "naver": 54,
+    "snsMentions": 910,
+    "snsPos": 480,
+    "snsNeg": 210
+  },
+  {
+    "date": "2025-01-03",
+    "google": 53,
+    "naver": 57,
+    "snsMentions": 980,
+    "snsPos": 510,
+    "snsNeg": 240
+  },
+  {
+    "date": "2025-01-04",
+    "google": 60,
+    "naver": 63,
+    "snsMentions": 1200,
+    "snsPos": 650,
+    "snsNeg": 260
+  },
+  {
+    "date": "2025-01-05",
+    "google": 58,
+    "naver": 62,
+    "snsMentions": 1100,
+    "snsPos": 590,
+    "snsNeg": 250
+  },
+  {
+    "date": "2025-01-06",
+    "google": 62,
+    "naver": 66,
+    "snsMentions": 1300,
+    "snsPos": 700,
+    "snsNeg": 270
+  },
+  {
+    "date": "2025-01-07",
+    "google": 65,
+    "naver": 70,
+    "snsMentions": 1500,
+    "snsPos": 810,
+    "snsNeg": 280
+  },
+  {
+    "date": "2025-01-08",
+    "google": 63,
+    "naver": 69,
+    "snsMentions": 1400,
+    "snsPos": 760,
+    "snsNeg": 300
+  },
+  {
+    "date": "2025-01-09",
+    "google": 66,
+    "naver": 72,
+    "snsMentions": 1600,
+    "snsPos": 880,
+    "snsNeg": 310
+  },
+  {
+    "date": "2025-01-10",
+    "google": 70,
+    "naver": 75,
+    "snsMentions": 1750,
+    "snsPos": 950,
+    "snsNeg": 320
+  }
+]
