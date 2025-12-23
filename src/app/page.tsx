@@ -22,6 +22,12 @@ import { AppHeader, Sidebar, AppFooter } from '@/components/layout';
 import { KPICard, ModuleCard } from '@/components/dashboard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
 // 애니메이션 variants
@@ -180,6 +186,7 @@ const kpiData = [
 
 export default function DashboardPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-dynamic">
@@ -299,9 +306,18 @@ export default function DashboardPage() {
 
             {/* 컨텐츠 버튼 그룹 */}
             <div className="mt-4 flex flex-wrap gap-2">
-              {/* 동영상 컨텐츠 버튼 (빨간색 배경) */}
+              {/* 출마선언 버튼 - 비디오 모달 열기 */}
+              <Button
+                className="bg-red-600 hover:bg-red-700 text-white font-normal gap-2"
+                size="sm"
+                onClick={() => setVideoModalOpen(true)}
+              >
+                <PlayCircle className="h-4 w-4" />
+                출마선언
+              </Button>
+
+              {/* 다른 동영상 컨텐츠 버튼 (빨간색 배경) */}
               {[
-                { label: '출마선언', icon: PlayCircle },
                 { label: '공약하이라이트', icon: Video },
                 { label: '현장투어', icon: MapPin },
                 { label: '주민인터뷰', icon: Users },
@@ -492,6 +508,33 @@ export default function DashboardPage() {
       </main>
 
       <AppFooter sidebarCollapsed={sidebarCollapsed} />
+
+      {/* 비디오 모달 */}
+      <Dialog open={videoModalOpen} onOpenChange={setVideoModalOpen}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black">
+          <DialogHeader className="p-4 bg-gradient-to-r from-red-600 to-red-700">
+            <DialogTitle className="text-white flex items-center gap-2">
+              <PlayCircle className="h-5 w-5" />
+              출마선언 영상
+            </DialogTitle>
+          </DialogHeader>
+          <div className="aspect-video">
+            {videoModalOpen && (
+              <video
+                src="/candidate-hong.mp4"
+                controls
+                autoPlay
+                className="w-full h-full"
+                onError={(e) => {
+                  console.error('비디오 로드 실패:', e);
+                }}
+              >
+                브라우저가 비디오 태그를 지원하지 않습니다.
+              </video>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
