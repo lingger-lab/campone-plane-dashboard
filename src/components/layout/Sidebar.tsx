@@ -125,12 +125,12 @@ export function Sidebar({
               <Button
                 variant={active ? 'secondary' : 'ghost'}
                 className={cn(
-                  'w-full justify-start gap-3',
+                  'w-full justify-start gap-3 group',
                   collapsed && 'justify-center px-2',
                   active && 'text-white'
                 )}
               >
-                <item.icon className={cn('h-5 w-5 shrink-0', active && 'text-white')} />
+                <item.icon className={cn('h-5 w-5 shrink-0 icon-pulse', active && 'text-white')} />
                 {!collapsed && (
                   <>
                     <span className={cn('flex-1 text-left', active && 'text-white')}>{item.label}</span>
@@ -155,20 +155,20 @@ export function Sidebar({
         </div>
         {channelLinks.map((item) => {
           return (
-            <Link 
-              key={item.href} 
-              href={item.href} 
+            <Link
+              key={item.href}
+              href={item.href}
               target={item.href.startsWith('http') ? '_blank' : undefined}
             >
               <Button
                 variant="ghost"
                 className={cn(
-                  'w-full justify-start gap-3',
+                  'w-full justify-start gap-3 group',
                   collapsed && 'justify-center px-2'
                 )}
                 size="sm"
               >
-                <item.icon className={cn('h-4 w-4 shrink-0', item.color)} />
+                <item.icon className={cn('h-4 w-4 shrink-0 icon-pulse', item.color)} />
                 {!collapsed && <span>{item.label}</span>}
               </Button>
             </Link>
@@ -188,13 +188,13 @@ export function Sidebar({
               <Button
                 variant={active ? 'secondary' : 'ghost'}
                 className={cn(
-                  'w-full justify-start gap-3',
+                  'w-full justify-start gap-3 group',
                   collapsed && 'justify-center px-2',
                   active && 'text-white'
                 )}
                 size="sm"
               >
-                <item.icon className={cn('h-4 w-4 shrink-0', active && 'text-white')} />
+                <item.icon className={cn('h-4 w-4 shrink-0 icon-pulse', active && 'text-white')} />
                 {!collapsed && <span className={cn(active && 'text-white')}>{item.label}</span>}
               </Button>
             </Link>

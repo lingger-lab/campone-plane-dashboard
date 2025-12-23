@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 import {
   Video,
   PlayCircle,
@@ -22,6 +23,32 @@ import { KPICard, ModuleCard } from '@/components/dashboard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+
+// 애니메이션 variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+};
+
+const fadeInVariants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { duration: 0.6 } },
+};
+
+const slideInLeftVariants = {
+  hidden: { opacity: 0, x: -30 },
+  show: { opacity: 1, x: 0, transition: { duration: 0.8 } },
+};
 
 // 모듈 데이터
 const modules = [
@@ -155,7 +182,7 @@ export default function DashboardPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-dynamic">
       <AppHeader onMenuClick={() => setSidebarCollapsed(!sidebarCollapsed)} />
       <Sidebar collapsed={sidebarCollapsed} onCollapse={setSidebarCollapsed} />
 
@@ -165,12 +192,27 @@ export default function DashboardPage() {
           sidebarCollapsed ? 'ml-16' : 'ml-60'
         )}
       >
-        <div className="container max-w-7xl mx-auto p-6 space-y-8">
+        <motion.div
+          className="container max-w-7xl mx-auto p-6 space-y-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+        >
           {/* 브랜딩 헤더 */}
-          <section className="rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 p-4">
+          <motion.section
+            className="rounded-2xl bg-white/90 dark:bg-card/90 backdrop-blur-md p-4 shadow-sm border"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.8 }}
+          >
             <div className="flex items-start gap-4">
               {/* 후보 이미지 */}
-              <div className="relative shrink-0">
+              <motion.div
+                className="relative shrink-0"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+              >
                 <Image
                   src="/candidate.png"
                   alt="홍길동 후보"
@@ -193,15 +235,19 @@ export default function DashboardPage() {
                 >
                   홍
                 </div>
-              </div>
+              </motion.div>
 
               {/* 캠페인 정보 */}
               <div className="flex-1 flex items-start justify-between gap-4">
                 <div className="space-y-1.5 flex-1">
-                  <div>
-                    <h1 className="text-2xl font-bold text-center">홍길동 후보 선거대책본부</h1>
+                  <motion.div
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.4, duration: 0.8 }}
+                  >
+                    <h1 className="text-2xl font-bold text-center text-primary">홍길동 후보 선거대책본부</h1>
                     <p className="text-base text-muted-foreground font-medium mt-0.5 text-center">창녕군 국회의원 후보</p>
-                  </div>
+                  </motion.div>
 
                   {/* 경력 정보 */}
                   <div className="space-y-1">
@@ -289,51 +335,93 @@ export default function DashboardPage() {
                 </Button>
               ))}
             </div>
-          </section>
+          </motion.section>
 
           {/* KPI 그리드 */}
           <section>
-            <h2 className="mb-4 text-lg font-semibold">핵심 지표</h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+            <motion.h2
+              className="mb-4 text-lg font-semibold"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+            >
+              핵심 지표
+            </motion.h2>
+            <motion.div
+              className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7"
+              variants={containerVariants}
+              initial="hidden"
+              animate="show"
+            >
               {kpiData.map((kpi, i) => (
-                <KPICard
-                  key={i}
-                  label={kpi.label}
-                  value={kpi.value}
-                  unit={kpi.unit}
-                  change={kpi.change}
-                  changeLabel={kpi.changeLabel}
-                  status={kpi.status}
-                  sparkline={kpi.sparkline}
-                  source={kpi.source}
-                />
+                <motion.div key={i} variants={itemVariants}>
+                  <KPICard
+                    label={kpi.label}
+                    value={kpi.value}
+                    unit={kpi.unit}
+                    change={kpi.change}
+                    changeLabel={kpi.changeLabel}
+                    status={kpi.status}
+                    sparkline={kpi.sparkline}
+                    source={kpi.source}
+                  />
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </section>
 
           {/* 모듈 카드 그리드 */}
           <section>
-            <h2 className="mb-4 text-lg font-semibold">모듈 바로가기</h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-              {modules.map((module) => (
-                <ModuleCard
+            <motion.h2
+              className="mb-4 text-lg font-semibold"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.7, duration: 0.5 }}
+            >
+              모듈 바로가기
+            </motion.h2>
+            <motion.div
+              className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true }}
+            >
+              {modules.map((module, i) => (
+                <motion.div
                   key={module.path}
-                  name={module.name}
-                  path={module.path}
-                  slogan={module.slogan}
-                  benefits={module.benefits}
-                  kpis={module.kpis}
-                  publicUrl={module.publicUrl}
-                  thumbnail={module.thumbnail}
-                />
+                  variants={itemVariants}
+                  whileHover={{ scale: 1.02, y: -4 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ModuleCard
+                    name={module.name}
+                    path={module.path}
+                    slogan={module.slogan}
+                    benefits={module.benefits}
+                    kpis={module.kpis}
+                    publicUrl={module.publicUrl}
+                    thumbnail={module.thumbnail}
+                  />
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </section>
 
           {/* 최근 활동 & 알림 */}
-          <section className="grid gap-6 lg:grid-cols-2">
+          <motion.section
+            className="grid gap-6 lg:grid-cols-2"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
             {/* 최근 활동 타임라인 */}
-            <div className="rounded-2xl border bg-card p-6">
+            <motion.div
+              className="rounded-2xl border bg-card/90 backdrop-blur-sm p-6"
+              whileHover={{ scale: 1.01 }}
+              transition={{ duration: 0.2 }}
+            >
               <h3 className="mb-4 font-semibold">최근 활동</h3>
               <div className="space-y-4">
                 {[
@@ -353,10 +441,14 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </motion.div>
 
             {/* 알림 센터 */}
-            <div className="rounded-2xl border bg-card p-6">
+            <motion.div
+              className="rounded-2xl border bg-card/90 backdrop-blur-sm p-6"
+              whileHover={{ scale: 1.01 }}
+              transition={{ duration: 0.2 }}
+            >
               <h3 className="mb-4 font-semibold">알림</h3>
               <div className="space-y-3">
                 {[
@@ -394,9 +486,9 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
-            </div>
-          </section>
-        </div>
+            </motion.div>
+          </motion.section>
+        </motion.div>
       </main>
 
       <AppFooter sidebarCollapsed={sidebarCollapsed} />

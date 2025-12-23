@@ -89,7 +89,7 @@ export function KPICard({
   };
 
   return (
-    <Card className={cn('card-hover', className)}>
+    <Card className={cn('card-hover-lift bg-white/90 dark:bg-card/90 backdrop-blur-sm', className)}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="space-y-1">

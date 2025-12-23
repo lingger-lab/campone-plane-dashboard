@@ -38,17 +38,17 @@ export function ModuleCard({
   };
 
   return (
-    <Card 
-      className={cn('card-hover overflow-hidden cursor-pointer', className)}
+    <Card
+      className={cn('module-card-hover overflow-hidden cursor-pointer bg-white/90 dark:bg-card/90 backdrop-blur-sm', className)}
       onClick={handleCardClick}
     >
       {/* 썸네일 영역 */}
       {thumbnail ? (
-        <div className="w-full h-[400px] bg-gradient-to-br from-primary/20 to-primary/5 overflow-hidden relative">
+        <div className="w-full h-[400px] bg-gradient-to-br from-primary/20 to-primary/5 overflow-hidden relative group">
           <img
             src={thumbnail}
             alt={name}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             onError={(e) => {
               // 이미지 로드 실패 시 대체 처리
               const target = e.target as HTMLImageElement;
@@ -107,9 +107,9 @@ export function ModuleCard({
 
         {/* CTA 버튼 - 고정 높이 */}
         <div className="flex gap-2 border-t pt-1.5 mt-auto">
-          <Button 
-            size="sm" 
-            className="flex-1 text-white font-normal h-9"
+          <Button
+            size="sm"
+            className="flex-1 text-white font-normal h-9 btn-shine"
             onClick={handleButtonClick}
           >
             <Settings className="mr-1 h-4 w-4 text-white" />
