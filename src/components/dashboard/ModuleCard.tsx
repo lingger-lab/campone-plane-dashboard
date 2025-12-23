@@ -42,32 +42,30 @@ export function ModuleCard({
       className={cn('module-card-hover overflow-hidden cursor-pointer bg-white/90 dark:bg-card/90 backdrop-blur-sm', className)}
       onClick={handleCardClick}
     >
-      {/* 썸네일 영역 */}
+      {/* 썸네일 영역 - 반응형 높이 */}
       {thumbnail ? (
-        <div className="w-full h-[400px] bg-gradient-to-br from-primary/20 to-primary/5 overflow-hidden relative group">
+        <div className="w-full h-[200px] sm:h-[250px] lg:h-[300px] xl:h-[350px] bg-gradient-to-br from-primary/20 to-primary/5 overflow-hidden relative group">
           <img
             src={thumbnail}
             alt={name}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 will-change-transform"
             onError={(e) => {
-              // 이미지 로드 실패 시 대체 처리
               const target = e.target as HTMLImageElement;
               target.style.display = 'none';
               const fallback = target.parentElement?.querySelector('.fallback-content') as HTMLElement;
               if (fallback) fallback.style.display = 'flex';
             }}
           />
-          {/* 이미지 로드 실패 시 대체 표시 */}
           <div
             className="fallback-content hidden absolute inset-0 items-center justify-center"
             style={{ display: 'none' }}
           >
-            <span className="text-4xl font-bold text-primary/30">{name[0]}</span>
+            <span className="text-3xl sm:text-4xl font-bold text-primary/30">{name[0]}</span>
           </div>
         </div>
       ) : (
-        <div className="w-full h-[400px] bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-          <span className="text-4xl font-bold text-primary/30">{name[0]}</span>
+        <div className="w-full h-[200px] sm:h-[250px] lg:h-[300px] xl:h-[350px] bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+          <span className="text-3xl sm:text-4xl font-bold text-primary/30">{name[0]}</span>
         </div>
       )}
 

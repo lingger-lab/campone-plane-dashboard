@@ -339,4 +339,79 @@
     animation: slideInLeft 0.8s ease-out forwards;
     opacity: 0;
   }
+
+  /* GPU 가속 최적화 */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform, opacity;
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  /* 모바일 터치 피드백 */
+  .touch-feedback {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .touch-feedback:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+}
+
+/* 모바일 성능 최적화 - 사용자 설정 존중 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .bg-dynamic {
+    animation: none !important;
+    background: hsl(var(--background)) !important;
+  }
+
+  .btn-shine::after {
+    animation: none !important;
+  }
+
+  .module-card-hover:hover,
+  .card-hover-lift:hover {
+    transform: none !important;
+  }
+}
+
+/* 모바일 뷰포트 최적화 */
+@media (max-width: 640px) {
+  /* 모바일에서 호버 효과 비활성화 (터치 디바이스) */
+  @media (hover: none) {
+    .module-card-hover:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
+    .card-hover-lift:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
+    .icon-pulse:hover {
+      transform: none;
+    }
+  }
+
+  /* 모바일 스크롤 성능 */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .overflow-x-auto::-webkit-scrollbar {
+    display: none;
+  }
 }
