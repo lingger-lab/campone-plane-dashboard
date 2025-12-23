@@ -199,8 +199,8 @@ export default function DashboardPage() {
               <div className="flex-1 flex items-start justify-between gap-4">
                 <div className="space-y-1.5 flex-1">
                   <div>
-                    <h1 className="text-2xl font-bold">홍길동</h1>
-                    <p className="text-base text-muted-foreground font-medium mt-0.5">창녕군 국회의원 후보</p>
+                    <h1 className="text-2xl font-bold text-center">홍길동 후보 선거대책본부</h1>
+                    <p className="text-base text-muted-foreground font-medium mt-0.5 text-center">창녕군 국회의원 후보</p>
                   </div>
 
                   {/* 경력 정보 */}
