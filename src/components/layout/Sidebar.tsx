@@ -10,19 +10,15 @@ import {
   FileCheck,
   ListChecks,
   Users,
-  Link2,
   Shield,
   History,
   Settings,
   HelpCircle,
   ChevronLeft,
   X,
-  Youtube,
-  MessageCircle,
-  Instagram,
-  FileText,
   PenTool,
 } from 'lucide-react';
+import { SiYoutube, SiKakaotalk, SiInstagram, SiNaver } from 'react-icons/si';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -46,10 +42,10 @@ const menuItems = [
 
 // 채널 링크 데이터
 const channelLinks = [
-  { icon: Youtube, label: '유튜브', href: 'https://youtube.com/@hongdemo', color: 'text-red-600' },
-  { icon: MessageCircle, label: '카카오', href: 'https://pf.kakao.com/_hongdemo', color: 'text-yellow-500' },
-  { icon: Instagram, label: '인스타', href: 'https://instagram.com/hongdemo', color: 'text-pink-600' },
-  { icon: FileText, label: '네이버', href: 'https://blog.naver.com/hongdemo', color: 'text-[#03C75A]' },
+  { icon: SiYoutube, label: '유튜브', href: 'https://youtube.com/@hongdemo', color: 'text-red-600' },
+  { icon: SiKakaotalk, label: '카카오', href: 'https://pf.kakao.com/_hongdemo', color: 'text-yellow-500' },
+  { icon: SiInstagram, label: '인스타', href: 'https://instagram.com/hongdemo', color: 'text-pink-600' },
+  { icon: SiNaver, label: '네이버', href: 'https://blog.naver.com/hongdemo', color: 'text-[#03C75A]' },
   { icon: PenTool, label: '현수막', href: '/studio/banners', color: 'text-primary' },
 ];
 

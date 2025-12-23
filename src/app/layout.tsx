@@ -5,6 +5,7 @@ import { Providers } from './providers';
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://campone.cloud';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: '홍길동 후보 선거대책본부 | CampOne',
   description: '창녕군 국회의원 후보 홍길동 - 국민과 함께하는 정치, 청년에게 희망을, 경제 성장의 새 길',
   icons: {
