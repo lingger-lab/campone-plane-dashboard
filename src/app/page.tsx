@@ -195,8 +195,8 @@ export default function DashboardPage() {
 
       <main
         className={cn(
-          'transition-all duration-300 pt-16 pb-12',
-          sidebarCollapsed ? 'ml-16' : 'ml-60'
+          'transition-all duration-300 pt-16',
+          sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-60'
         )}
       >
         <motion.div
