@@ -275,7 +275,7 @@ export default function DashboardPage() {
               {/* 캠페인 정보 */}
               <div className="flex-1 w-full">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 text-center sm:text-left">
+                  <div className="flex-1 text-center sm:text-center lg:text-center">
                     <motion.div
                       initial={{ opacity: 0, x: -50 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -315,7 +315,7 @@ export default function DashboardPage() {
 
                     {/* 경력 정보 - 모바일: 가로 스크롤, 데스크탑: 세로 */}
                     <motion.div 
-                      className="flex sm:flex-col gap-3 sm:gap-1 mt-2 overflow-x-auto pb-1 sm:pb-0 justify-center sm:justify-start"
+                      className="flex sm:flex-col gap-3 sm:gap-1 mt-2 overflow-x-auto pb-1 sm:pb-0 justify-center sm:justify-center lg:justify-center"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.8, duration: 0.6 }}

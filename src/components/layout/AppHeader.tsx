@@ -64,6 +64,7 @@ export function AppHeader({ onMenuClick, className }: AppHeaderProps) {
             width={49}
             height={49}
             className="h-[49px] w-auto object-contain"
+            style={{ width: "auto", height: "49px" }}
             priority
           />
         </Link>
