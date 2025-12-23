@@ -199,33 +199,71 @@ export default function DashboardPage() {
           {/* 브랜딩 헤더 */}
           <motion.section
             className="rounded-2xl bg-white/90 dark:bg-card/90 backdrop-blur-md p-4 sm:p-6 shadow-sm border"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.8 }}
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ 
+              delay: 0.1, 
+              duration: 0.8,
+              type: "spring",
+              stiffness: 100,
+              damping: 15
+            }}
+            whileHover={{ scale: 1.01 }}
           >
             {/* 모바일: 세로 레이아웃 / 데스크탑: 가로 레이아웃 */}
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
               {/* 후보 이미지 */}
               <motion.div
                 className="relative shrink-0"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
+                initial={{ opacity: 0, scale: 0.5, rotate: -10 }}
+                animate={{ 
+                  opacity: 1, 
+                  scale: 1, 
+                  rotate: 0,
+                }}
+                transition={{ 
+                  delay: 0.3, 
+                  duration: 0.6,
+                  type: "spring",
+                  stiffness: 150,
+                  damping: 12
+                }}
+                whileHover={{ 
+                  scale: 1.05, 
+                  rotate: 2,
+                  transition: { duration: 0.3 }
+                }}
               >
-                <Image
-                  src="/candidate.png"
-                  alt="홍길동 후보"
-                  width={120}
-                  height={120}
-                  className="w-20 h-20 sm:w-[120px] sm:h-[120px] rounded-xl object-cover shadow-md"
-                  priority
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    const fallback = target.nextElementSibling as HTMLElement;
-                    if (fallback) fallback.style.display = 'flex';
+                <motion.div
+                  animate={{
+                    boxShadow: [
+                      "0 4px 16px rgba(0, 0, 0, 0.1)",
+                      "0 8px 24px rgba(59, 130, 246, 0.3)",
+                      "0 4px 16px rgba(0, 0, 0, 0.1)",
+                    ],
                   }}
-                />
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                  className="rounded-xl"
+                >
+                  <Image
+                    src="/candidate.png"
+                    alt="홍길동 후보"
+                    width={120}
+                    height={120}
+                    className="w-20 h-20 sm:w-[120px] sm:h-[120px] rounded-xl object-cover shadow-md"
+                    priority
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                  />
+                </motion.div>
                 <div
                   className="hidden w-20 h-20 sm:w-[120px] sm:h-[120px] items-center justify-center rounded-xl bg-primary text-white font-bold text-xl sm:text-2xl shadow-md"
                   style={{ display: 'none' }}
@@ -239,98 +277,215 @@ export default function DashboardPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 text-center sm:text-left">
                     <motion.div
-                      initial={{ opacity: 0, x: -30 }}
+                      initial={{ opacity: 0, x: -50 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.4, duration: 0.8 }}
+                      transition={{ 
+                        delay: 0.5, 
+                        duration: 0.8,
+                        type: "spring",
+                        stiffness: 120,
+                        damping: 10
+                      }}
                     >
-                      <h1 className="text-xl sm:text-2xl font-bold text-primary">홍길동 후보 선거대책본부</h1>
-                      <p className="text-sm sm:text-base text-muted-foreground font-medium mt-0.5">창녕군 국회의원 후보</p>
+                      <motion.h1 
+                        className="text-xl sm:text-2xl font-bold text-primary"
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ 
+                          delay: 0.6,
+                          duration: 0.6,
+                          type: "spring",
+                          stiffness: 200
+                        }}
+                      >
+                        홍길동 후보 선거대책본부
+                      </motion.h1>
+                      <motion.p 
+                        className="text-sm sm:text-base text-muted-foreground font-medium mt-0.5"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ 
+                          delay: 0.7,
+                          duration: 0.6
+                        }}
+                      >
+                        창녕군 국회의원 후보
+                      </motion.p>
                     </motion.div>
 
                     {/* 경력 정보 - 모바일: 가로 스크롤, 데스크탑: 세로 */}
-                    <div className="flex sm:flex-col gap-3 sm:gap-1 mt-2 overflow-x-auto pb-1 sm:pb-0 justify-center sm:justify-start">
-                      <div className="flex items-center gap-1.5 text-xs sm:text-sm whitespace-nowrap">
-                        <Briefcase className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
-                        <span>행정경력 15년</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs sm:text-sm whitespace-nowrap">
-                        <GraduationCap className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
-                        <span>부산대 교수</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs sm:text-sm whitespace-nowrap">
-                        <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
-                        <span>창녕군 당협위원장</span>
-                      </div>
-                    </div>
+                    <motion.div 
+                      className="flex sm:flex-col gap-3 sm:gap-1 mt-2 overflow-x-auto pb-1 sm:pb-0 justify-center sm:justify-start"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.8, duration: 0.6 }}
+                    >
+                      {[
+                        { icon: Briefcase, text: '행정경력 15년' },
+                        { icon: GraduationCap, text: '부산대 교수' },
+                        { icon: Users, text: '창녕군 당협위원장' },
+                      ].map((item, index) => (
+                        <motion.div
+                          key={index}
+                          className="flex items-center gap-1.5 text-xs sm:text-sm whitespace-nowrap"
+                          initial={{ opacity: 0, x: -20, scale: 0.8 }}
+                          animate={{ opacity: 1, x: 0, scale: 1 }}
+                          transition={{
+                            delay: 0.9 + index * 0.15,
+                            duration: 0.5,
+                            type: "spring",
+                            stiffness: 150
+                          }}
+                          whileHover={{ 
+                            scale: 1.1,
+                            x: 5,
+                            transition: { duration: 0.2 }
+                          }}
+                        >
+                          <item.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
+                          <span>{item.text}</span>
+                        </motion.div>
+                      ))}
+                    </motion.div>
                   </div>
-                  <Badge variant="success" className="px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm shrink-0">
-                    Active
-                  </Badge>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0, rotate: -180 }}
+                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                    transition={{
+                      delay: 1.2,
+                      duration: 0.6,
+                      type: "spring",
+                      stiffness: 200
+                    }}
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                  >
+                    <motion.div
+                      animate={{
+                        boxShadow: [
+                          "0 0 0 0 rgba(34, 197, 94, 0.4)",
+                          "0 0 0 8px rgba(34, 197, 94, 0)",
+                          "0 0 0 0 rgba(34, 197, 94, 0)",
+                        ],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                      className="rounded-full"
+                    >
+                      <Badge variant="success" className="px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm shrink-0">
+                        Active
+                      </Badge>
+                    </motion.div>
+                  </motion.div>
                 </div>
 
                 {/* 슬로건 - 데스크탑만 표시 */}
-                <div className="hidden sm:flex items-center gap-2 flex-wrap pt-2">
+                <motion.div 
+                  className="hidden sm:flex items-center gap-2 flex-wrap pt-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.3, duration: 0.6 }}
+                >
                   {['국민과 함께하는 정치', '청년에게 희망을', '경제 성장의 새 길'].map(
                     (slogan, i) => (
-                      <div
+                      <motion.div
                         key={i}
                         className={cn(
-                          'shrink-0 rounded-lg px-3 py-1.5 text-sm h-8 flex items-center',
+                          'shrink-0 rounded-lg px-3 py-1.5 text-sm h-8 flex items-center cursor-pointer',
                           i === 0
                             ? 'bg-primary text-white'
                             : 'bg-white/50 dark:bg-white/10'
                         )}
+                        initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{
+                          delay: 1.4 + i * 0.1,
+                          duration: 0.5,
+                          type: "spring",
+                          stiffness: 150
+                        }}
+                        whileHover={{ 
+                          scale: 1.1, 
+                          y: -2,
+                          transition: { duration: 0.2 }
+                        }}
+                        whileTap={{ scale: 0.95 }}
                       >
                         {slogan}
-                      </div>
+                      </motion.div>
                     )
                   )}
-                </div>
+                </motion.div>
               </div>
             </div>
 
             {/* 모바일 CTA 영역 */}
-            <div className="mt-4 space-y-3 sm:hidden">
+            <motion.div 
+              className="mt-4 space-y-3 sm:hidden"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.5, duration: 0.6 }}
+            >
               {/* 메인 CTA - 10대 공약 */}
-              <Button
-                className="w-full py-4 h-auto bg-primary hover:bg-primary/90 text-white text-base font-bold rounded-xl"
-                onClick={() => window.open('https://campone.cloud/', '_blank')}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ 
+                  delay: 1.6, 
+                  duration: 0.5,
+                  type: "spring",
+                  stiffness: 150
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <List className="h-5 w-5 mr-2" />
-                10대 공약 보기
-              </Button>
+                <Button
+                  className="w-full py-4 h-auto bg-primary hover:bg-primary/90 text-white text-base font-bold rounded-xl"
+                  onClick={() => window.open('https://campone.cloud/', '_blank')}
+                >
+                  <List className="h-5 w-5 mr-2" />
+                  10대 공약 보기
+                </Button>
+              </motion.div>
 
               {/* 2x2 그리드 - 영상 콘텐츠 */}
               <div className="grid grid-cols-2 gap-2">
-                <Button
-                  className="py-3 h-auto bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 rounded-lg font-medium"
-                  variant="ghost"
-                  onClick={() => setVideoModalOpen(true)}
-                >
-                  <PlayCircle className="h-4 w-4 mr-1.5" />
-                  출마선언
-                </Button>
-                <Button
-                  className="py-3 h-auto bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 rounded-lg font-medium"
-                  variant="ghost"
-                >
-                  <Video className="h-4 w-4 mr-1.5" />
-                  공약하이라이트
-                </Button>
-                <Button
-                  className="py-3 h-auto bg-muted text-muted-foreground hover:bg-muted/80 rounded-lg font-medium"
-                  variant="ghost"
-                >
-                  <MapPin className="h-4 w-4 mr-1.5" />
-                  현장투어
-                </Button>
-                <Button
-                  className="py-3 h-auto bg-muted text-muted-foreground hover:bg-muted/80 rounded-lg font-medium"
-                  variant="ghost"
-                >
-                  <Users className="h-4 w-4 mr-1.5" />
-                  주민인터뷰
-                </Button>
+                {[
+                  { label: '출마선언', icon: PlayCircle, onClick: () => setVideoModalOpen(true) },
+                  { label: '공약하이라이트', icon: Video },
+                  { label: '현장투어', icon: MapPin },
+                  { label: '주민인터뷰', icon: Users },
+                ].map((item, index) => (
+                  <motion.div
+                    key={item.label}
+                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ 
+                      delay: 1.7 + index * 0.1, 
+                      duration: 0.5,
+                      type: "spring",
+                      stiffness: 150
+                    }}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      className={cn(
+                        "py-3 h-auto rounded-lg font-medium w-full",
+                        index < 2
+                          ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      )}
+                      variant="ghost"
+                      onClick={item.onClick}
+                    >
+                      <item.icon className="h-4 w-4 mr-1.5" />
+                      {item.label}
+                    </Button>
+                  </motion.div>
+                ))}
               </div>
 
               {/* 텍스트 링크 - 블로그 콘텐츠 */}
@@ -343,29 +498,60 @@ export default function DashboardPage() {
                 <span className="text-border">·</span>
                 <a href="#" className="hover:text-primary transition-colors">현장리포트</a>
               </div>
-            </div>
+            </motion.div>
 
             {/* 데스크탑 CTA 영역 */}
-            <div className="hidden sm:block mt-4">
+            <motion.div 
+              className="hidden sm:block mt-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.5, duration: 0.6 }}
+            >
               <div className="flex items-center gap-2 flex-wrap">
                 {/* 10대 공약 버튼 */}
-                <Button
-                  className="bg-primary hover:bg-primary/90 text-white font-medium gap-2 h-9 px-4 rounded-lg"
-                  onClick={() => window.open('https://campone.cloud/', '_blank')}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8, x: -20 }}
+                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                  transition={{ 
+                    delay: 1.6, 
+                    duration: 0.5,
+                    type: "spring",
+                    stiffness: 150
+                  }}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <List className="h-4 w-4" />
-                  10대 공약
-                </Button>
+                  <Button
+                    className="bg-primary hover:bg-primary/90 text-white font-medium gap-2 h-9 px-4 rounded-lg"
+                    onClick={() => window.open('https://campone.cloud/', '_blank')}
+                  >
+                    <List className="h-4 w-4" />
+                    10대 공약
+                  </Button>
+                </motion.div>
 
                 {/* 출마선언 버튼 */}
-                <Button
-                  className="bg-red-600 hover:bg-red-700 text-white font-normal gap-2"
-                  size="sm"
-                  onClick={() => setVideoModalOpen(true)}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8, x: -20 }}
+                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                  transition={{ 
+                    delay: 1.7, 
+                    duration: 0.5,
+                    type: "spring",
+                    stiffness: 150
+                  }}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <PlayCircle className="h-4 w-4" />
-                  출마선언
-                </Button>
+                  <Button
+                    className="bg-red-600 hover:bg-red-700 text-white font-normal gap-2"
+                    size="sm"
+                    onClick={() => setVideoModalOpen(true)}
+                  >
+                    <PlayCircle className="h-4 w-4" />
+                    출마선언
+                  </Button>
+                </motion.div>
 
                 {/* 영상 콘텐츠 버튼 */}
                 {[
@@ -373,15 +559,28 @@ export default function DashboardPage() {
                   { label: '현장투어', icon: MapPin },
                   { label: '주민인터뷰', icon: Users },
                   { label: '이슈에답하다', icon: MessageCircle },
-                ].map((item) => (
-                  <Button
+                ].map((item, index) => (
+                  <motion.div
                     key={item.label}
-                    className="bg-red-600 hover:bg-red-700 text-white font-normal gap-2"
-                    size="sm"
+                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ 
+                      delay: 1.8 + index * 0.1, 
+                      duration: 0.5,
+                      type: "spring",
+                      stiffness: 150
+                    }}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    <item.icon className="h-4 w-4" />
-                    {item.label}
-                  </Button>
+                    <Button
+                      className="bg-red-600 hover:bg-red-700 text-white font-normal gap-2"
+                      size="sm"
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {item.label}
+                    </Button>
+                  </motion.div>
                 ))}
 
                 {/* 블로그 콘텐츠 버튼 */}
@@ -391,18 +590,31 @@ export default function DashboardPage() {
                   { label: '현장 리포트', icon: FileCheck },
                   { label: '정책팩트체크', icon: CheckCircle2 },
                   { label: '캠페뉴스', icon: Newspaper },
-                ].map((item) => (
-                  <Button
+                ].map((item, index) => (
+                  <motion.div
                     key={item.label}
-                    className="bg-[#03C75A] hover:bg-[#02b051] text-white font-normal gap-2"
-                    size="sm"
+                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ 
+                      delay: 2.2 + index * 0.1, 
+                      duration: 0.5,
+                      type: "spring",
+                      stiffness: 150
+                    }}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    <item.icon className="h-4 w-4" />
-                    {item.label}
-                  </Button>
+                    <Button
+                      className="bg-[#03C75A] hover:bg-[#02b051] text-white font-normal gap-2"
+                      size="sm"
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {item.label}
+                    </Button>
+                  </motion.div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           </motion.section>
 
           {/* KPI 그리드 */}
