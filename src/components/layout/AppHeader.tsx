@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useSession, signOut } from 'next-auth/react';
 import {
   Search,
   Bell,
@@ -11,6 +12,7 @@ import {
   User,
   Menu,
   X,
+  LogOut,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +26,12 @@ interface AppHeaderProps {
 
 export function AppHeader({ onMenuClick, className }: AppHeaderProps) {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const { data: session } = useSession();
+
+  const handleLogout = () => {
+    signOut({ callbackUrl: '/login' });
+  };
 
   return (
     <header
@@ -122,12 +130,46 @@ export function AppHeader({ onMenuClick, className }: AppHeaderProps) {
           <HelpCircle className="h-5 w-5" />
         </Button>
 
-        {/* 프로필 */}
-        <Button variant="ghost" size="icon" className="ml-1 sm:ml-2" title="프로필">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary">
-            <span className="text-sm font-semibold text-white">CO</span>
-          </div>
-        </Button>
+        {/* 프로필 & 로그아웃 */}
+        <div className="relative ml-1 sm:ml-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            title="프로필"
+            onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary">
+              <span className="text-sm font-semibold text-white">
+                {session?.user?.name?.charAt(0) || 'U'}
+              </span>
+            </div>
+          </Button>
+
+          {/* 프로필 드롭다운 메뉴 */}
+          {profileMenuOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setProfileMenuOpen(false)}
+              />
+              <div className="absolute right-0 top-full mt-2 z-50 w-48 rounded-lg border bg-background shadow-lg">
+                <div className="p-3 border-b">
+                  <p className="text-sm font-medium">{session?.user?.name || '사용자'}</p>
+                  <p className="text-xs text-muted-foreground">{session?.user?.email}</p>
+                </div>
+                <div className="p-1">
+                  <button
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    로그아웃
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );

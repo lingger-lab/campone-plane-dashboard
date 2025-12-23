@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import '@/styles/globals.css';
 import { Providers } from './providers';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://campone.cloud';
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://campone-dashboard-755458598444.asia-northeast3.run.app';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
