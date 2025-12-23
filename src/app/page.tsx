@@ -518,17 +518,27 @@ export default function DashboardPage() {
               출마선언 영상
             </DialogTitle>
           </DialogHeader>
-          <div className="aspect-video">
+          <div className="aspect-video bg-black">
             {videoModalOpen && (
               <video
                 src="/candidate-hong.mp4"
                 controls
                 autoPlay
-                className="w-full h-full"
+                muted
+                playsInline
+                preload="auto"
+                className="w-full h-full object-contain"
+                onLoadedData={(e) => {
+                  // 비디오 로드 완료 후 음소거 해제 시도
+                  const video = e.currentTarget;
+                  video.muted = false;
+                }}
                 onError={(e) => {
                   console.error('비디오 로드 실패:', e);
+                  alert('비디오를 불러올 수 없습니다. 파일을 확인해주세요.');
                 }}
               >
+                <source src="/candidate-hong.mp4" type="video/mp4" />
                 브라우저가 비디오 태그를 지원하지 않습니다.
               </video>
             )}
