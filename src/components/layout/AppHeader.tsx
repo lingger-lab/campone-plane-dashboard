@@ -2,17 +2,13 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Search,
   Bell,
   Plus,
   HelpCircle,
   User,
-  Youtube,
-  MessageCircle,
-  Instagram,
-  FileText,
-  PenTool,
   Menu,
   X,
 } from 'lucide-react';
@@ -25,14 +21,6 @@ interface AppHeaderProps {
   onMenuClick?: () => void;
   className?: string;
 }
-
-const channelLinks = [
-  { icon: Youtube, label: 'YouTube', href: 'https://youtube.com/@hongdemo', color: 'text-red-500' },
-  { icon: MessageCircle, label: 'Kakao', href: 'https://pf.kakao.com/_hongdemo', color: 'text-yellow-500' },
-  { icon: Instagram, label: 'Instagram', href: 'https://instagram.com/hongdemo', color: 'text-pink-500' },
-  { icon: FileText, label: 'Blog', href: 'https://blog.naver.com/hongdemo', color: 'text-green-500' },
-  { icon: PenTool, label: '현수막', href: '/studio/banners', color: 'text-primary' },
-];
 
 export function AppHeader({ onMenuClick, className }: AppHeaderProps) {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -70,10 +58,14 @@ export function AppHeader({ onMenuClick, className }: AppHeaderProps) {
         </Button>
 
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white font-bold">
-            C1
-          </div>
-          <span className="hidden font-semibold sm:inline-block">CampOne</span>
+          <Image
+            src="/camponelogo.svg"
+            alt="CampOne"
+            width={49}
+            height={49}
+            className="h-[49px] w-auto object-contain"
+            priority
+          />
         </Link>
 
         {/* 캠페인 스위처 */}
@@ -100,27 +92,8 @@ export function AppHeader({ onMenuClick, className }: AppHeaderProps) {
         </div>
       </div>
 
-      {/* 우측: 채널 퀵링크 & 액션 */}
+      {/* 우측: 액션 */}
       <div className="flex items-center gap-1">
-        {/* 채널 퀵링크 (데스크탑) */}
-        <div className="hidden items-center gap-1 xl:flex">
-          {channelLinks.map((channel) => (
-            <Button
-              key={channel.label}
-              variant="ghost"
-              size="icon"
-              asChild
-              className="h-8 w-8"
-              title={channel.label}
-            >
-              <Link href={channel.href} target={channel.href.startsWith('http') ? '_blank' : undefined}>
-                <channel.icon className={cn('h-4 w-4', channel.color)} />
-              </Link>
-            </Button>
-          ))}
-          <span className="mx-2 h-4 w-px bg-border" />
-        </div>
-
         {/* 모바일 검색 버튼 */}
         <Button
           variant="ghost"
@@ -151,7 +124,7 @@ export function AppHeader({ onMenuClick, className }: AppHeaderProps) {
         {/* 프로필 */}
         <Button variant="ghost" size="icon" className="ml-1 sm:ml-2" title="프로필">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary">
-            <User className="h-4 w-4" />
+            <span className="text-sm font-semibold text-white">CO</span>
           </div>
         </Button>
       </div>

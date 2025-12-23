@@ -51,7 +51,7 @@ export const handlers = [
 
   http.post(`${API_BASE}/contacts`, async ({ request }) => {
     await delay(DELAY_MS);
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
     const newContact = {
       id: `c${String(contacts.length + 1).padStart(3, '0')}`,
       ...body,
@@ -62,7 +62,7 @@ export const handlers = [
 
   http.put(`${API_BASE}/contacts/:id`, async ({ params, request }) => {
     await delay(DELAY_MS);
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json({ id: params.id, ...body });
   }),
 
@@ -96,7 +96,7 @@ export const handlers = [
 
   http.post(`${API_BASE}/segments`, async ({ request }) => {
     await delay(DELAY_MS);
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
     const newSegment = {
       id: `s${String(segments.length + 1).padStart(3, '0')}`,
       ...body,
@@ -168,10 +168,10 @@ export const handlers = [
 
   http.post(`${API_BASE}/messages/send`, async ({ request }) => {
     await delay(DELAY_MS * 3);
-    const body = await request.json();
+    const body = (await request.json()) as { campaignId: string };
     return HttpResponse.json({
       jobId: `send_${Date.now()}`,
-      campaignId: (body as { campaignId: string }).campaignId,
+      campaignId: body.campaignId,
       status: 'queued',
     });
   }),
@@ -201,7 +201,7 @@ export const handlers = [
 
   http.post(`${API_BASE}/events`, async ({ request }) => {
     await delay(DELAY_MS);
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
     const newEvent = {
       id: `e${String(events.length + 1).padStart(3, '0')}`,
       ...body,
@@ -263,7 +263,7 @@ export const handlers = [
 
   http.patch(`${API_BASE}/tasks/:id`, async ({ params, request }) => {
     await delay(DELAY_MS);
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
     const task = tasks.find((t) => t.id === params.id);
     return HttpResponse.json({ ...task, ...body });
   }),
@@ -361,7 +361,7 @@ export const handlers = [
 
   http.put(`${API_BASE}/channels/:key`, async ({ params, request }) => {
     await delay(DELAY_MS);
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json({
       key: params.key,
       ...body,

@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: 'CampOne 관리자 대시보드',
   description: '후보/캠프를 위한 통합 관리 대시보드',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/favicon.svg',
   },
 };
 

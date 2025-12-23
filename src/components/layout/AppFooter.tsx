@@ -63,7 +63,7 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
 
       {/* 중앙: 버전 정보 */}
       <div className="hidden items-center gap-4 lg:flex">
-        <span className="rounded bg-secondary px-2 py-0.5 font-mono text-xs">v1.0.0-demo</span>
+        <span className="rounded bg-secondary px-2 py-0.5 font-mono text-xs text-white">v1.0.0-demo</span>
         <Link href="/changelog" className="text-xs text-muted-foreground hover:text-foreground">
           릴리스 노트
         </Link>
@@ -86,7 +86,7 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
             onClick={() => setTheme('light')}
             title="라이트 모드"
           >
-            <Sun className="h-3 w-3" />
+            <Sun className="h-3 w-3 text-white" />
           </Button>
           <Button
             variant={theme === 'dark' ? 'secondary' : 'ghost'}
@@ -95,7 +95,7 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
             onClick={() => setTheme('dark')}
             title="다크 모드"
           >
-            <Moon className="h-3 w-3" />
+            <Moon className="h-3 w-3 text-white" />
           </Button>
           <Button
             variant={theme === 'system' ? 'secondary' : 'ghost'}
@@ -104,7 +104,7 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
             onClick={() => setTheme('system')}
             title="시스템 설정"
           >
-            <Monitor className="h-3 w-3" />
+            <Monitor className="h-3 w-3 text-white" />
           </Button>
         </div>
 

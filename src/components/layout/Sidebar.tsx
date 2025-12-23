@@ -17,7 +17,13 @@ import {
   HelpCircle,
   ChevronLeft,
   X,
+  Youtube,
+  MessageCircle,
+  Instagram,
+  FileText,
+  PenTool,
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -38,8 +44,16 @@ const menuItems = [
   { icon: Users, label: 'Civic Hub', href: '/hub', badge: 'M5' },
 ];
 
+// 채널 링크 데이터
+const channelLinks = [
+  { icon: Youtube, label: '유튜브', href: 'https://youtube.com/@hongdemo', color: 'text-red-600' },
+  { icon: MessageCircle, label: '카카오', href: 'https://pf.kakao.com/_hongdemo', color: 'text-yellow-500' },
+  { icon: Instagram, label: '인스타', href: 'https://instagram.com/hongdemo', color: 'text-pink-600' },
+  { icon: FileText, label: '네이버', href: 'https://blog.naver.com/hongdemo', color: 'text-[#03C75A]' },
+  { icon: PenTool, label: '현수막', href: '/studio/banners', color: 'text-primary' },
+];
+
 const bottomItems = [
-  { icon: Link2, label: '채널 링크', href: '/channels' },
   { icon: Shield, label: '권한/역할', href: '/roles' },
   { icon: History, label: '활동 로그', href: '/audit' },
   { icon: Settings, label: '설정', href: '/settings' },
@@ -104,27 +118,62 @@ export function Sidebar({
       >
       {/* 메인 메뉴 */}
       <nav className="flex-1 space-y-1 overflow-y-auto p-2">
-        {menuItems.map((item) => (
-          <Link key={item.href} href={item.href}>
-            <Button
-              variant={isActive(item.href) ? 'secondary' : 'ghost'}
-              className={cn(
-                'w-full justify-start gap-3',
-                collapsed && 'justify-center px-2'
-              )}
+        {menuItems.map((item) => {
+          const active = isActive(item.href);
+          return (
+            <Link key={item.href} href={item.href}>
+              <Button
+                variant={active ? 'secondary' : 'ghost'}
+                className={cn(
+                  'w-full justify-start gap-3',
+                  collapsed && 'justify-center px-2',
+                  active && 'text-white'
+                )}
+              >
+                <item.icon className={cn('h-5 w-5 shrink-0', active && 'text-white')} />
+                {!collapsed && (
+                  <>
+                    <span className={cn('flex-1 text-left', active && 'text-white')}>{item.label}</span>
+                    {item.badge && (
+                      <span className={cn('text-xs', active ? 'text-white/80' : 'text-muted-foreground')}>{item.badge}</span>
+                    )}
+                  </>
+                )}
+              </Button>
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* 구분선 */}
+      <div className="mx-4 border-t" />
+
+      {/* 채널 링크 */}
+      <nav className="space-y-1 p-2">
+        <div className={cn('px-3 py-2 text-xs font-semibold text-muted-foreground', collapsed && 'hidden')}>
+          채널 링크
+        </div>
+        {channelLinks.map((item) => {
+          return (
+            <Link 
+              key={item.href} 
+              href={item.href} 
+              target={item.href.startsWith('http') ? '_blank' : undefined}
             >
-              <item.icon className="h-5 w-5 shrink-0" />
-              {!collapsed && (
-                <>
-                  <span className="flex-1 text-left">{item.label}</span>
-                  {item.badge && (
-                    <span className="text-xs text-muted-foreground">{item.badge}</span>
-                  )}
-                </>
-              )}
-            </Button>
-          </Link>
-        ))}
+              <Button
+                variant="ghost"
+                className={cn(
+                  'w-full justify-start gap-3',
+                  collapsed && 'justify-center px-2'
+                )}
+                size="sm"
+              >
+                <item.icon className={cn('h-4 w-4 shrink-0', item.color)} />
+                {!collapsed && <span>{item.label}</span>}
+              </Button>
+            </Link>
+          );
+        })}
       </nav>
 
       {/* 구분선 */}
@@ -132,22 +181,52 @@ export function Sidebar({
 
       {/* 하단 메뉴 */}
       <nav className="space-y-1 p-2">
-        {bottomItems.map((item) => (
-          <Link key={item.href} href={item.href}>
-            <Button
-              variant={isActive(item.href) ? 'secondary' : 'ghost'}
-              className={cn(
-                'w-full justify-start gap-3',
-                collapsed && 'justify-center px-2'
-              )}
-              size="sm"
-            >
-              <item.icon className="h-4 w-4 shrink-0" />
-              {!collapsed && <span>{item.label}</span>}
-            </Button>
-          </Link>
-        ))}
+        {bottomItems.map((item) => {
+          const active = isActive(item.href);
+          return (
+            <Link key={item.href} href={item.href}>
+              <Button
+                variant={active ? 'secondary' : 'ghost'}
+                className={cn(
+                  'w-full justify-start gap-3',
+                  collapsed && 'justify-center px-2',
+                  active && 'text-white'
+                )}
+                size="sm"
+              >
+                <item.icon className={cn('h-4 w-4 shrink-0', active && 'text-white')} />
+                {!collapsed && <span className={cn(active && 'text-white')}>{item.label}</span>}
+              </Button>
+            </Link>
+          );
+        })}
       </nav>
+
+      {/* 구분선 */}
+      <div className="mx-4 border-t" />
+
+      {/* QR 코드 섹션 */}
+      {!collapsed && (
+        <div className="p-4 flex flex-col items-center gap-2">
+          <div className="text-xs font-semibold text-muted-foreground mb-1">공개 사이트</div>
+          <div className="bg-white p-2 rounded-lg shadow-sm">
+            <QRCodeSVG
+              value="https://campone.cloud/"
+              size={120}
+              level="H"
+              includeMargin={false}
+            />
+          </div>
+          <a
+            href="https://campone.cloud/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-primary hover:underline text-center break-all"
+          >
+            campone.cloud
+          </a>
+        </div>
+      )}
 
       {/* 모바일: 닫기 버튼 */}
       <div className="border-t p-2 lg:hidden">

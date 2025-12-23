@@ -136,7 +136,7 @@ export function formatPhone(phone: string | null): string {
   if (!phone) return '-';
 
   // +82 제거 및 0 추가
-  let cleaned = phone.replace(/^\+82/, '0').replace(/\D/g, '');
+  const cleaned = phone.replace(/^\+82/, '0').replace(/\D/g, '');
 
   // 포맷팅
   if (cleaned.length === 11) {
