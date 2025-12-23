@@ -498,14 +498,14 @@ export default function DashboardPage() {
                   { action: '메시지 발송', user: '김관리', time: '1시간 전', module: 'Hub' },
                   { action: 'SNS 카드 생성', user: '이스태프', time: '2시간 전', module: 'Studio' },
                 ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-3 text-sm">
-                    <div className="h-2 w-2 rounded-full bg-primary" />
-                    <span className="font-medium">{item.action}</span>
-                    <Badge variant="outline" className="text-xs">
+                  <div key={i} className="flex items-center gap-2 text-sm whitespace-nowrap overflow-hidden">
+                    <div className="h-2 w-2 rounded-full bg-primary shrink-0" />
+                    <span className="font-medium truncate min-w-0">{item.action}</span>
+                    <Badge variant="outline" className="text-xs shrink-0">
                       {item.module}
                     </Badge>
-                    <span className="text-muted-foreground">{item.user}</span>
-                    <span className="ml-auto text-muted-foreground">{item.time}</span>
+                    <span className="text-muted-foreground truncate min-w-0">{item.user}</span>
+                    <span className="ml-auto text-muted-foreground shrink-0">{item.time}</span>
                   </div>
                 ))}
               </div>

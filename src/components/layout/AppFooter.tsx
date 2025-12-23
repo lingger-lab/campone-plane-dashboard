@@ -169,7 +169,7 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
                   onClick={() => setTheme('system')}
                   title="시스템 설정"
                 >
-                  <Monitor className="h-4 w-4" />
+                  <Monitor className="h-4 w-4 text-white" />
                 </Button>
               </div>
             </div>

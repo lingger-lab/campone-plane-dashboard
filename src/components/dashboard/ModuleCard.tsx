@@ -48,7 +48,7 @@ export function ModuleCard({
           <img
             src={thumbnail}
             alt={name}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 will-change-transform"
+            className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105 will-change-transform"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.style.display = 'none';
