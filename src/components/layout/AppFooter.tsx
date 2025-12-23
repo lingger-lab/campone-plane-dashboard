@@ -15,10 +15,10 @@ interface AppFooterProps {
 
 // 소셜 미디어 링크
 const socialLinks = [
-  { icon: SiYoutube, label: '유튜브', href: 'https://youtube.com/@hongdemo', color: 'hover:text-red-600' },
-  { icon: SiKakaotalk, label: '카카오톡', href: 'https://pf.kakao.com/_hongdemo', color: 'hover:text-yellow-500' },
-  { icon: SiInstagram, label: '인스타그램', href: 'https://instagram.com/hongdemo', color: 'hover:text-pink-600' },
-  { icon: SiNaver, label: '네이버', href: 'https://blog.naver.com/hongdemo', color: 'hover:text-[#03C75A]' },
+  { icon: SiYoutube, label: '유튜브', href: 'https://youtube.com/@hongdemo', color: 'text-red-600' },
+  { icon: SiKakaotalk, label: '카카오톡', href: 'https://pf.kakao.com/_hongdemo', color: 'text-yellow-500' },
+  { icon: SiInstagram, label: '인스타그램', href: 'https://instagram.com/hongdemo', color: 'text-pink-600' },
+  { icon: SiNaver, label: '네이버', href: 'https://blog.naver.com/hongdemo', color: 'text-[#03C75A]' },
 ];
 
 // 시스템 상태 인디케이터
@@ -47,7 +47,7 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
   return (
     <footer
       className={cn(
-        'relative z-30 border-t bg-slate-900 text-slate-300 transition-all duration-300',
+        'relative z-30 border-t bg-card/95 backdrop-blur-sm transition-all duration-300',
         // 데스크탑: 사이드바 고려
         sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-60',
         className
@@ -58,8 +58,8 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           {/* 선거대책본부 정보 */}
           <div className="space-y-4">
-            <h3 className="text-lg font-bold text-white">홍길동 후보 선거대책본부</h3>
-            <p className="text-sm leading-relaxed">
+            <h3 className="text-lg font-bold text-foreground">홍길동 후보 선거대책본부</h3>
+            <p className="text-sm leading-relaxed text-muted-foreground">
               창녕군 국회의원 후보<br />
               국민과 함께하는 정치, 청년에게 희망을, 경제 성장의 새 길
             </p>
@@ -69,7 +69,7 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
                   key={item.href}
                   href={item.href}
                   target="_blank"
-                  className={cn('text-slate-400 transition-colors', item.color)}
+                  className={cn('transition-transform hover:scale-110', item.color)}
                   title={item.label}
                 >
                   <item.icon className="h-5 w-5" />
@@ -80,8 +80,8 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
 
           {/* 연락처 */}
           <div className="space-y-4">
-            <h3 className="text-lg font-bold text-white">연락처</h3>
-            <ul className="space-y-3 text-sm">
+            <h3 className="text-lg font-bold text-foreground">연락처</h3>
+            <ul className="space-y-3 text-sm text-muted-foreground">
               <li className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 mt-0.5 text-primary shrink-0" />
                 <span>경남 창녕군 창녕읍 중앙로 123<br />홍길동 선거사무소 2층</span>
@@ -103,25 +103,25 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
 
           {/* 바로가기 */}
           <div className="space-y-4">
-            <h3 className="text-lg font-bold text-white">바로가기</h3>
+            <h3 className="text-lg font-bold text-foreground">바로가기</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/" className="hover:text-white transition-colors">
+                <Link href="/" className="text-muted-foreground hover:text-primary transition-colors">
                   대시보드
                 </Link>
               </li>
               <li>
-                <Link href="/policy" className="hover:text-white transition-colors">
+                <Link href="/policy" className="text-muted-foreground hover:text-primary transition-colors">
                   10대 공약
                 </Link>
               </li>
               <li>
-                <Link href="/hub" className="hover:text-white transition-colors">
+                <Link href="/hub" className="text-muted-foreground hover:text-primary transition-colors">
                   시민 소통
                 </Link>
               </li>
               <li>
-                <Link href="/studio" className="hover:text-white transition-colors">
+                <Link href="/studio" className="text-muted-foreground hover:text-primary transition-colors">
                   콘텐츠 스튜디오
                 </Link>
               </li>
@@ -129,7 +129,7 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
                 <Link
                   href="https://campone.cloud/"
                   target="_blank"
-                  className="inline-flex items-center gap-1 hover:text-white transition-colors"
+                  className="inline-flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors"
                 >
                   공개 사이트 <ExternalLink className="h-3 w-3" />
                 </Link>
@@ -137,13 +137,13 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
             </ul>
           </div>
 
-          {/* 법적 고지 및 테마 */}
+          {/* 설정 */}
           <div className="space-y-4">
-            <h3 className="text-lg font-bold text-white">설정</h3>
+            <h3 className="text-lg font-bold text-foreground">설정</h3>
             {/* 테마 토글 */}
             <div className="flex items-center gap-2">
-              <span className="text-sm">테마:</span>
-              <div className="flex items-center rounded-lg border border-slate-700 p-0.5">
+              <span className="text-sm text-muted-foreground">테마:</span>
+              <div className="flex items-center rounded-lg border p-0.5">
                 <Button
                   variant={theme === 'light' ? 'secondary' : 'ghost'}
                   size="sm"
@@ -175,7 +175,7 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
             </div>
 
             {/* 시스템 상태 */}
-            <div className="flex items-center gap-3 text-xs">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
               <span>시스템 상태:</span>
               {systemStatus.map((item) => (
                 <div key={item.label} className="flex items-center gap-1">
@@ -187,16 +187,16 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
 
             {/* 버전 */}
             <div className="text-xs">
-              <span className="rounded bg-slate-800 px-2 py-1 font-mono">v1.0.0-demo</span>
+              <span className="rounded bg-muted px-2 py-1 font-mono text-muted-foreground">v1.0.0-demo</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* 하단 법적 고지 */}
-      <div className="border-t border-slate-800 bg-slate-950">
+      <div className="border-t bg-muted/50">
         <div className="container max-w-7xl mx-auto px-6 py-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
             <div className="text-center md:text-left">
               <p>© 2025 홍길동 후보 선거대책본부. All rights reserved.</p>
               <p className="mt-1">
@@ -204,14 +204,14 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
               </p>
             </div>
             <div className="flex items-center gap-4">
-              <Link href="/privacy" className="hover:text-slate-300 transition-colors">
+              <Link href="/privacy" className="hover:text-primary transition-colors">
                 개인정보처리방침
               </Link>
-              <Link href="/terms" className="hover:text-slate-300 transition-colors">
+              <Link href="/terms" className="hover:text-primary transition-colors">
                 이용약관
               </Link>
-              <span className="text-slate-600">|</span>
-              <span>Powered by CampOne</span>
+              <span className="text-border">|</span>
+              <span className="text-primary font-medium">Powered by CampOne</span>
             </div>
           </div>
         </div>
