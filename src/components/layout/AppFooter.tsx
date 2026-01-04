@@ -15,10 +15,10 @@ interface AppFooterProps {
 
 // 소셜 미디어 링크
 const socialLinks = [
-  { icon: SiYoutube, label: '유튜브', href: 'https://youtube.com/@hongdemo', color: 'text-red-600' },
-  { icon: SiKakaotalk, label: '카카오톡', href: 'https://pf.kakao.com/_hongdemo', color: 'text-yellow-500' },
+  { icon: SiYoutube, label: '유튜브', href: 'https://www.youtube.com/@CampOne-w9p', color: 'text-red-600' },
+  { icon: SiKakaotalk, label: '카카오톡', href: 'https://open.kakao.com/o/gQ9XBl9h', color: 'text-yellow-500' },
   { icon: SiInstagram, label: '인스타그램', href: 'https://instagram.com/hongdemo', color: 'text-pink-600' },
-  { icon: SiNaver, label: '네이버', href: 'https://blog.naver.com/hongdemo', color: 'text-[#03C75A]' },
+  { icon: SiNaver, label: '네이버', href: 'https://blog.naver.com/nineuri/224131041233', color: 'text-[#03C75A]' },
 ];
 
 // 시스템 상태 인디케이터
@@ -111,27 +111,28 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
                 </Link>
               </li>
               <li>
-                <Link href="/policy" className="text-muted-foreground hover:text-primary transition-colors">
-                  10대 공약
-                </Link>
-              </li>
-              <li>
-                <Link href="/hub" className="text-muted-foreground hover:text-primary transition-colors">
-                  시민 소통
+                <Link href="/pulse" className="text-muted-foreground hover:text-primary transition-colors">
+                  인사이트
                 </Link>
               </li>
               <li>
                 <Link href="/studio" className="text-muted-foreground hover:text-primary transition-colors">
-                  콘텐츠 스튜디오
+                  스튜디오
                 </Link>
               </li>
               <li>
-                <Link
-                  href="https://campone.cloud/"
-                  target="_blank"
-                  className="inline-flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors"
-                >
-                  공개 사이트 <ExternalLink className="h-3 w-3" />
+                <Link href="/policy" className="text-muted-foreground hover:text-primary transition-colors">
+                  정책연구
+                </Link>
+              </li>
+              <li>
+                <Link href="/ops" className="text-muted-foreground hover:text-primary transition-colors">
+                  운영관리
+                </Link>
+              </li>
+              <li>
+                <Link href="/hub" className="text-muted-foreground hover:text-primary transition-colors">
+                  시민소통
                 </Link>
               </li>
             </ul>

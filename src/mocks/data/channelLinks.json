@@ -1,13 +1,13 @@
 {
   "youtube": {
     "key": "youtube",
-    "url": "https://youtube.com/@hongdemo",
+    "url": "https://www.youtube.com/@CampOne-w9p",
     "label": "YouTube",
     "visible": true
   },
   "kakao": {
     "key": "kakao",
-    "url": "https://pf.kakao.com/_hongdemo",
+    "url": "https://open.kakao.com/o/gQ9XBl9h",
     "label": "KakaoTalk 채널",
     "visible": true
   },
@@ -19,7 +19,7 @@
   },
   "naverBlog": {
     "key": "naverBlog",
-    "url": "https://blog.naver.com/hongdemo",
+    "url": "https://blog.naver.com/nineuri/224131041233",
     "label": "Naver Blog",
     "visible": true
   },

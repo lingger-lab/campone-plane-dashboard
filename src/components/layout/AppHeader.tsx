@@ -69,10 +69,10 @@ export function AppHeader({ onMenuClick, className }: AppHeaderProps) {
           <Image
             src="/camponelogo.svg"
             alt="CampOne"
-            width={49}
-            height={49}
-            className="h-[49px] w-auto object-contain"
-            style={{ width: "auto", height: "49px" }}
+            width={98}
+            height={98}
+            className="object-contain"
+            style={{ width: "98px", height: "98px" }}
             priority
           />
         </Link>

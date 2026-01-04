@@ -178,6 +178,10 @@ const kpiData = [
 export default function DashboardPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [audioModalOpen, setAudioModalOpen] = useState(false);
+  const [issueModalOpen, setIssueModalOpen] = useState(false);
+  const [visionModalOpen, setVisionModalOpen] = useState(false);
+  const [policyDetailModalOpen, setPolicyDetailModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-dynamic">
@@ -443,7 +447,7 @@ export default function DashboardPage() {
               >
                 <Button
                   className="w-full py-4 h-auto bg-primary hover:bg-primary/90 text-white text-base font-bold rounded-xl"
-                  onClick={() => window.open('https://campone.cloud/', '_blank')}
+                  onClick={() => window.open('https://campone.cloud/vision', '_blank')}
                 >
                   <List className="h-5 w-5 mr-2" />
                   10대 공약 보기
@@ -454,7 +458,7 @@ export default function DashboardPage() {
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { label: '출마선언', icon: PlayCircle, onClick: () => setVideoModalOpen(true) },
-                  { label: '공약하이라이트', icon: Video },
+                  { label: '공약하이라이트', icon: Video, onClick: () => setAudioModalOpen(true) },
                   { label: '현장투어', icon: MapPin },
                   { label: '주민인터뷰', icon: Users },
                 ].map((item, index) => (
@@ -523,7 +527,7 @@ export default function DashboardPage() {
                 >
                   <Button
                     className="bg-primary hover:bg-primary/90 text-white font-medium gap-2 h-9 px-4 rounded-lg"
-                    onClick={() => window.open('https://campone.cloud/', '_blank')}
+                    onClick={() => window.open('https://campone.cloud/vision', '_blank')}
                   >
                     <List className="h-4 w-4" />
                     10대 공약
@@ -555,17 +559,17 @@ export default function DashboardPage() {
 
                 {/* 영상 콘텐츠 버튼 */}
                 {[
-                  { label: '공약하이라이트', icon: Video },
+                  { label: '공약하이라이트', icon: Video, onClick: () => setAudioModalOpen(true) },
                   { label: '현장투어', icon: MapPin },
                   { label: '주민인터뷰', icon: Users },
-                  { label: '이슈에답하다', icon: MessageCircle },
+                  { label: '이슈에답하다', icon: MessageCircle, onClick: () => setIssueModalOpen(true) },
                 ].map((item, index) => (
                   <motion.div
                     key={item.label}
                     initial={{ opacity: 0, scale: 0.8, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ 
-                      delay: 1.8 + index * 0.1, 
+                    transition={{
+                      delay: 1.8 + index * 0.1,
                       duration: 0.5,
                       type: "spring",
                       stiffness: 150
@@ -576,6 +580,7 @@ export default function DashboardPage() {
                     <Button
                       className="bg-red-600 hover:bg-red-700 text-white font-normal gap-2"
                       size="sm"
+                      onClick={item.onClick}
                     >
                       <item.icon className="h-4 w-4" />
                       {item.label}
@@ -585,8 +590,8 @@ export default function DashboardPage() {
 
                 {/* 블로그 콘텐츠 버튼 */}
                 {[
-                  { label: '후보자비전스토리', icon: BookOpen },
-                  { label: '공약상세설명', icon: FileText },
+                  { label: '후보자비전스토리', icon: BookOpen, onClick: () => setVisionModalOpen(true) },
+                  { label: '공약상세설명', icon: FileText, onClick: () => setPolicyDetailModalOpen(true) },
                   { label: '현장 리포트', icon: FileCheck },
                   { label: '정책팩트체크', icon: CheckCircle2 },
                   { label: '캠페뉴스', icon: Newspaper },
@@ -607,6 +612,7 @@ export default function DashboardPage() {
                     <Button
                       className="bg-[#03C75A] hover:bg-[#02b051] text-white font-normal gap-2"
                       size="sm"
+                      onClick={item.onClick}
                     >
                       <item.icon className="h-4 w-4" />
                       {item.label}
@@ -803,6 +809,150 @@ export default function DashboardPage() {
                 }}
               >
                 <source src="/candidate-hong.mp4" type="video/mp4" />
+                브라우저가 비디오 태그를 지원하지 않습니다.
+              </video>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 공약하이라이트 비디오 모달 */}
+      <Dialog open={audioModalOpen} onOpenChange={setAudioModalOpen}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black">
+          <DialogHeader className="p-4 bg-gradient-to-r from-primary to-primary/80">
+            <DialogTitle className="text-white flex items-center gap-2">
+              <Video className="h-5 w-5" />
+              공약 하이라이트
+            </DialogTitle>
+          </DialogHeader>
+          <div className="aspect-video bg-black">
+            {audioModalOpen && (
+              <video
+                src="/policy-highlight.mp4"
+                controls
+                autoPlay
+                muted
+                playsInline
+                preload="auto"
+                className="w-full h-full object-contain"
+                onLoadedData={(e) => {
+                  const video = e.currentTarget;
+                  video.muted = false;
+                }}
+                onError={(e) => {
+                  console.error('비디오 로드 실패:', e);
+                  alert('비디오를 불러올 수 없습니다. 파일을 확인해주세요.');
+                }}
+              >
+                <source src="/policy-highlight.mp4" type="video/mp4" />
+                브라우저가 비디오 태그를 지원하지 않습니다.
+              </video>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 이슈에답하다 비디오 모달 */}
+      <Dialog open={issueModalOpen} onOpenChange={setIssueModalOpen}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black">
+          <DialogHeader className="p-4 bg-gradient-to-r from-orange-500 to-orange-600">
+            <DialogTitle className="text-white flex items-center gap-2">
+              <MessageCircle className="h-5 w-5" />
+              이슈에 답하다
+            </DialogTitle>
+          </DialogHeader>
+          <div className="aspect-video bg-black">
+            {issueModalOpen && (
+              <video
+                src="/issue-answer.mp4"
+                controls
+                autoPlay
+                muted
+                playsInline
+                preload="auto"
+                className="w-full h-full object-contain"
+                onLoadedData={(e) => {
+                  const video = e.currentTarget;
+                  video.muted = false;
+                }}
+                onError={(e) => {
+                  console.error('비디오 로드 실패:', e);
+                  alert('비디오를 불러올 수 없습니다. 파일을 확인해주세요.');
+                }}
+              >
+                <source src="/issue-answer.mp4" type="video/mp4" />
+                브라우저가 비디오 태그를 지원하지 않습니다.
+              </video>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 후보자비전스토리 비디오 모달 */}
+      <Dialog open={visionModalOpen} onOpenChange={setVisionModalOpen}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black">
+          <DialogHeader className="p-4 bg-gradient-to-r from-[#03C75A] to-[#02a050]">
+            <DialogTitle className="text-white flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
+              후보자 비전 스토리
+            </DialogTitle>
+          </DialogHeader>
+          <div className="aspect-video bg-black">
+            {visionModalOpen && (
+              <video
+                src="/vision-story.mp4"
+                controls
+                autoPlay
+                muted
+                playsInline
+                preload="auto"
+                className="w-full h-full object-contain"
+                onLoadedData={(e) => {
+                  const video = e.currentTarget;
+                  video.muted = false;
+                }}
+                onError={(e) => {
+                  console.error('비디오 로드 실패:', e);
+                  alert('비디오를 불러올 수 없습니다. 파일을 확인해주세요.');
+                }}
+              >
+                <source src="/vision-story.mp4" type="video/mp4" />
+                브라우저가 비디오 태그를 지원하지 않습니다.
+              </video>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 공약상세설명 비디오 모달 */}
+      <Dialog open={policyDetailModalOpen} onOpenChange={setPolicyDetailModalOpen}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black">
+          <DialogHeader className="p-4 bg-gradient-to-r from-[#03C75A] to-[#02a050]">
+            <DialogTitle className="text-white flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              공약 상세 설명
+            </DialogTitle>
+          </DialogHeader>
+          <div className="aspect-video bg-black">
+            {policyDetailModalOpen && (
+              <video
+                src="/policy-detail.mp4"
+                controls
+                autoPlay
+                muted
+                playsInline
+                preload="auto"
+                className="w-full h-full object-contain"
+                onLoadedData={(e) => {
+                  const video = e.currentTarget;
+                  video.muted = false;
+                }}
+                onError={(e) => {
+                  console.error('비디오 로드 실패:', e);
+                  alert('비디오를 불러올 수 없습니다. 파일을 확인해주세요.');
+                }}
+              >
+                <source src="/policy-detail.mp4" type="video/mp4" />
                 브라우저가 비디오 태그를 지원하지 않습니다.
               </video>
             )}

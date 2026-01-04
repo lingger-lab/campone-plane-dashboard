@@ -28,20 +28,11 @@ export function ModuleCard({
   publicUrl,
   className,
 }: ModuleCardProps) {
-  const handleCardClick = () => {
-    window.open('https://campone.cloud/', '_blank');
-  };
-
-  const handleButtonClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
-    window.open('https://campone.cloud/', '_blank');
-  };
-
   return (
-    <Card
-      className={cn('module-card-hover overflow-hidden cursor-pointer bg-white/90 dark:bg-card/90 backdrop-blur-sm', className)}
-      onClick={handleCardClick}
-    >
+    <Link href={path} className="block">
+      <Card
+        className={cn('module-card-hover overflow-hidden cursor-pointer bg-white/90 dark:bg-card/90 backdrop-blur-sm', className)}
+      >
       {/* 썸네일 영역 - 반응형 높이 */}
       {thumbnail ? (
         <div className="w-full h-[200px] sm:h-[250px] lg:h-[300px] xl:h-[350px] bg-gradient-to-br from-primary/20 to-primary/5 overflow-hidden relative group">
@@ -108,10 +99,12 @@ export function ModuleCard({
           <Button
             size="sm"
             className="flex-1 text-white font-normal h-9 btn-shine"
-            onClick={handleButtonClick}
+            asChild
           >
-            <Settings className="mr-1 h-4 w-4 text-white" />
-            <span className="text-white font-normal">관리 열기</span>
+            <Link href={path}>
+              <Settings className="mr-1 h-4 w-4 text-white" />
+              <span className="text-white font-normal">관리 열기</span>
+            </Link>
           </Button>
           <Button 
             variant="outline" 
@@ -139,5 +132,6 @@ export function ModuleCard({
         </div>
       </CardContent>
     </Card>
+    </Link>
   );
 }

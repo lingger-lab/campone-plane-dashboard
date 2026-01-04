@@ -25,8 +25,8 @@ export const config = {
      * - login (login page)
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - favicon.ico, public files
+     * - favicon.ico, public files, mockServiceWorker.js
      */
-    '/((?!api/auth|login|_next/static|_next/image|favicon\\.ico|.*\\.svg|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.webp).*)',
+    '/((?!api/auth|login|_next/static|_next/image|favicon\\.ico|mockServiceWorker\\.js|.*\\.svg|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.webp|.*\\.mp4|.*\\.m4a|.*\\.mp3).*)',
   ],
 };

@@ -30,7 +30,7 @@ const initialChannels: Channel[] = [
   {
     key: 'youtube',
     label: 'YouTube',
-    url: 'https://youtube.com/@hongdemo',
+    url: 'https://www.youtube.com/@CampOne-w9p',
     icon: Youtube,
     color: 'text-red-500',
     visible: true,
@@ -38,7 +38,7 @@ const initialChannels: Channel[] = [
   {
     key: 'kakao',
     label: 'KakaoTalk 채널',
-    url: 'https://pf.kakao.com/_hongdemo',
+    url: 'https://open.kakao.com/o/gQ9XBl9h',
     icon: MessageCircle,
     color: 'text-yellow-500',
     visible: true,
@@ -54,7 +54,7 @@ const initialChannels: Channel[] = [
   {
     key: 'naverBlog',
     label: 'Naver Blog',
-    url: 'https://blog.naver.com/hongdemo',
+    url: 'https://blog.naver.com/nineuri/224131041233',
     icon: FileText,
     color: 'text-green-500',
     visible: true,
