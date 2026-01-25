@@ -6,8 +6,8 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://campone-dashboard-7
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: '홍길동 후보 선거대책본부 | CampOne',
-  description: '창녕군 국회의원 후보 홍길동 - 국민과 함께하는 정치, 청년에게 희망을, 경제 성장의 새 길',
+  title: '유해남 후보 선거대책본부 | CampOne',
+  description: '사천시장 후보 유해남 - 국민과 함께하는 정치, 청년에게 희망을, 경제 성장의 새 길',
   icons: {
     icon: '/favicon.svg',
   },
@@ -16,28 +16,28 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'ko_KR',
     url: siteUrl,
-    siteName: '홍길동 후보 선거대책본부',
-    title: '홍길동 후보 선거대책본부 | 창녕군 국회의원 후보',
-    description: '국민과 함께하는 정치, 청년에게 희망을, 경제 성장의 새 길 - 창녕군민을 위한 10대 공약',
+    siteName: '유해남 후보 선거대책본부',
+    title: '유해남 후보 선거대책본부 | 사천시장 후보',
+    description: '국민과 함께하는 정치, 청년에게 희망을, 경제 성장의 새 길 - 사천시민을 위한 10대 공약',
     images: [
       {
         url: '/og-image-d.png',
         width: 1200,
         height: 630,
-        alt: '홍길동 후보 선거대책본부',
+        alt: '유해남 후보 선거대책본부',
       },
     ],
   },
   // Twitter Card
   twitter: {
     card: 'summary_large_image',
-    title: '홍길동 후보 선거대책본부 | 창녕군 국회의원 후보',
+    title: '유해남 후보 선거대책본부 | 사천시장 후보',
     description: '국민과 함께하는 정치, 청년에게 희망을, 경제 성장의 새 길',
     images: ['/og-image-d.png'],
   },
   // 기타 메타태그
-  keywords: ['홍길동', '창녕군', '국회의원', '선거', '공약', '캠프원'],
-  authors: [{ name: '홍길동 선거대책본부' }],
+  keywords: ['유해남', '사천시', '시장', '선거', '공약', '캠프원'],
+  authors: [{ name: '유해남 선거대책본부' }],
   robots: {
     index: true,
     follow: true,

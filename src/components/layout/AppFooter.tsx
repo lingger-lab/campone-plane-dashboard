@@ -58,9 +58,9 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           {/* 선거대책본부 정보 */}
           <div className="space-y-4">
-            <h3 className="text-lg font-bold text-foreground">홍길동 후보 선거대책본부</h3>
+            <h3 className="text-lg font-bold text-foreground">유해남 후보 선거대책본부</h3>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              창녕군 국회의원 후보<br />
+              사천시장 후보<br />
               국민과 함께하는 정치, 청년에게 희망을, 경제 성장의 새 길
             </p>
             <div className="flex items-center gap-3 pt-2">
@@ -84,7 +84,7 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
             <ul className="space-y-3 text-sm text-muted-foreground">
               <li className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 mt-0.5 text-primary shrink-0" />
-                <span>경남 창녕군 창녕읍 중앙로 123<br />홍길동 선거사무소 2층</span>
+                <span>경남 사천시 사천읍 중앙로 123<br />유해남 선거사무소 2층</span>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-primary shrink-0" />
@@ -199,7 +199,7 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
         <div className="container max-w-7xl mx-auto px-6 py-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
             <div className="text-center md:text-left">
-              <p>© 2025 홍길동 후보 선거대책본부. All rights reserved.</p>
+              <p>© 2025 유해남 후보 선거대책본부. All rights reserved.</p>
               <p className="mt-1">
                 본 사이트는 공직선거법에 따라 운영됩니다. | 선거비용 제한액 준수
               </p>

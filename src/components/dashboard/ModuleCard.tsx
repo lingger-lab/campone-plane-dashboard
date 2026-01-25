@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ExternalLink, Settings, RefreshCw } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -13,8 +13,6 @@ interface ModuleCardProps {
   slogan: string;
   benefits: string[];
   thumbnail?: string;
-  kpis?: { label: string; value: string | number }[];
-  publicUrl?: string;
   className?: string;
 }
 
@@ -24,8 +22,6 @@ export function ModuleCard({
   slogan,
   benefits,
   thumbnail,
-  kpis,
-  publicUrl,
   className,
 }: ModuleCardProps) {
   return (
@@ -79,26 +75,13 @@ export function ModuleCard({
             ))}
           </ul>
 
-          {/* KPI 미리보기 */}
-          {kpis && kpis.length > 0 && (
-            <div className="flex gap-4 border-t pt-1.5">
-              {kpis.map((kpi, i) => (
-                <div key={i} className="text-center">
-                  <p className="text-lg font-medium">
-                    {typeof kpi.value === 'number' ? kpi.value.toLocaleString() : kpi.value}
-                  </p>
-                  <p className="text-xs text-muted-foreground font-normal">{kpi.label}</p>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
-        {/* CTA 버튼 - 고정 높이 */}
-        <div className="flex gap-2 border-t pt-1.5 mt-auto">
+        {/* CTA 버튼 */}
+        <div className="border-t pt-1.5 mt-auto">
           <Button
             size="sm"
-            className="flex-1 text-white font-normal h-9 btn-shine"
+            className="w-full text-white font-normal h-9 btn-shine"
             asChild
           >
             <Link href={path}>
@@ -106,29 +89,6 @@ export function ModuleCard({
               <span className="text-white font-normal">관리 열기</span>
             </Link>
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            title="데이터 업데이트"
-            className="h-9"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-          {publicUrl && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              asChild 
-              title="사이트 열어보기"
-              className="h-9"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Link href={publicUrl} target="_blank">
-                <ExternalLink className="h-4 w-4" />
-              </Link>
-            </Button>
-          )}
         </div>
       </CardContent>
     </Card>

@@ -51,7 +51,7 @@ const channelLinks = [
 
 const bottomItems = [
   { icon: Shield, label: '권한/역할', href: '/roles' },
-  { icon: History, label: '활동 로그', href: '/audit' },
+  { icon: History, label: '활동 & 알림', href: '/audit' },
   { icon: Settings, label: '설정', href: '/settings' },
   { icon: HelpCircle, label: '도움말', href: '/help' },
 ];
