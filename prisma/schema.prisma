@@ -1,0 +1,140 @@
+// CampOne Dashboard - Prisma Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// 사용자 및 인증
+// ============================================
+
+enum UserRole {
+  Admin
+  Manager
+  Staff
+  Viewer
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String
+  password  String
+  role      UserRole  @default(Staff)
+  avatar    String?
+  isActive  Boolean   @default(true)
+  lastLogin DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  auditLogs  AuditLog[]
+  userAlerts UserAlert[]
+
+  @@map("users")
+}
+
+// ============================================
+// 알림
+// ============================================
+
+enum AlertType {
+  system
+  workflow
+}
+
+enum AlertSeverity {
+  info
+  warning
+  error
+  success
+}
+
+model Alert {
+  id        String        @id @default(cuid())
+  type      AlertType
+  severity  AlertSeverity
+  title     String
+  message   String
+  source    String?       // 발생 서비스 (pulse, studio 등)
+  sourceId  String?       // 원본 ID
+  pinned    Boolean       @default(false)
+  expiresAt DateTime?
+  createdAt DateTime      @default(now())
+
+  userAlerts UserAlert[]
+
+  @@index([createdAt])
+  @@index([type])
+  @@map("alerts")
+}
+
+model UserAlert {
+  userId  String
+  alertId String
+  read    Boolean   @default(false)
+  readAt  DateTime?
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alert Alert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+
+  @@id([userId, alertId])
+  @@map("user_alerts")
+}
+
+// ============================================
+// 감사 로그
+// ============================================
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  userName  String
+  action    String   // create, update, delete, login, logout 등
+  module    String   // Dashboard, Pulse, Studio, Policy, Ops, Hub, System
+  target    String
+  details   Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([module])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ============================================
+// 채널 링크
+// ============================================
+
+model ChannelLink {
+  key       String   @id
+  url       String
+  label     String
+  icon      String?
+  visible   Boolean  @default(true)
+  order     Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@map("channel_links")
+}
+
+// ============================================
+// KPI 캐시
+// ============================================
+
+model KpiCache {
+  key       String   @id
+  value     Json
+  expiresAt DateTime
+  updatedAt DateTime @updatedAt
+
+  @@map("kpi_cache")
+}
