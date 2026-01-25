@@ -21,12 +21,12 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api/auth (NextAuth API routes)
+     * - api (all API routes - 각 route에서 자체 인증 처리)
      * - login (login page)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico, public files, mockServiceWorker.js
      */
-    '/((?!api/auth|login|_next/static|_next/image|favicon\\.ico|mockServiceWorker\\.js|.*\\.svg|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.webp|.*\\.mp4|.*\\.m4a|.*\\.mp3).*)',
+    '/((?!api|login|_next/static|_next/image|favicon\\.ico|mockServiceWorker\\.js|.*\\.svg|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.webp|.*\\.mp4|.*\\.m4a|.*\\.mp3).*)',
   ],
 };

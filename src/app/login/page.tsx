@@ -75,7 +75,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="appearance-none relative block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm"
-                placeholder="admin@campone.cloud"
+                placeholder="admin@campone.kr"
               />
             </div>
             <div>
@@ -125,14 +125,19 @@ export default function LoginPage() {
           {/* Demo Credentials Info */}
           <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
             <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-2">
-              데모 계정 정보
+              테스트 계정 정보
             </p>
-            <p className="text-xs text-blue-500 dark:text-blue-300">
-              이메일: admin@campone.cloud
-            </p>
-            <p className="text-xs text-blue-500 dark:text-blue-300">
-              비밀번호: admin123
-            </p>
+            <div className="space-y-1">
+              <p className="text-xs text-blue-500 dark:text-blue-300">
+                <span className="font-medium">Admin:</span> admin@campone.kr / campone123!
+              </p>
+              <p className="text-xs text-blue-500 dark:text-blue-300">
+                <span className="font-medium">Manager:</span> manager@campone.kr / campone123!
+              </p>
+              <p className="text-xs text-blue-500 dark:text-blue-300">
+                <span className="font-medium">Staff:</span> staff@campone.kr / campone123!
+              </p>
+            </div>
           </div>
         </form>
       </div>
