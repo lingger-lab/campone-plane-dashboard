@@ -1,9 +1,16 @@
 # Google Cloud Build configuration for Cloud Run deployment
 steps:
-  # Build the Docker image
+  # Pull cache image (ignore if not exists)
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args: ['-c', 'docker pull gcr.io/$PROJECT_ID/campone-dashboard:latest || exit 0']
+
+  # Build the Docker image with cache
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
+      - '--cache-from'
+      - 'gcr.io/$PROJECT_ID/campone-dashboard:latest'
       - '-t'
       - 'gcr.io/$PROJECT_ID/campone-dashboard:$COMMIT_SHA'
       - '-t'
@@ -45,6 +52,12 @@ steps:
       - '0'
       - '--max-instances'
       - '10'
+      - '--add-cloudsql-instances'
+      - 'campone-v1-0:asia-northeast3:campone'
+      - '--set-env-vars'
+      - 'NEXTAUTH_URL=https://campone-dashboard-755458598444.asia-northeast3.run.app'
+      - '--set-secrets'
+      - 'NEXTAUTH_SECRET=campone-admin-secret:latest,DATABASE_URL=DATABASE_URL_DASHBOARD:latest,EMBED_JWT_SECRET=embed-jwt-secret:latest'
 
 images:
   - 'gcr.io/$PROJECT_ID/campone-dashboard:$COMMIT_SHA'

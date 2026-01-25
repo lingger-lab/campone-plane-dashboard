@@ -18,6 +18,7 @@ import trends from './data/trends.json';
 import trendsConfig from './data/trends.config.json';
 import channelLinks from './data/channelLinks.json';
 import alerts from './data/alerts.json';
+import activities from './data/activities.json';
 import audit from './data/audit.json';
 
 const API_BASE = '/api/v1';
@@ -334,10 +335,10 @@ export const handlers = [
     await delay(DELAY_MS);
     return HttpResponse.json({
       spikes: [
-        { date: '2025-01-04', source: 'google', keyword: '홍길동 후보', rate: 0.23 },
+        { date: '2025-01-04', source: 'google', keyword: '유해남 후보', rate: 0.23 },
         { date: '2025-01-07', source: 'sns', keyword: '타운홀', rate: 0.28 },
       ],
-      topKeywords: ['홍길동', '타운홀', '청년정책', '출정식', '경제공약'],
+      topKeywords: ['유해남', '타운홀', '청년정책', '출정식', '경제공약'],
     });
   }),
 
@@ -397,20 +398,45 @@ export const handlers = [
   // ============================================
   // Alerts
   // ============================================
-  http.get(`${API_BASE}/alerts`, async () => {
+  http.get('/api/alerts', async () => {
     await delay(DELAY_MS);
-    const unread = alerts.filter((a) => !a.read).length;
+    const unreadCount = alerts.filter((a) => !a.read).length;
     return HttpResponse.json({
-      items: alerts,
-      unread,
+      alerts,
+      unreadCount,
     });
   }),
 
-  http.patch(`${API_BASE}/alerts/:id/read`, async ({ params }) => {
+  http.post('/api/alerts/:id/read', async ({ params }) => {
     await delay(DELAY_MS);
     return HttpResponse.json({
       id: params.id,
       read: true,
+    });
+  }),
+
+  // ============================================
+  // Activities (최근 활동)
+  // ============================================
+  http.get('/api/activities', async () => {
+    await delay(DELAY_MS);
+    return HttpResponse.json({
+      activities,
+    });
+  }),
+
+  http.post('/api/activities', async () => {
+    await delay(DELAY_MS);
+    return HttpResponse.json({
+      success: true,
+      activity: {
+        id: `act${Date.now()}`,
+        userName: '현재 사용자',
+        action: '활동 기록',
+        module: 'Dashboard',
+        target: '새 활동',
+        createdAt: new Date().toISOString(),
+      },
     });
   }),
 

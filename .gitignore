@@ -48,3 +48,12 @@ Thumbs.db
 
 # Claude Code
 .claude/
+
+/src/generated/prisma
+
+# Windows artifacts
+nul
+
+# Personal/temp files
+상반신.jpg
+public/ChatGPT*
