@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { AppHeader, Sidebar, AppFooter } from '@/components/layout';
 import { cn } from '@/lib/utils';
+import { useModuleMessages } from '@/hooks/useModuleMessages';
 
 export default function ModulesLayout({
   children,
@@ -11,6 +12,11 @@ export default function ModulesLayout({
 }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // iframe 모듈들로부터 메시지 수신 (활동/알림/KPI 자동 저장)
+  useModuleMessages({
+    onReady: (source) => console.log(`[Modules] ${source} module ready`),
+  });
 
   const handleMobileClose = useCallback(() => {
     setMobileOpen(false);

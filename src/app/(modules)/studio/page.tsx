@@ -155,7 +155,7 @@ function InfoCard({ title, desc }: { title: string; desc: string }) {
 }
 
 function Dashboard({ onBack }: { onBack: () => void }) {
-  const [prompt, setPrompt] = useState('창녕군 신년 시정 메시지 요약과 현장 일정 하이라이트');
+  const [prompt, setPrompt] = useState('사천시 신년 시정 메시지 요약과 현장 일정 하이라이트');
   const [autoMode, setAutoMode] = useState(true);
   const [connected, setConnected] = useState<Record<string, boolean>>({ youtube: true, naverBlog: true, kakao: true });
   const [queue, setQueue] = useState<QueueItem[]>([]);
@@ -173,7 +173,7 @@ function Dashboard({ onBack }: { onBack: () => void }) {
         body: `${prompt} — 핵심 3줄 요약, 현장 이미지를 포함한 블로그 글 초안입니다.`,
         thumb: PLACEHOLDER.image,
         status: 'draft',
-        hashtags: ['#창녕군', '#현장일정', '#캠프'],
+        hashtags: ['#사천시', '#현장일정', '#캠프'],
       },
       {
         id: uid(),
@@ -254,7 +254,7 @@ function Dashboard({ onBack }: { onBack: () => void }) {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               className="h-24 w-full resize-none rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="예) 창녕군 최근 30일 주요 이슈 간단 요약"
+              placeholder="예) 사천시 최근 30일 주요 이슈 간단 요약"
             />
             <div className="mt-3 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 text-xs text-slate-500">

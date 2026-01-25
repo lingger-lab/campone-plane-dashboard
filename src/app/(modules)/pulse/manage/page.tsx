@@ -27,7 +27,7 @@ const trendData = [
 ];
 
 const topKeywords = [
-  { keyword: '홍길동', count: 1250, change: 15 },
+  { keyword: '유해남', count: 1250, change: 15 },
   { keyword: '타운홀', count: 890, change: 28 },
   { keyword: '청년정책', count: 720, change: 12 },
   { keyword: '경제공약', count: 580, change: -5 },
