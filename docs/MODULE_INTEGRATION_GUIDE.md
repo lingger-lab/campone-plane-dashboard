@@ -1,482 +1,658 @@
-# CampOne Dashboard 모듈 연동 가이드 v2.0
+# CampOne Dashboard 모듈 통합 가이드 v3.0
 
-> 작성일: 2026-01-24
-> 대상: Insights, Policy, CivicHub 모듈 개발팀
-> 상태: **방식 변경 - 반드시 확인 필요**
-
----
-
-## 1. 변경 사항 요약
-
-### 기존 방식 (v1.0)
-- 모든 이벤트를 `postMessage`로 전송
-- **문제점**: iframe이 현재 페이지에 있을 때만 작동
-
-### 새로운 방식 (v2.0)
-- **클라이언트 이벤트** → postMessage (기존대로)
-- **서버/백그라운드 이벤트** → Dashboard API 직접 호출 (신규)
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  문제 상황                                                       │
-│                                                                  │
-│  1. 사용자가 Insights에서 AI 분석 시작                           │
-│  2. 사용자가 다른 페이지(Settings 등)로 이동                      │
-│  3. Insights iframe 언로드됨                                     │
-│  4. 분석 완료되어도 postMessage 전송 불가 ❌                      │
-│  5. 사용자는 분석 완료 알림을 못 받음 ❌                          │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│  해결 방법                                                       │
-│                                                                  │
-│  [모듈 서버] ──── API 호출 ────→ [Dashboard API]                │
-│                                         │                        │
-│                                         ▼                        │
-│                                   DB에 저장                      │
-│                                         │                        │
-│                                         ▼                        │
-│                              사용자가 어디에 있든                 │
-│                              헤더 알림 배지에 표시 ✅             │
-└─────────────────────────────────────────────────────────────────┘
-```
+> 작성일: 2026-01-25
+> 대상: 신규 모듈 개발팀 (Insights, Studio, Policy, Ops, Hub)
+> 목적: Dashboard에 임베드되는 모듈 개발을 위한 종합 가이드
 
 ---
 
-## 2. 이벤트 분류 기준
+## 목차
 
-### 2.1 postMessage 사용 (클라이언트 이벤트)
-
-**특징**: 사용자가 해당 모듈 페이지에서 직접 조작하는 경우
-
-| 모듈 | 이벤트 예시 |
-|------|------------|
-| Insights | 분석 시작 버튼 클릭, 보고서 다운로드 버튼 클릭 |
-| Policy | 프로필 저장 버튼 클릭, PDF 업로드 버튼 클릭 |
-| CivicHub | 질문 승인/반려 버튼 클릭, 문의 답변 버튼 클릭 |
-
-### 2.2 서버 API 호출 (백그라운드 이벤트)
-
-**특징**: 서버에서 처리 완료 후 발생하는 경우, 사용자가 다른 페이지에 있을 수 있음
-
-| 모듈 | 이벤트 예시 |
-|------|------------|
-| Insights | AI 분석 완료, 분석 실패, KPI 데이터 |
-| Policy | ME/FIELD/PLAN/DO 분석 완료, 분석 실패 |
-| CivicHub | 품질 검수 실패, 긴급 티켓 발생, KPI 데이터 |
+1. [시스템 아키텍처 개요](#1-시스템-아키텍처-개요)
+2. [임베드 인증 시스템](#2-임베드-인증-시스템)
+3. [테마 동기화](#3-테마-동기화)
+4. [postMessage 통신 프로토콜](#4-postmessage-통신-프로토콜)
+5. [Dashboard API 연동](#5-dashboard-api-연동)
+6. [신규 모듈 통합 체크리스트](#6-신규-모듈-통합-체크리스트)
+7. [환경 설정](#7-환경-설정)
+8. [테스트 및 디버깅](#8-테스트-및-디버깅)
+9. [FAQ](#9-faq)
 
 ---
 
-## 3. Dashboard API 인증
+## 1. 시스템 아키텍처 개요
 
-### 3.1 API 키
-
-```
-DASHBOARD_API_KEY=151ebde2377f280365b4c54cf7b37ca5b2eed5773489d049486e6342e49ce930
-```
-
-**보안 주의사항**:
-- 절대 클라이언트 코드에 포함하지 마세요
-- 환경변수로 관리하세요
-- Git에 커밋하지 마세요
-
-### 3.2 Base URL
+### 1.1 전체 구조
 
 ```
-# Production
-DASHBOARD_API_URL=https://campone-dashboard-755458598444.asia-northeast3.run.app
-
-# Local Development
-DASHBOARD_API_URL=http://localhost:3000
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         CampOne Dashboard                                │
+│                   (Next.js 14 + App Router)                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌──────────────────────────────────────────────────┐  │
+│  │   Header    │  │                 iframe 영역                       │  │
+│  │  (알림,유저) │  │                                                  │  │
+│  ├─────────────┤  │   ┌────────────────────────────────────────────┐ │  │
+│  │             │  │   │         외부 모듈 서비스                     │ │  │
+│  │   Sidebar   │  │   │   (Insights, Policy, Hub, Studio, Ops)     │ │  │
+│  │             │  │   │                                             │ │  │
+│  │  - 모듈 메뉴 │  │   │   URL: /embed?token=xxx&theme=light        │ │  │
+│  │  - 채널 링크 │  │   │                                             │ │  │
+│  │  - 설정 메뉴 │  │   │   ← postMessage →                          │ │  │
+│  │             │  │   └────────────────────────────────────────────┘ │  │
+│  └─────────────┘  └──────────────────────────────────────────────────┘  │
+├─────────────────────────────────────────────────────────────────────────┤
+│                              Footer                                      │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                    ┌───────────────┼───────────────┐
+                    │               │               │
+                    ▼               ▼               ▼
+              ┌─────────┐    ┌─────────┐    ┌─────────┐
+              │ Insights│    │ Policy  │    │   Hub   │
+              │ Backend │    │ Backend │    │ Backend │
+              └────┬────┘    └────┬────┘    └────┬────┘
+                   │              │              │
+                   └──────────────┼──────────────┘
+                                  │
+                                  ▼
+                    ┌─────────────────────────────┐
+                    │     Dashboard API            │
+                    │  /api/activities             │
+                    │  /api/alerts                 │
+                    │  /api/kpi                    │
+                    └─────────────────────────────┘
+                                  │
+                                  ▼
+                    ┌─────────────────────────────┐
+                    │      PostgreSQL (Prisma)     │
+                    │  - users, alerts, audit_logs │
+                    │  - kpi_cache, channel_links  │
+                    └─────────────────────────────┘
 ```
 
-### 3.3 인증 헤더
+### 1.2 기술 스택
+
+| 구분 | Dashboard | 권장 모듈 스택 |
+|------|-----------|--------------|
+| 프레임워크 | Next.js 14 (App Router) | 자유 (React, Vue, Svelte 등) |
+| 인증 | NextAuth.js (JWT) | JWT 검증 라이브러리 |
+| 상태관리 | Zustand + TanStack Query | 자유 |
+| UI | Tailwind CSS + Radix UI | Tailwind CSS 권장 (테마 호환) |
+| DB | PostgreSQL + Prisma | 자유 |
+
+### 1.3 현재 등록된 모듈
+
+| 모듈 | 경로 | 설명 | URL |
+|------|------|------|-----|
+| Insights (M1) | `/pulse` | 여론 분석 · 트렌드 모니터링 | campone-v2-backend-*.run.app |
+| Studio (M2) | `/studio` | 콘텐츠 제작 | (준비 중) |
+| Policy Lab (M3) | `/policy` | 정책 관리 · 공약 로드맵 | campone-policy-*.run.app |
+| Ops (M4) | `/ops` | 운영 관리 | (준비 중) |
+| Civic Hub (M5) | `/hub` | 시민 소통 · Q&A 관리 | campone-civic-hub-*.run.app |
+
+---
+
+## 2. 임베드 인증 시스템
+
+### 2.1 인증 흐름
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ 1. 사용자가 Dashboard에 로그인 (NextAuth.js)                          │
+│                                                                       │
+│ 2. 모듈 페이지 접근 시                                                 │
+│    Dashboard가 /api/auth/embed-token 호출                             │
+│    → JWT 토큰 발급 (1시간 유효)                                        │
+│                                                                       │
+│ 3. iframe src에 토큰 포함                                              │
+│    https://module-url/embed?token=xxx&theme=light                     │
+│                                                                       │
+│ 4. 모듈에서 토큰 검증                                                  │
+│    → userId, email, name, role 추출                                   │
+│                                                                       │
+│ 5. 토큰 자동 갱신 (50분마다)                                           │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### 2.2 JWT 토큰 구조
 
 ```typescript
+// JWT Payload
+interface EmbedTokenPayload {
+  userId: string;       // 사용자 ID (cuid)
+  email: string;        // 사용자 이메일
+  name: string;         // 사용자 이름
+  role: UserRole;       // 역할: "Admin" | "Manager" | "Staff" | "Viewer"
+  source: "dashboard";  // 발급처
+  iat: number;          // 발급 시각
+  exp: number;          // 만료 시각 (1시간 후)
+}
+
+// 역할별 권한
+type UserRole = "Admin" | "Manager" | "Staff" | "Viewer";
+```
+
+### 2.3 모듈에서 토큰 검증 (필수 구현)
+
+**Node.js/TypeScript:**
+```typescript
+import jwt from 'jsonwebtoken';
+
+const EMBED_JWT_SECRET = process.env.EMBED_JWT_SECRET;
+
+interface EmbedTokenPayload {
+  userId: string;
+  email: string;
+  name: string;
+  role: string;
+  source: string;
+}
+
+export function verifyEmbedToken(token: string): EmbedTokenPayload | null {
+  try {
+    const decoded = jwt.verify(token, EMBED_JWT_SECRET!) as EmbedTokenPayload;
+
+    if (decoded.source !== 'dashboard') {
+      console.error('Invalid token source');
+      return null;
+    }
+
+    return decoded;
+  } catch (error) {
+    console.error('Token verification failed:', error);
+    return null;
+  }
+}
+
+// /embed 엔드포인트 구현 예시
+app.get('/embed', (req, res) => {
+  const { token, theme } = req.query;
+
+  if (!token) {
+    return res.status(401).send('Token required');
+  }
+
+  const payload = verifyEmbedToken(token as string);
+  if (!payload) {
+    return res.status(401).send('Invalid token');
+  }
+
+  // 사용자 정보를 세션/컨텍스트에 저장
+  req.session.user = payload;
+  req.session.theme = theme || 'light';
+
+  // 앱 렌더링
+  res.render('app', { user: payload, theme });
+});
+```
+
+**Python (FastAPI):**
+```python
+import jwt
+from fastapi import Query, HTTPException
+from pydantic import BaseModel
+
+EMBED_JWT_SECRET = os.environ.get("EMBED_JWT_SECRET")
+
+class EmbedTokenPayload(BaseModel):
+    userId: str
+    email: str
+    name: str
+    role: str
+    source: str
+
+def verify_embed_token(token: str) -> EmbedTokenPayload:
+    try:
+        decoded = jwt.decode(token, EMBED_JWT_SECRET, algorithms=["HS256"])
+
+        if decoded.get("source") != "dashboard":
+            raise HTTPException(status_code=401, detail="Invalid token source")
+
+        return EmbedTokenPayload(**decoded)
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+@app.get("/embed")
+async def embed_page(
+    token: str = Query(..., description="JWT 토큰"),
+    theme: str = Query("light", description="테마")
+):
+    payload = verify_embed_token(token)
+
+    # 사용자 정보를 컨텍스트에 저장하고 앱 렌더링
+    return templates.TemplateResponse("app.html", {
+        "request": request,
+        "user": payload.dict(),
+        "theme": theme
+    })
+```
+
+### 2.4 공유 시크릿 설정
+
+**반드시 모듈과 Dashboard에서 동일한 시크릿 사용:**
+
+```bash
+# 모듈 서버 환경변수
+EMBED_JWT_SECRET=<Dashboard와 동일한 값>
+```
+
+> **주의**: 시크릿은 Cloud Run Secret Manager에서 관리됩니다.
+> 신규 모듈 배포 시 시크릿 공유가 필요합니다.
+
+---
+
+## 3. 테마 동기화
+
+### 3.1 테마 전달 방식
+
+Dashboard는 두 가지 방법으로 테마를 전달합니다:
+
+1. **URL 파라미터 (초기 로드 시)**
+   ```
+   /embed?token=xxx&theme=light   // 또는 theme=dark
+   ```
+
+2. **postMessage (런타임 변경 시)**
+   ```typescript
+   // Dashboard → 모듈
+   {
+     type: 'THEME_CHANGE',
+     source: 'Dashboard',
+     timestamp: 1706234567890,
+     payload: { theme: 'dark' }
+   }
+   ```
+
+### 3.2 모듈에서 테마 처리 (필수 구현)
+
+**React 예시:**
+```typescript
+// hooks/useThemeSync.ts
+import { useEffect, useState } from 'react';
+
+type Theme = 'light' | 'dark';
+
+export function useThemeSync(initialTheme: Theme = 'light') {
+  const [theme, setTheme] = useState<Theme>(initialTheme);
+
+  useEffect(() => {
+    // URL에서 초기 테마 읽기
+    const params = new URLSearchParams(window.location.search);
+    const urlTheme = params.get('theme') as Theme | null;
+    if (urlTheme) {
+      setTheme(urlTheme);
+    }
+
+    // postMessage 리스너
+    const handleMessage = (event: MessageEvent) => {
+      // Dashboard origin 확인
+      if (event.data?.type === 'THEME_CHANGE' && event.data?.source === 'Dashboard') {
+        const newTheme = event.data.payload?.theme as Theme;
+        if (newTheme) {
+          setTheme(newTheme);
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  // 테마 적용
+  useEffect(() => {
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(theme);
+  }, [theme]);
+
+  return theme;
+}
+```
+
+### 3.3 Tailwind CSS 테마 호환
+
+Dashboard와 동일한 CSS 변수를 사용하면 테마가 자동 호환됩니다:
+
+```css
+/* globals.css */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+  }
+}
+```
+
+---
+
+## 4. postMessage 통신 프로토콜
+
+### 4.1 메시지 타입
+
+**모듈 → Dashboard:**
+| 타입 | 용도 | 언제 사용 |
+|------|------|----------|
+| `READY` | 모듈 로드 완료 알림 | 앱 초기화 완료 시 |
+| `ACTIVITY` | 사용자 활동 기록 | 버튼 클릭, 작업 수행 시 |
+| `ALERT` | 알림 생성 | 주요 이벤트 발생 시 |
+| `KPI_UPDATE` | KPI 데이터 갱신 | 데이터 변경 시 |
+| `ERROR` | 에러 보고 | 오류 발생 시 |
+| `NAVIGATION` | 페이지 이동 요청 | (예약됨) |
+
+**Dashboard → 모듈:**
+| 타입 | 용도 |
+|------|------|
+| `THEME_CHANGE` | 테마 변경 알림 |
+
+### 4.2 메시지 형식
+
+```typescript
+// 모듈 → Dashboard 메시지
+interface ModuleMessage {
+  type: 'ACTIVITY' | 'ALERT' | 'KPI_UPDATE' | 'NAVIGATION' | 'ERROR' | 'READY';
+  source: 'Insights' | 'Studio' | 'Policy' | 'Ops' | 'Hub';  // 모듈 이름
+  timestamp: number;  // Date.now()
+  payload: object;    // 타입별 페이로드
+}
+
+// Dashboard → 모듈 메시지
+interface DashboardMessage {
+  type: 'THEME_CHANGE';
+  source: 'Dashboard';
+  timestamp: number;
+  payload: { theme: 'light' | 'dark' };
+}
+```
+
+### 4.3 페이로드 상세
+
+#### READY
+```typescript
+{
+  type: 'READY',
+  source: 'Policy',
+  timestamp: Date.now(),
+  payload: {
+    version: '1.0.0'  // 선택
+  }
+}
+```
+
+#### ACTIVITY
+```typescript
+{
+  type: 'ACTIVITY',
+  source: 'Policy',
+  timestamp: Date.now(),
+  payload: {
+    action: '공약 수정',           // 필수: 수행한 작업
+    target: '청년 일자리 공약',     // 선택: 대상
+    details: { pledgeId: 'abc' }   // 선택: 추가 정보
+  }
+}
+```
+
+#### ALERT
+```typescript
+{
+  type: 'ALERT',
+  source: 'Insights',
+  timestamp: Date.now(),
+  payload: {
+    severity: 'warning',           // 필수: info, warning, error, success
+    title: '여론 급증 감지',        // 필수: 제목
+    message: 'SNS 멘션이 30% 증가', // 필수: 내용
+    pinned: false,                 // 선택: 상단 고정
+    expiresInMinutes: 60           // 선택: 만료 시간(분)
+  }
+}
+```
+
+#### KPI_UPDATE
+```typescript
+{
+  type: 'KPI_UPDATE',
+  source: 'Hub',
+  timestamp: Date.now(),
+  payload: {
+    key: 'pending_questions',      // 필수: KPI 키
+    value: 42,                     // 필수: 값
+    unit: '건',                    // 선택: 단위
+    change: -5.2                   // 선택: 변화율 (%)
+  }
+}
+```
+
+### 4.4 모듈에서 메시지 전송 (헬퍼 함수)
+
+```typescript
+// lib/dashboard-bridge.ts
+
+type ModuleName = 'Insights' | 'Studio' | 'Policy' | 'Ops' | 'Hub';
+type AlertSeverity = 'info' | 'warning' | 'error' | 'success';
+
+// 모듈 이름 설정 (앱 초기화 시 설정)
+const MODULE_NAME: ModuleName = 'Policy';
+
+function isInIframe(): boolean {
+  return typeof window !== 'undefined' && window.parent !== window;
+}
+
+function sendToDashboard(type: string, payload: object): void {
+  if (!isInIframe()) {
+    console.warn('[Module] Not in iframe context');
+    return;
+  }
+
+  const message = {
+    type,
+    source: MODULE_NAME,
+    timestamp: Date.now(),
+    payload,
+  };
+
+  window.parent.postMessage(message, '*');
+  console.log(`[${MODULE_NAME}] Sent:`, message);
+}
+
+// 모듈 로드 완료 알림
+export function notifyReady(version?: string): void {
+  sendToDashboard('READY', { version });
+}
+
+// 활동 기록
+export function logActivity(action: string, target?: string, details?: object): void {
+  sendToDashboard('ACTIVITY', { action, target, details });
+}
+
+// 알림 생성
+export function sendAlert(
+  severity: AlertSeverity,
+  title: string,
+  message: string,
+  options?: { pinned?: boolean; expiresInMinutes?: number }
+): void {
+  sendToDashboard('ALERT', {
+    severity,
+    title,
+    message,
+    ...options,
+  });
+}
+
+// KPI 업데이트
+export function updateKpi(
+  key: string,
+  value: number | string,
+  unit?: string,
+  change?: number
+): void {
+  sendToDashboard('KPI_UPDATE', { key, value, unit, change });
+}
+
+// 에러 보고
+export function reportError(code: string, message: string, stack?: string): void {
+  sendToDashboard('ERROR', { code, message, stack });
+}
+```
+
+### 4.5 사용 예시
+
+```typescript
+// 앱 초기화 시
+useEffect(() => {
+  notifyReady('1.2.0');
+}, []);
+
+// 사용자 작업 시
+const handleSave = async () => {
+  await savePledge(data);
+  logActivity('공약 저장', pledgeName, { pledgeId });
+};
+
+// 중요 이벤트 시
+if (analysisComplete) {
+  sendAlert('success', '분석 완료', '여론 분석이 완료되었습니다.');
+}
+
+// 에러 발생 시
+try {
+  await riskyOperation();
+} catch (error) {
+  reportError('ANALYSIS_FAILED', error.message, error.stack);
+}
+```
+
+---
+
+## 5. Dashboard API 연동
+
+### 5.1 왜 API 호출이 필요한가?
+
+postMessage는 iframe이 현재 페이지에 있을 때만 작동합니다.
+서버에서 발생하는 백그라운드 이벤트(AI 분석 완료 등)는 사용자가 다른 페이지에 있을 수 있으므로 **서버 → Dashboard API** 직접 호출이 필요합니다.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  클라이언트 이벤트 (postMessage)  │  서버 이벤트 (API 호출)      │
+├─────────────────────────────────────────────────────────────────┤
+│  버튼 클릭                        │  AI 분석 완료                 │
+│  문서 저장                        │  백그라운드 작업 완료          │
+│  설정 변경                        │  스케줄된 알림                 │
+│  → 사용자가 모듈 페이지에 있음     │  → 사용자 위치 알 수 없음      │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 5.2 API 인증
+
+```typescript
+// 모든 API 요청에 포함
 const headers = {
   'Content-Type': 'application/json',
   'X-Service-Key': process.env.DASHBOARD_API_KEY
 };
 ```
 
----
+### 5.3 Activity API
 
-## 4. API 엔드포인트 상세
+**엔드포인트:** `POST /api/activities`
 
-### 4.1 Activity API (활동 기록)
-
-**용도**: 사용자 활동 로그 저장 (최근 활동 목록에 표시)
-
-```
-POST /api/activities
-```
-
-**Request Body**:
+**Request:**
 ```typescript
 {
-  action: string;       // 필수. 활동 동작 (아래 표준 값 참고!)
-  module: string;       // 필수. 모듈명 ("Insights" | "Policy" | "Hub")
-  target: string;       // 필수. 대상 (깔끔한 텍스트, ID 금지!)
-  details?: object;     // 선택. 추가 정보 (ID, 상태 등 상세 정보는 여기에)
-  userId?: string;      // 선택. 사용자 ID (없으면 "system")
-  userName?: string;    // 선택. 사용자 이름 (없으면 "System")
+  action: string;       // 필수. 활동 동작
+  module: string;       // 필수. 모듈명 ("Insights" | "Policy" | "Hub" 등)
+  target: string;       // 필수. 대상 (깔끔한 텍스트)
+  details?: object;     // 선택. 추가 정보 (ID 등)
+  userId?: string;      // 선택. 사용자 ID
+  userName?: string;    // 선택. 사용자 이름
 }
 ```
 
-#### ⚠️ 중요: action 필드 표준 값 (배지 색상 매핑됨)
+**action 키워드 → 배지 색상 매핑:**
+| 키워드 | 색상 |
+|--------|------|
+| `실패`, `fail`, `error`, `오류` | 빨강 |
+| `반려`, `거절`, `reject` | 빨강 |
+| `생성`, `create`, `추가`, `등록`, `upload` | 초록 |
+| `수정`, `update`, `변경`, `편집` | 파랑 |
+| `삭제`, `delete`, `제거` | 빨강 |
+| `승인`, `approve`, `완료` | 노랑 |
+| `조회`, `download` | 회색 |
 
-| 액션 | 키워드 (포함되면 매칭) | 배지 색상 |
-|------|----------------------|----------|
-| 실패 | `실패`, `fail`, `error`, `오류` | 🔴 빨강 |
-| 반려 | `반려`, `거절`, `reject`, `거부` | 🔴 빨강 |
-| 생성 | `생성`, `create`, `추가`, `등록`, `접수`, `신규`, `발생`, `업로드`, `upload` | 🟢 초록 |
-| 수정 | `수정`, `update`, `변경`, `편집`, `갱신`, `답변`, `reply`, `response` | 🔵 파랑 |
-| 삭제 | `삭제`, `delete`, `제거`, `취소` | 🔴 빨강 |
-| 발송 | `발송`, `send`, `전송`, `발행` | ⚫ 기본 |
-| 완료 | `승인`, `approve`, `완료`, `처리` | 🟡 노랑 |
-| 조회 | `조회`, `검색`, `read`, `다운로드`, `download` | ⚪ 회색 |
+### 5.4 Alert API
 
-**⚠️ 우선순위**: 실패/반려 > 생성 > 수정 > 삭제 > 발송 > 완료 > 조회
+**엔드포인트:** `POST /api/alerts`
 
-**권장 사용법**:
-```typescript
-// ✅ 간단한 영문 동작 키워드 사용 (권장)
-action: "create"    // → 🟢 생성
-action: "update"    // → 🔵 수정
-action: "delete"    // → 🔴 삭제
-action: "approve"   // → 🟡 완료
-action: "fail"      // → 🔴 실패
-
-// ✅ 또는 한글 키워드 포함
-action: "문의 접수"       // "접수" 포함 → 🟢 생성
-action: "상태 변경"       // "변경" 포함 → 🔵 수정
-action: "분석 완료"       // "완료" 포함 → 🟡 완료
-action: "분석 실패"       // "실패" 포함 → 🔴 실패
-action: "질문 반려"       // "반려" 포함 → 🔴 반려
-action: "티켓 발생"       // "발생" 포함 → 🟢 생성
-action: "문서 업로드"     // "업로드" 포함 → 🟢 생성
-```
-
-#### ⚠️ 중요: target 필드 작성 규칙
-
-**target 필드는 사용자에게 그대로 표시됩니다. 깔끔하게 작성하세요!**
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  ❌ 잘못된 예시 (ID, 코드 포함)                                   │
-├─────────────────────────────────────────────────────────────────┤
-│  "문의 #ykd07m 취재/인터뷰 요청이(가) 접수되었습니다."            │
-│  "분석 작업 ID:85가 완료됨"                                       │
-│  "ticket_abc123 상태 변경"                                        │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│  ✅ 올바른 예시 (깔끔한 텍스트만)                                 │
-├─────────────────────────────────────────────────────────────────┤
-│  "문의: 취재/인터뷰 요청"                                         │
-│  "여론 분석: 김철수 외 2명"                                       │
-│  "티켓: 로그인 오류 문의"                                         │
-│  "세그먼트: 서울 지지자"                                          │
-│  "캠페인: 공약 안내"                                              │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-**ID, 상태코드 등 기술적 정보는 details 필드에 넣으세요:**
-
-```typescript
-// ❌ 잘못된 방식
-{
-  action: "문의 상태 변경",
-  module: "Hub",
-  target: "문의 #ykd07m 취재/인터뷰 요청이(가) 접수되었습니다. (문의 #o7f12c)"
-}
-
-// ✅ 올바른 방식
-{
-  action: "update",                    // 간단한 동작 키워드
-  module: "Hub",
-  target: "문의: 취재/인터뷰 요청",    // 깔끔한 표시 텍스트
-  details: {                           // 상세 정보는 여기에
-    inquiryId: "ykd07m",
-    status: "접수",
-    type: "취재/인터뷰"
-  }
-}
-```
-
-**Response**:
+**Request:**
 ```typescript
 {
-  success: true,
-  activity: {
-    id: string;
-    action: string;
-    module: string;
-    target: string;
-    createdAt: string;
-  }
+  type?: 'system' | 'workflow';  // 기본: system
+  severity: 'info' | 'warning' | 'error' | 'success';
+  title: string;
+  message: string;
+  source?: string;               // 모듈명
+  pinned?: boolean;              // 상단 고정
+  expiresAt?: string;            // ISO 8601 형식
+  targetUserIds?: string[];      // 특정 사용자만 (없으면 전체)
 }
 ```
 
-**예시 - Insights 분석 완료**:
-```typescript
-await fetch(`${DASHBOARD_API_URL}/api/activities`, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'X-Service-Key': process.env.DASHBOARD_API_KEY
-  },
-  body: JSON.stringify({
-    action: 'AI 분석 완료',
-    module: 'Insights',
-    target: '김철수, 이영희, 박민수',
-    details: {
-      analysisId: 85,
-      duration: '5분 32초'
-    },
-    userName: 'Insights System'
-  })
-});
-```
+### 5.5 KPI API
 
----
+**엔드포인트:** `POST /api/kpi`
 
-### 4.2 Alert API (알림)
-
-**용도**: 알림 생성 (헤더 알림 배지 + 알림 센터에 표시)
-
-```
-POST /api/alerts
-```
-
-**Request Body**:
+**Request:**
 ```typescript
 {
-  type?: string;              // 선택. "system" | "workflow" (기본: "system")
-  severity: string;           // 필수. "info" | "warning" | "error" | "success"
-  title: string;              // 필수. 알림 제목
-  message: string;            // 필수. 알림 내용
-  source?: string;            // 선택. 출처 모듈명 ("Insights" | "Policy" | "Hub")
-  pinned?: boolean;           // 선택. 상단 고정 여부 (기본: false)
-  expiresAt?: string;         // 선택. 만료 시간 (ISO 8601 형식)
-  targetUserIds?: string[];   // 선택. 특정 사용자에게만 알림 (없으면 전체)
+  module: string;               // 모듈명
+  key: string;                  // KPI 식별자
+  value: number | string;       // 값
+  unit?: string;                // 단위 (예: "점", "%", "건")
+  change?: number;              // 변화율 (%)
+  expiresInMinutes?: number;    // 만료 시간 (분, 기본: 60)
 }
 ```
 
-**Response**:
-```typescript
-{
-  success: true,
-  alert: {
-    id: string;
-    title: string;
-    severity: string;
-    createdAt: string;
-  },
-  notifiedUsers: number  // 알림 받은 사용자 수
-}
-```
-
-**Severity 가이드**:
-| severity | 용도 | UI 색상 |
-|----------|------|--------|
-| `info` | 일반 정보 | 파랑 |
-| `success` | 성공/완료 | 초록 |
-| `warning` | 주의/확인 필요 | 주황 |
-| `error` | 오류/실패 | 빨강 |
-
-**예시 - Insights 분석 완료 알림**:
-```typescript
-await fetch(`${DASHBOARD_API_URL}/api/alerts`, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'X-Service-Key': process.env.DASHBOARD_API_KEY
-  },
-  body: JSON.stringify({
-    type: 'workflow',
-    severity: 'success',
-    title: 'AI 분석 완료',
-    message: '김철수 외 2명에 대한 여론 분석이 완료되었습니다. 결과를 확인하세요.',
-    source: 'Insights',
-    pinned: false
-  })
-});
-```
-
-**예시 - CivicHub 긴급 티켓 알림**:
-```typescript
-await fetch(`${DASHBOARD_API_URL}/api/alerts`, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'X-Service-Key': process.env.DASHBOARD_API_KEY
-  },
-  body: JSON.stringify({
-    type: 'workflow',
-    severity: 'error',
-    title: '긴급 티켓 발생',
-    message: 'L1 긴급 티켓이 접수되었습니다. 즉시 확인이 필요합니다.',
-    source: 'Hub',
-    pinned: true  // 긴급이므로 상단 고정
-  })
-});
-```
-
----
-
-### 4.3 KPI API (지표 데이터)
-
-**용도**: KPI 데이터 저장/업데이트 (대시보드 KPI 카드에 표시)
-
-```
-POST /api/kpi
-```
-
-**Request Body**:
-```typescript
-{
-  module: string;           // 필수. 모듈명 ("Insights" | "Policy" | "Hub")
-  key: string;              // 필수. KPI 식별자 (예: "recognition_score")
-  value: number | string;   // 필수. 값
-  unit?: string;            // 선택. 단위 (예: "점", "%", "건")
-  change?: number;          // 선택. 변화율 (예: 5.2 → +5.2%)
-  expiresInMinutes?: number; // 선택. 만료 시간 (분, 기본: 60)
-}
-```
-
-**Response**:
-```typescript
-{
-  success: true,
-  kpi: {
-    module: string;
-    key: string;
-    value: object;
-    expiresAt: string;
-    updatedAt: string;
-  }
-}
-```
-
-**예시 - Insights KPI 전송**:
-```typescript
-// 여러 KPI를 한 번에 전송하는 헬퍼 함수
-async function sendKpis(kpis: Array<{key: string, value: number, unit: string}>) {
-  const promises = kpis.map(kpi =>
-    fetch(`${DASHBOARD_API_URL}/api/kpi`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Service-Key': process.env.DASHBOARD_API_KEY
-      },
-      body: JSON.stringify({
-        module: 'Insights',
-        key: kpi.key,
-        value: kpi.value,
-        unit: kpi.unit,
-        expiresInMinutes: 120
-      })
-    })
-  );
-
-  await Promise.all(promises);
-}
-
-// 사용 예시
-await sendKpis([
-  { key: 'recognition_score', value: 3.8, unit: '점' },
-  { key: 'support_score', value: 4.2, unit: '점' },
-  { key: 'positive_ratio', value: 65.4, unit: '%' },
-  { key: 'negative_ratio', value: 12.3, unit: '%' },
-  { key: 'mention_count', value: 1520, unit: '건' },
-]);
-```
-
----
-
-## 5. 모듈별 구현 가이드
-
-### 5.1 Insights (여론분석)
-
-**서버에서 호출해야 하는 이벤트**:
-
-| 이벤트 | API | 타이밍 |
-|--------|-----|-------|
-| 분석 완료 | Activity + Alert(success) + KPI(12개) | 분석 파이프라인 완료 시 |
-| 분석 실패 | Activity + Alert(error) | 분석 중 에러 발생 시 |
-
-**클라이언트 postMessage 유지**:
-- 분석 시작 버튼 클릭
-- 보고서 다운로드 버튼 클릭
-- READY 알림
-
-**구현 위치 제안**:
-```
-# 백엔드 (FastAPI 등)
-backend/app/services/analysis_service.py
-  → 분석 완료/실패 시 Dashboard API 호출
-
-# 프론트엔드 (기존 유지)
-frontend/src/lib/dashboard-bridge.ts
-  → postMessage 함수들 유지
-```
-
----
-
-### 5.2 Policy (전략 분석)
-
-**서버에서 호출해야 하는 이벤트**:
-
-| 이벤트 | API | 타이밍 |
-|--------|-----|-------|
-| ME 분석 완료 | Activity + KPI | ME 분석 API 완료 시 |
-| FIELD 분석 완료 | Activity + KPI | FIELD 분석 API 완료 시 |
-| PLAN 분석 완료 | Activity + KPI | PLAN 분석 API 완료 시 |
-| DO 분석 완료 | Activity + KPI + Alert(success) | DO 분석 API 완료 시 (전체 완료) |
-| 분석 실패 | Alert(error) | 각 단계 실패 시 |
-
-**클라이언트 postMessage 유지**:
-- 프로필 저장 버튼 클릭
-- PDF 업로드 버튼 클릭
-- 보고서 다운로드 버튼 클릭
-- READY 알림
-
----
-
-### 5.3 CivicHub (시민 소통)
-
-**서버에서 호출해야 하는 이벤트**:
-
-| 이벤트 | API | 타이밍 |
-|--------|-----|-------|
-| 품질 검수 실패 | Alert(warning) | 자동 검수에서 품질 미달 시 |
-| 긴급 티켓 발생 | Alert(error, pinned) | L1 티켓 생성 시 |
-| 중요 문의 접수 | Alert(info) | 취재/인터뷰 문의 접수 시 |
-| KPI 갱신 | KPI | 주기적 또는 변경 시 |
-
-**클라이언트 postMessage 유지**:
-- 질문 승인/반려 버튼 클릭
-- 문의 답변/상태변경 버튼 클릭
-- 티켓 완료 처리 버튼 클릭
-- 문서 업로드/삭제 버튼 클릭
-- READY 알림
-
-**KPI 목록**:
-| key | 설명 | unit |
-|-----|------|------|
-| `questions_today` | 오늘 질문 수 | 건 |
-| `total_questions` | 누적 질문 수 | 건 |
-| `pending_review` | 승인 대기 질문 | 건 |
-| `quality_pass_rate` | 품질 통과율 | % |
-| `pending_inquiries` | 대기 중 문의 | 건 |
-| `open_tickets` | 열린 티켓 | 건 |
-
----
-
-## 6. 헬퍼 함수 예시 (Node.js/TypeScript)
-
-각 모듈 서버에서 사용할 수 있는 헬퍼 함수:
+### 5.6 헬퍼 함수 (서버용)
 
 ```typescript
 // lib/dashboard-api.ts
@@ -484,88 +660,84 @@ frontend/src/lib/dashboard-bridge.ts
 const DASHBOARD_API_URL = process.env.DASHBOARD_API_URL;
 const DASHBOARD_API_KEY = process.env.DASHBOARD_API_KEY;
 
-interface ActivityParams {
-  action: string;
-  module: string;
-  target?: string;
-  details?: Record<string, unknown>;
-  userName?: string;
-}
+async function callDashboardApi(endpoint: string, body: object): Promise<void> {
+  try {
+    const response = await fetch(`${DASHBOARD_API_URL}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Service-Key': DASHBOARD_API_KEY!,
+      },
+      body: JSON.stringify(body),
+    });
 
-interface AlertParams {
-  severity: 'info' | 'warning' | 'error' | 'success';
-  title: string;
-  message: string;
-  source: string;
-  pinned?: boolean;
-  expiresAt?: string;
-}
-
-interface KpiParams {
-  module: string;
-  key: string;
-  value: number | string;
-  unit?: string;
-  change?: number;
-  expiresInMinutes?: number;
-}
-
-async function callDashboardApi(endpoint: string, body: object): Promise<Response> {
-  const response = await fetch(`${DASHBOARD_API_URL}${endpoint}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Service-Key': DASHBOARD_API_KEY!,
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    console.error(`Dashboard API error: ${response.status} ${response.statusText}`);
+    if (!response.ok) {
+      console.error(`Dashboard API error: ${response.status}`);
+    }
+  } catch (error) {
+    // Dashboard 알림은 부가 기능이므로 에러 로깅만
+    console.error('Dashboard API call failed:', error);
   }
-
-  return response;
 }
 
-// 활동 기록
-export async function logActivity(params: ActivityParams): Promise<void> {
+export async function logActivity(
+  action: string,
+  module: string,
+  target: string,
+  details?: object
+): Promise<void> {
   await callDashboardApi('/api/activities', {
-    ...params,
-    userName: params.userName || `${params.module} System`,
+    action,
+    module,
+    target,
+    details,
+    userName: `${module} System`,
   });
 }
 
-// 알림 전송
-export async function sendAlert(params: AlertParams): Promise<void> {
+export async function sendAlert(
+  severity: string,
+  title: string,
+  message: string,
+  source: string,
+  pinned = false
+): Promise<void> {
   await callDashboardApi('/api/alerts', {
     type: 'workflow',
-    ...params,
+    severity,
+    title,
+    message,
+    source,
+    pinned,
   });
 }
 
-// KPI 전송
-export async function sendKpi(params: KpiParams): Promise<void> {
+export async function sendKpi(
+  module: string,
+  key: string,
+  value: number | string,
+  unit?: string,
+  change?: number
+): Promise<void> {
   await callDashboardApi('/api/kpi', {
-    ...params,
-    expiresInMinutes: params.expiresInMinutes || 120,
+    module,
+    key,
+    value,
+    unit,
+    change,
+    expiresInMinutes: 120,
   });
-}
-
-// 여러 KPI 한 번에 전송
-export async function sendKpis(module: string, kpis: Array<Omit<KpiParams, 'module'>>): Promise<void> {
-  await Promise.all(
-    kpis.map(kpi => sendKpi({ ...kpi, module }))
-  );
 }
 ```
 
-**Python (FastAPI) 예시**:
+**Python (FastAPI) 헬퍼:**
+
 ```python
 # lib/dashboard_api.py
 
 import os
 import httpx
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 
 DASHBOARD_API_URL = os.environ.get("DASHBOARD_API_URL")
 DASHBOARD_API_KEY = os.environ.get("DASHBOARD_API_KEY")
@@ -587,7 +759,7 @@ async def call_dashboard_api(endpoint: str, body: dict) -> dict:
 async def log_activity(
     action: str,
     module: str,
-    target: Optional[str] = None,
+    target: str,
     details: Optional[Dict[str, Any]] = None,
     user_name: Optional[str] = None
 ):
@@ -600,7 +772,7 @@ async def log_activity(
     })
 
 async def send_alert(
-    severity: str,  # "info" | "warning" | "error" | "success"
+    severity: str,
     title: str,
     message: str,
     source: str,
@@ -620,8 +792,7 @@ async def send_kpi(
     key: str,
     value: float | int | str,
     unit: Optional[str] = None,
-    change: Optional[float] = None,
-    expires_in_minutes: int = 120
+    change: Optional[float] = None
 ):
     await call_dashboard_api("/api/kpi", {
         "module": module,
@@ -629,33 +800,163 @@ async def send_kpi(
         "value": value,
         "unit": unit,
         "change": change,
-        "expiresInMinutes": expires_in_minutes,
+        "expiresInMinutes": 120,
     })
 ```
 
 ---
 
-## 7. 환경변수 설정
+## 6. 신규 모듈 통합 체크리스트
 
-각 모듈 서버에 다음 환경변수 추가:
+### 6.1 Dashboard팀에게 요청할 것
+
+| 항목 | 설명 | 필수 |
+|------|------|:----:|
+| 사이드바 등록 | 모듈 메뉴 추가 (아이콘, 라벨, 경로) | O |
+| 모듈 페이지 생성 | `/app/(modules)/[name]/page.tsx` | O |
+| Origin 허용 | `module-protocol.ts`에 URL 추가 | O |
+| EMBED_JWT_SECRET 공유 | Secret Manager에서 값 공유 | O |
+| DASHBOARD_API_KEY 발급 | 서버 간 통신용 API 키 | O |
+| 모듈 타입 등록 | `types.ts`의 ModuleName에 추가 | - |
+
+**Dashboard팀에게 전달할 정보:**
+```yaml
+모듈 정보:
+  이름: "NewModule"
+  표시명: "새 모듈"
+  설명: "새 모듈 설명"
+  경로: "/new-module"
+  아이콘: "lucide-react 아이콘 이름"
+  배지: "M6" (또는 빈 문자열)
+
+서비스 URL:
+  프로덕션: https://campone-new-module-xxx.asia-northeast3.run.app
+  개발: http://localhost:3006
+```
+
+### 6.2 모듈에서 구현할 것
+
+| 항목 | 설명 | 필수 |
+|------|------|:----:|
+| `/embed` 엔드포인트 | 토큰 검증 + 앱 렌더링 | O |
+| JWT 토큰 검증 | EMBED_JWT_SECRET 사용 | O |
+| 테마 동기화 | URL + postMessage 처리 | O |
+| READY 알림 | 앱 로드 완료 시 postMessage | O |
+| CORS 설정 | Dashboard origin 허용 | O |
+| ACTIVITY 전송 | 사용자 활동 기록 | 권장 |
+| ALERT 전송 | 주요 이벤트 알림 | 권장 |
+| KPI 전송 | 지표 데이터 갱신 | - |
+| 서버 API 호출 | 백그라운드 이벤트 처리 | 권장 |
+
+### 6.3 통합 테스트 체크리스트
+
+- [ ] `/embed?token=xxx&theme=light` 접근 시 정상 렌더링
+- [ ] 토큰 없이 접근 시 401 에러
+- [ ] 만료된 토큰으로 접근 시 401 에러
+- [ ] Dashboard에서 iframe 로드 정상 확인
+- [ ] READY 메시지 수신 확인 (브라우저 콘솔)
+- [ ] 테마 변경 시 모듈에 반영 확인
+- [ ] Activity 전송 후 Dashboard 최근활동에 표시 확인
+- [ ] Alert 전송 후 Dashboard 헤더 알림에 표시 확인
+- [ ] 서버 API 호출 후 DB 저장 확인
+
+---
+
+## 7. 환경 설정
+
+### 7.1 모듈 서버 환경변수
 
 ```bash
 # .env 또는 Cloud Run 환경변수
+
+# 임베드 인증 (필수)
+EMBED_JWT_SECRET=<Dashboard와 동일한 값>
+
+# Dashboard API 호출 (서버 이벤트용)
 DASHBOARD_API_URL=https://campone-dashboard-755458598444.asia-northeast3.run.app
-DASHBOARD_API_KEY=151ebde2377f280365b4c54cf7b37ca5b2eed5773489d049486e6342e49ce930
+DASHBOARD_API_KEY=<발급받은 API 키>
+
+# 로컬 개발
+# DASHBOARD_API_URL=http://localhost:3000
+```
+
+### 7.2 Cloud Run 배포 시
+
+```bash
+# Secret Manager 시크릿 연결
+gcloud run deploy my-module \
+  --image gcr.io/PROJECT/my-module \
+  --set-secrets=EMBED_JWT_SECRET=campone-embed-jwt-secret:latest \
+  --set-secrets=DASHBOARD_API_KEY=campone-dashboard-api-key:latest \
+  --set-env-vars=DASHBOARD_API_URL=https://campone-dashboard-xxx.run.app
+```
+
+### 7.3 CORS 설정
+
+모듈 서버에서 Dashboard origin 허용:
+
+```typescript
+// Next.js API Route
+export async function GET(request: NextRequest) {
+  const response = NextResponse.json({ data });
+
+  response.headers.set('Access-Control-Allow-Origin', 'https://campone-dashboard-xxx.run.app');
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  return response;
+}
+
+// Express.js
+app.use(cors({
+  origin: [
+    'https://campone-dashboard-755458598444.asia-northeast3.run.app',
+    'http://localhost:3000',  // 로컬 개발
+  ],
+  credentials: true,
+}));
 ```
 
 ---
 
-## 8. 테스트 방법
+## 8. 테스트 및 디버깅
 
-### 8.1 API 직접 테스트 (curl)
+### 8.1 로컬 개발 환경
+
+1. **Dashboard 로컬 실행:**
+   ```bash
+   cd campone-dashboard
+   npm run dev  # http://localhost:3000
+   ```
+
+2. **모듈 로컬 실행:**
+   ```bash
+   cd my-module
+   npm run dev  # http://localhost:3001
+   ```
+
+3. **모듈 URL 임시 변경:**
+   Dashboard의 모듈 페이지에서 URL 상수를 localhost로 변경
+
+### 8.2 브라우저 콘솔 디버깅
+
+```javascript
+// Dashboard 콘솔에서 확인
+// [Dashboard] Module Policy is ready
+// [Dashboard] Received from Policy: {...}
+
+// 모듈 콘솔에서 확인
+// [Policy] Sent: {type: 'READY', ...}
+// [Policy] Sent: {type: 'ACTIVITY', ...}
+```
+
+### 8.3 API 테스트 (curl)
 
 ```bash
 # Activity 테스트
-curl -X POST https://campone-dashboard-755458598444.asia-northeast3.run.app/api/activities \
+curl -X POST https://campone-dashboard-xxx.run.app/api/activities \
   -H "Content-Type: application/json" \
-  -H "X-Service-Key: 151ebde2377f280365b4c54cf7b37ca5b2eed5773489d049486e6342e49ce930" \
+  -H "X-Service-Key: YOUR_API_KEY" \
   -d '{
     "action": "테스트 활동",
     "module": "Test",
@@ -663,62 +964,58 @@ curl -X POST https://campone-dashboard-755458598444.asia-northeast3.run.app/api/
   }'
 
 # Alert 테스트
-curl -X POST https://campone-dashboard-755458598444.asia-northeast3.run.app/api/alerts \
+curl -X POST https://campone-dashboard-xxx.run.app/api/alerts \
   -H "Content-Type: application/json" \
-  -H "X-Service-Key: 151ebde2377f280365b4c54cf7b37ca5b2eed5773489d049486e6342e49ce930" \
+  -H "X-Service-Key: YOUR_API_KEY" \
   -d '{
     "severity": "info",
     "title": "테스트 알림",
-    "message": "이것은 테스트 알림입니다.",
+    "message": "테스트 메시지",
     "source": "Test"
-  }'
-
-# KPI 테스트
-curl -X POST https://campone-dashboard-755458598444.asia-northeast3.run.app/api/kpi \
-  -H "Content-Type: application/json" \
-  -H "X-Service-Key: 151ebde2377f280365b4c54cf7b37ca5b2eed5773489d049486e6342e49ce930" \
-  -d '{
-    "module": "Test",
-    "key": "test_score",
-    "value": 85.5,
-    "unit": "점"
   }'
 ```
 
-### 8.2 확인 방법
+### 8.4 일반적인 문제 해결
 
-1. Dashboard 접속: https://campone-dashboard-755458598444.asia-northeast3.run.app
-2. 로그인 후 메인 페이지에서:
-   - **최근 활동** 섹션에 Activity 표시 확인
-   - **헤더 알림 배지** 숫자 증가 확인
-   - **알림 드롭다운**에서 Alert 내용 확인
-3. `/audit` 페이지에서 전체 목록 확인
+| 문제 | 원인 | 해결 |
+|------|------|------|
+| iframe 빈 화면 | 토큰 검증 실패 | EMBED_JWT_SECRET 확인 |
+| CORS 에러 | Origin 미허용 | module-protocol.ts 확인 |
+| 테마 미적용 | CSS 변수 누락 | 테마 CSS 확인 |
+| 메시지 미수신 | isValidModuleMessage 실패 | 메시지 형식 확인 |
+| API 401 에러 | API 키 잘못됨 | X-Service-Key 확인 |
 
 ---
 
 ## 9. FAQ
 
-**Q: postMessage 코드는 삭제해야 하나요?**
-A: 아니요. 사용자가 해당 모듈 페이지에 있을 때의 즉각적인 피드백을 위해 postMessage도 유지하세요. 서버 API는 백그라운드 이벤트용 추가 채널입니다.
+**Q: 모듈에서 사용자 정보는 어떻게 얻나요?**
+A: JWT 토큰에서 `userId`, `email`, `name`, `role`을 추출하세요.
 
-**Q: 같은 이벤트를 postMessage와 서버 API 둘 다 보내면 중복되나요?**
-A: Activity와 Alert는 각각 새 레코드로 저장되므로 중복 가능합니다. 클라이언트 이벤트는 postMessage만, 서버 이벤트는 API만 사용하도록 분리하세요.
+**Q: postMessage와 API 둘 다 사용해야 하나요?**
+A: 네. 클라이언트 이벤트는 postMessage, 서버 이벤트는 API로 분리하세요.
 
-**Q: API 호출이 실패하면?**
-A: 모듈 서비스의 핵심 기능에 영향을 주지 않도록 try-catch로 감싸고 로깅만 하세요. Dashboard 알림은 부가 기능입니다.
+**Q: 토큰이 만료되면 어떻게 되나요?**
+A: Dashboard가 50분마다 자동 갱신합니다. 모듈은 갱신된 토큰을 URL에서 다시 받습니다.
 
-**Q: KPI 데이터는 얼마나 자주 보내야 하나요?**
-A: 데이터 변경 시 또는 주기적으로 (예: 5분마다). `expiresInMinutes` 설정에 따라 만료되므로, 만료 전에 갱신하면 됩니다.
+**Q: 역할별 권한 처리는 모듈에서 해야 하나요?**
+A: 네. 토큰의 `role` 값을 확인해서 모듈 내에서 권한을 제어하세요.
+
+**Q: KPI는 어디에 표시되나요?**
+A: Dashboard 메인 페이지 또는 각 모듈 카드에 표시됩니다 (구현에 따라 다름).
+
+**Q: 로컬에서 테스트할 때 localhost 허용은 자동인가요?**
+A: 네. `ALLOWED_ORIGINS`에 localhost가 포함되어 있고, 검증 로직에서도 localhost는 허용합니다.
 
 ---
 
 ## 10. 문의
 
-- Dashboard 연동 관련: (담당자)
-- API 키 재발급 요청: (담당자)
-- GitHub Issues: https://github.com/xxx/campone-dashboard/issues
+- **Dashboard 연동**: (담당자)
+- **시크릿/API 키 발급**: (담당자)
+- **GitHub Issues**: https://github.com/xxx/campone-dashboard/issues
 
 ---
 
-*문서 버전: 2.0*
-*최종 수정: 2026-01-24*
+*문서 버전: 3.0*
+*최종 수정: 2026-01-25*

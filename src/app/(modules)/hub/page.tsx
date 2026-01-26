@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { RefreshCw, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEmbedToken, getEmbedUrl } from '@/hooks/useEmbedToken';
+import { useTheme } from '@/components/theme-provider';
 
 const CIVIC_HUB_URL = 'https://campone-civic-hub-755458598444.asia-northeast3.run.app';
 
@@ -13,6 +14,7 @@ export default function CivicHubPage() {
   const [iframeKey, setIframeKey] = useState(0);
 
   const { token, isLoading: tokenLoading, error: tokenError } = useEmbedToken();
+  const { resolvedTheme } = useTheme();
 
   const handleRefresh = () => {
     setIframeKey((prev) => prev + 1);
@@ -20,13 +22,13 @@ export default function CivicHubPage() {
     setHasError(false);
   };
 
-  // 토큰이 준비되면 /embed?token=xxx 형태로, 아니면 기본 URL
-  const iframeSrc = token ? getEmbedUrl(CIVIC_HUB_URL, token) : CIVIC_HUB_URL;
+  // 토큰이 준비되면 /embed?token=xxx&theme=xxx 형태로, 아니면 기본 URL
+  const iframeSrc = token ? getEmbedUrl(CIVIC_HUB_URL, token, resolvedTheme) : CIVIC_HUB_URL;
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
       {/* 툴바 */}
-      <div className="flex items-center justify-between px-4 py-2 bg-white border-b shrink-0">
+      <div className="flex items-center justify-between px-4 py-2 bg-background border-b shrink-0">
         <div className="flex items-center gap-3">
           <h1 className="font-semibold text-lg">Civic Hub</h1>
           <span className="text-xs text-muted-foreground hidden sm:inline">
@@ -47,10 +49,10 @@ export default function CivicHubPage() {
       </div>
 
       {/* iframe 영역 */}
-      <div className="flex-1 relative bg-slate-100">
+      <div className="flex-1 relative bg-muted">
         {/* 로딩 오버레이 */}
         {(isLoading || tokenLoading) && !hasError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
             <div className="flex flex-col items-center gap-3">
               <RefreshCw className="h-8 w-8 animate-spin text-primary" />
               <span className="text-sm text-muted-foreground">
@@ -62,7 +64,7 @@ export default function CivicHubPage() {
 
         {/* 에러 상태 */}
         {(hasError || tokenError) && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
+          <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
             <div className="flex flex-col items-center gap-4 text-center px-4">
               <AlertCircle className="h-12 w-12 text-destructive" />
               <div>

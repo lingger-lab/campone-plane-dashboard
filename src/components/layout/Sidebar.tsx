@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -17,11 +17,13 @@ import {
   ChevronLeft,
   X,
   PenTool,
+  Link as LinkIcon,
 } from 'lucide-react';
 import { SiYoutube, SiKakaotalk, SiInstagram, SiNaver } from 'react-icons/si';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useChannels, getChannelIconColor } from '@/hooks/useChannels';
 
 interface SidebarProps {
   collapsed?: boolean;
@@ -40,21 +42,21 @@ const menuItems = [
   { icon: Users, label: 'Civic Hub', href: '/hub', badge: 'M5' },
 ];
 
-// 채널 링크 데이터
-const channelLinks = [
-  { icon: SiYoutube, label: '유튜브', href: 'https://www.youtube.com/@CampOne-w9p', color: 'text-red-600' },
-  { icon: SiKakaotalk, label: '카카오', href: 'https://open.kakao.com/o/gQ9XBl9h', color: 'text-yellow-500' },
-  { icon: SiInstagram, label: '인스타', href: 'https://instagram.com/hongdemo', color: 'text-pink-600' },
-  { icon: SiNaver, label: '네이버', href: 'https://blog.naver.com/nineuri/224131041233', color: 'text-[#03C75A]' },
-  { icon: PenTool, label: '현수막', href: '/studio/banners', color: 'text-primary' },
-];
-
 const bottomItems = [
   { icon: Shield, label: '권한/역할', href: '/roles' },
   { icon: History, label: '활동 & 알림', href: '/audit' },
   { icon: Settings, label: '설정', href: '/settings' },
   { icon: HelpCircle, label: '도움말', href: '/help' },
 ];
+
+// 아이콘 키 → 컴포넌트 매핑
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  youtube: SiYoutube,
+  kakao: SiKakaotalk,
+  instagram: SiInstagram,
+  naver: SiNaver,
+  banner: PenTool,
+};
 
 export function Sidebar({
   collapsed = false,
@@ -64,6 +66,22 @@ export function Sidebar({
   className
 }: SidebarProps) {
   const pathname = usePathname();
+  const { data: channelsData } = useChannels();
+
+  // 표시할 채널 링크 (visible=true만)
+  const channelLinks = useMemo(() => {
+    const channels = channelsData?.channels || [];
+    return channels
+      .filter((ch) => ch.visible)
+      .sort((a, b) => a.order - b.order)
+      .map((ch) => ({
+        key: ch.key,
+        label: ch.label,
+        href: ch.url,
+        icon: iconMap[ch.icon || ''] || LinkIcon,
+        color: getChannelIconColor(ch.icon),
+      }));
+  }, [channelsData]);
 
   // 페이지 이동 시 모바일 사이드바 닫기
   useEffect(() => {
@@ -119,19 +137,18 @@ export function Sidebar({
           return (
             <Link key={item.href} href={item.href}>
               <Button
-                variant={active ? 'secondary' : 'ghost'}
+                variant={active ? 'default' : 'ghost'}
                 className={cn(
                   'w-full justify-start gap-3 group',
-                  collapsed && 'justify-center px-2',
-                  active && 'text-white'
+                  collapsed && 'justify-center px-2'
                 )}
               >
-                <item.icon className={cn('h-5 w-5 shrink-0 icon-pulse', active && 'text-white')} />
+                <item.icon className="h-5 w-5 shrink-0 icon-pulse" />
                 {!collapsed && (
                   <>
-                    <span className={cn('flex-1 text-left', active && 'text-white')}>{item.label}</span>
+                    <span className="flex-1 text-left">{item.label}</span>
                     {item.badge && (
-                      <span className={cn('text-xs', active ? 'text-white/80' : 'text-muted-foreground')}>{item.badge}</span>
+                      <span className={cn('text-xs', active ? 'opacity-80' : 'text-muted-foreground')}>{item.badge}</span>
                     )}
                   </>
                 )}
@@ -150,9 +167,10 @@ export function Sidebar({
           채널 링크
         </div>
         {channelLinks.map((item) => {
+          const IconComponent = item.icon;
           return (
             <Link
-              key={item.href}
+              key={item.key}
               href={item.href}
               target={item.href.startsWith('http') ? '_blank' : undefined}
             >
@@ -164,7 +182,7 @@ export function Sidebar({
                 )}
                 size="sm"
               >
-                <item.icon className={cn('h-4 w-4 shrink-0 icon-pulse', item.color)} />
+                <IconComponent className={cn('h-4 w-4 shrink-0 icon-pulse', item.color)} />
                 {!collapsed && <span>{item.label}</span>}
               </Button>
             </Link>
@@ -182,16 +200,15 @@ export function Sidebar({
           return (
             <Link key={item.href} href={item.href}>
               <Button
-                variant={active ? 'secondary' : 'ghost'}
+                variant={active ? 'default' : 'ghost'}
                 className={cn(
                   'w-full justify-start gap-3 group',
-                  collapsed && 'justify-center px-2',
-                  active && 'text-white'
+                  collapsed && 'justify-center px-2'
                 )}
                 size="sm"
               >
-                <item.icon className={cn('h-4 w-4 shrink-0 icon-pulse', active && 'text-white')} />
-                {!collapsed && <span className={cn(active && 'text-white')}>{item.label}</span>}
+                <item.icon className="h-4 w-4 shrink-0 icon-pulse" />
+                {!collapsed && <span>{item.label}</span>}
               </Button>
             </Link>
           );

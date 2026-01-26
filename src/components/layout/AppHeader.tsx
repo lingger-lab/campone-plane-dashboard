@@ -154,7 +154,8 @@ export function AppHeader({ onMenuClick, className }: AppHeaderProps) {
                                   <p
                                     className={cn(
                                       'text-sm font-medium truncate',
-                                      !alert.read && 'font-semibold'
+                                      !alert.read && 'font-semibold',
+                                      !alert.read && styles.text
                                     )}
                                   >
                                     {alert.title}
@@ -213,8 +214,8 @@ export function AppHeader({ onMenuClick, className }: AppHeaderProps) {
             title="프로필"
             onClick={() => setProfileMenuOpen(!profileMenuOpen)}
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary">
-              <span className="text-sm font-semibold text-white">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
+              <span className="text-sm font-semibold text-primary-foreground">
                 {session?.user?.name?.charAt(0) || 'U'}
               </span>
             </div>

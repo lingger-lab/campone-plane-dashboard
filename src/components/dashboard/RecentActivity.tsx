@@ -55,7 +55,7 @@ export function RecentActivity() {
         </div>
       ) : (
         <>
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[320px] overflow-y-auto">
             {activities.map((item) => (
               <motion.div
                 key={item.id}

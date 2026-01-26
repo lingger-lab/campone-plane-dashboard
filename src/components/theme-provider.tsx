@@ -14,6 +14,7 @@ type ThemeProviderProps = {
 
 type ThemeProviderState = {
   theme: Theme;
+  resolvedTheme: 'light' | 'dark';
   setTheme: (theme: Theme) => void;
 };
 
@@ -27,9 +28,9 @@ export function ThemeProvider({
   disableTransitionOnChange = false,
 }: ThemeProviderProps) {
   const [theme, setTheme] = React.useState<Theme>(defaultTheme);
+  const [resolvedTheme, setResolvedTheme] = React.useState<'light' | 'dark'>('light');
 
   React.useEffect(() => {
-    const root = window.document.documentElement;
     const savedTheme = localStorage.getItem('theme') as Theme | null;
 
     if (savedTheme) {
@@ -49,27 +50,43 @@ export function ThemeProvider({
 
     root.classList.remove('light', 'dark');
 
-    let resolvedTheme = theme;
+    let resolved: 'light' | 'dark' = theme === 'dark' ? 'dark' : 'light';
     if (theme === 'system' && enableSystem) {
-      resolvedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
 
+    setResolvedTheme(resolved);
+
     if (attribute === 'class') {
-      root.classList.add(resolvedTheme);
+      root.classList.add(resolved);
     } else {
-      root.setAttribute(attribute, resolvedTheme);
+      root.setAttribute(attribute, resolved);
     }
   }, [theme, attribute, enableSystem, disableTransitionOnChange]);
+
+  // 시스템 테마 변경 감지
+  React.useEffect(() => {
+    if (theme !== 'system' || !enableSystem) return;
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      setResolvedTheme(e.matches ? 'dark' : 'light');
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [theme, enableSystem]);
 
   const value = React.useMemo(
     () => ({
       theme,
+      resolvedTheme,
       setTheme: (newTheme: Theme) => {
         localStorage.setItem('theme', newTheme);
         setTheme(newTheme);
       },
     }),
-    [theme]
+    [theme, resolvedTheme]
   );
 
   return <ThemeProviderContext.Provider value={value}>{children}</ThemeProviderContext.Provider>;

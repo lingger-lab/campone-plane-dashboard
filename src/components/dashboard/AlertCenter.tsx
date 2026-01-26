@@ -67,7 +67,7 @@ export function AlertCenter() {
         </div>
       ) : (
         <>
-          <div className="space-y-3">
+          <div className="space-y-3 max-h-[320px] overflow-y-auto">
             {alerts.map((alert) => {
               const styles = getAlertStyles(alert.severity);
 
@@ -85,7 +85,7 @@ export function AlertCenter() {
                 >
                   <div className={cn('mt-1 h-2 w-2 rounded-full shrink-0', styles.dot)} />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{alert.title}</p>
+                    <p className={cn('font-medium text-sm truncate', styles.text)}>{alert.title}</p>
                     <p className="text-xs text-muted-foreground truncate">
                       {alert.message}
                     </p>

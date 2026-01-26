@@ -11,6 +11,7 @@
 // 메시지 타입 정의
 // ============================================
 
+// 모듈 → 대시보드 메시지 타입
 export type ModuleMessageType =
   | 'ACTIVITY'      // 사용자 활동 기록
   | 'ALERT'         // 알림 생성
@@ -18,6 +19,11 @@ export type ModuleMessageType =
   | 'NAVIGATION'    // 페이지 이동 요청
   | 'ERROR'         // 에러 보고
   | 'READY';        // 모듈 로드 완료
+
+// 대시보드 → 모듈 메시지 타입
+export type DashboardMessageType = 'THEME_CHANGE';
+
+export type ThemeValue = 'light' | 'dark';
 
 export type ModuleName = 'Insights' | 'Studio' | 'Policy' | 'Ops' | 'Hub';
 
@@ -63,6 +69,11 @@ export interface ReadyPayload {
   version?: string;
 }
 
+// 대시보드 → 모듈 페이로드
+export interface ThemeChangePayload {
+  theme: ThemeValue;
+}
+
 // ============================================
 // 통합 메시지 타입
 // ============================================
@@ -80,6 +91,14 @@ export interface ModuleMessage {
     | ReadyPayload;
 }
 
+// 대시보드 → 모듈 메시지
+export interface DashboardMessage {
+  type: DashboardMessageType;
+  source: 'Dashboard';
+  timestamp: number;
+  payload: ThemeChangePayload;
+}
+
 // ============================================
 // 허용된 Origin 목록
 // ============================================
@@ -90,10 +109,14 @@ export const ALLOWED_ORIGINS = [
   'https://campone-v2-frontend-755458598444.asia-northeast3.run.app',
   'https://campone-civic-hub-755458598444.asia-northeast3.run.app',
   'https://campone-policy-755458598444.asia-northeast3.run.app',
+  // Studio (새 배포)
+  'https://campone-studio-web-2qbgm2n2oq-du.a.run.app',
+  'https://campone-studio-api-2qbgm2n2oq-du.a.run.app',
   // 로컬 개발
   'http://localhost:3001',
   'http://localhost:3002',
   'http://localhost:3003',
+  'http://localhost:3004',
   'http://localhost:5173',
   'http://localhost:8000',
 ];
@@ -178,4 +201,38 @@ export function sendToDashboard<T extends ModuleMessageType>(
   window.parent.postMessage(message, '*');
 
   console.log(`[Module:${source}] Sent message:`, message);
+}
+
+// ============================================
+// 대시보드에서 사용할 헬퍼 함수
+// ============================================
+
+/**
+ * 모든 iframe 모듈에 테마 변경을 알리는 함수
+ * Dashboard에서 테마가 변경될 때 호출하세요.
+ *
+ * @example
+ * broadcastThemeChange('dark');
+ */
+export function broadcastThemeChange(theme: ThemeValue): void {
+  if (typeof window === 'undefined') return;
+
+  const message: DashboardMessage = {
+    type: 'THEME_CHANGE',
+    source: 'Dashboard',
+    timestamp: Date.now(),
+    payload: { theme },
+  };
+
+  // 모든 iframe에 메시지 전송
+  const iframes = document.querySelectorAll('iframe');
+  iframes.forEach((iframe) => {
+    try {
+      iframe.contentWindow?.postMessage(message, '*');
+    } catch (e) {
+      console.warn('[Dashboard] Failed to send theme to iframe:', e);
+    }
+  });
+
+  console.log(`[Dashboard] Broadcast theme change:`, theme);
 }

@@ -45,15 +45,27 @@ export function useEmbedToken(): EmbedTokenResult {
   return { token, isLoading, error, refetch: fetchToken };
 }
 
+export type ThemeType = 'light' | 'dark' | 'system';
+
 /**
- * 서비스 URL에 토큰을 추가하는 헬퍼 함수
+ * 서비스 URL에 토큰과 테마를 추가하는 헬퍼 함수
  */
-export function getEmbedUrl(baseUrl: string, token: string | null): string {
+export function getEmbedUrl(
+  baseUrl: string,
+  token: string | null,
+  theme?: ThemeType
+): string {
   if (!token) return baseUrl;
 
   const url = new URL(baseUrl);
   // /embed 경로로 리다이렉트하면서 토큰 전달
   url.pathname = '/embed';
   url.searchParams.set('token', token);
+
+  // 테마 전달 (system인 경우 실제 적용된 테마로 변환)
+  if (theme) {
+    url.searchParams.set('theme', theme);
+  }
+
   return url.toString();
 }

@@ -26,7 +26,8 @@ const config: Config = {
           950: '#172554',
         },
         secondary: {
-          DEFAULT: '#111827',
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
           50: '#F9FAFB',
           100: '#F3F4F6',
           200: '#E5E7EB',
