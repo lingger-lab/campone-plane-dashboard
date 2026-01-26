@@ -91,9 +91,21 @@ function verifyEmbedToken(token: string) {
 
 ### 4.3 테마 적용
 
-URL 쿼리에서 `theme` 파라미터 확인:
+**초기 로드 시**: URL 쿼리에서 `theme` 파라미터 확인
 - `light`: 라이트 모드
 - `dark`: 다크 모드
+
+**실시간 테마 변경 수신**:
+```typescript
+// 모듈에서 테마 변경 이벤트 수신
+window.addEventListener('message', (event) => {
+  if (event.data?.type === 'THEME_CHANGE' && event.data?.source === 'Dashboard') {
+    const newTheme = event.data.payload.theme; // 'light' | 'dark'
+    // 테마 적용 로직 실행
+    applyTheme(newTheme);
+  }
+});
+```
 
 ---
 
