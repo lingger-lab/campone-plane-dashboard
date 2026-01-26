@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { broadcastThemeChange } from '@/lib/module-protocol';
 
 type Theme = 'dark' | 'light' | 'system';
 
@@ -76,6 +77,11 @@ export function ThemeProvider({
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme, enableSystem]);
+
+  // 테마 변경 시 iframe 모듈들에 알림
+  React.useEffect(() => {
+    broadcastThemeChange(resolvedTheme);
+  }, [resolvedTheme]);
 
   const value = React.useMemo(
     () => ({
