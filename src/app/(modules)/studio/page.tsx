@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useEmbedToken, getEmbedUrl } from '@/hooks/useEmbedToken';
 import { useTheme } from '@/components/theme-provider';
 
-const STUDIO_URL = 'https://campone-studio-web-2qbgm2n2oq-du.a.run.app';
+const STUDIO_URL = 'https://campone-studio-web-755458598444.asia-northeast3.run.app';
 
 export default function StudioPage() {
   const [isLoading, setIsLoading] = useState(true);

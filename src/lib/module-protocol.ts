@@ -109,9 +109,9 @@ export const ALLOWED_ORIGINS = [
   'https://campone-v2-frontend-755458598444.asia-northeast3.run.app',
   'https://campone-civic-hub-755458598444.asia-northeast3.run.app',
   'https://campone-policy-755458598444.asia-northeast3.run.app',
-  // Studio (새 배포)
-  'https://campone-studio-web-2qbgm2n2oq-du.a.run.app',
-  'https://campone-studio-api-2qbgm2n2oq-du.a.run.app',
+  // Studio
+  'https://campone-studio-web-755458598444.asia-northeast3.run.app',
+  'https://campone-studio-api-755458598444.asia-northeast3.run.app',
   // 로컬 개발
   'http://localhost:3001',
   'http://localhost:3002',
