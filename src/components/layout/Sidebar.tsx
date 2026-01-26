@@ -130,8 +130,8 @@ export function Sidebar({
           className
         )}
       >
-      {/* 메인 메뉴 */}
-      <nav className="flex-1 space-y-1 overflow-y-auto p-2">
+      {/* 메인 메뉴 - 스크롤 가능 */}
+      <nav className="flex-1 min-h-0 overflow-y-auto space-y-1 p-2">
         {menuItems.map((item) => {
           const active = isActive(item.href);
           return (
@@ -158,74 +158,69 @@ export function Sidebar({
         })}
       </nav>
 
-      {/* 구분선 */}
-      <div className="mx-4 border-t" />
-
-      {/* 채널 링크 */}
-      <nav className="space-y-1 p-2">
-        <div className={cn('px-3 py-2 text-xs font-semibold text-muted-foreground', collapsed && 'hidden')}>
-          채널 링크
-        </div>
-        {channelLinks.map((item) => {
-          const IconComponent = item.icon;
-          return (
-            <Link
-              key={item.key}
-              href={item.href}
-              target={item.href.startsWith('http') ? '_blank' : undefined}
-            >
-              <Button
-                variant="ghost"
-                className={cn(
-                  'w-full justify-start gap-3 group',
-                  collapsed && 'justify-center px-2'
-                )}
-                size="sm"
+      {/* 채널 링크 - 고정 (스크롤 안됨) */}
+      <div className="shrink-0 border-t">
+        <nav className="space-y-1 p-2">
+          <div className={cn('px-3 py-1 text-xs font-semibold text-muted-foreground', collapsed && 'hidden')}>
+            채널 링크
+          </div>
+          {channelLinks.map((item) => {
+            const IconComponent = item.icon;
+            return (
+              <Link
+                key={item.key}
+                href={item.href}
+                target={item.href.startsWith('http') ? '_blank' : undefined}
               >
-                <IconComponent className={cn('h-4 w-4 shrink-0 icon-pulse', item.color)} />
-                {!collapsed && <span>{item.label}</span>}
-              </Button>
-            </Link>
-          );
-        })}
-      </nav>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    'w-full justify-start gap-3 group',
+                    collapsed && 'justify-center px-2'
+                  )}
+                  size="sm"
+                >
+                  <IconComponent className={cn('h-4 w-4 shrink-0 icon-pulse', item.color)} />
+                  {!collapsed && <span>{item.label}</span>}
+                </Button>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
 
-      {/* 구분선 */}
-      <div className="mx-4 border-t" />
+      {/* 하단 메뉴 - 고정 */}
+      <div className="shrink-0 border-t">
+        <nav className="space-y-1 p-2">
+          {bottomItems.map((item) => {
+            const active = isActive(item.href);
+            return (
+              <Link key={item.href} href={item.href}>
+                <Button
+                  variant={active ? 'default' : 'ghost'}
+                  className={cn(
+                    'w-full justify-start gap-3 group',
+                    collapsed && 'justify-center px-2'
+                  )}
+                  size="sm"
+                >
+                  <item.icon className="h-4 w-4 shrink-0 icon-pulse" />
+                  {!collapsed && <span>{item.label}</span>}
+                </Button>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
 
-      {/* 하단 메뉴 */}
-      <nav className="space-y-1 p-2">
-        {bottomItems.map((item) => {
-          const active = isActive(item.href);
-          return (
-            <Link key={item.href} href={item.href}>
-              <Button
-                variant={active ? 'default' : 'ghost'}
-                className={cn(
-                  'w-full justify-start gap-3 group',
-                  collapsed && 'justify-center px-2'
-                )}
-                size="sm"
-              >
-                <item.icon className="h-4 w-4 shrink-0 icon-pulse" />
-                {!collapsed && <span>{item.label}</span>}
-              </Button>
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* 구분선 */}
-      <div className="mx-4 border-t" />
-
-      {/* QR 코드 섹션 */}
+      {/* QR 코드 섹션 - 큰 화면에서만 표시 */}
       {!collapsed && (
-        <div className="p-4 flex flex-col items-center gap-2">
-          <div className="text-xs font-semibold text-muted-foreground mb-1">공개 사이트</div>
-          <div className="bg-white p-2 rounded-lg shadow-sm">
+        <div className="shrink-0 border-t hidden xl:flex flex-col items-center gap-1 p-2">
+          <div className="text-xs font-semibold text-muted-foreground">공개 사이트</div>
+          <div className="bg-white p-1 rounded shadow-sm">
             <QRCodeSVG
               value="https://campone.cloud/"
-              size={120}
+              size={64}
               level="H"
               includeMargin={false}
             />
@@ -234,7 +229,7 @@ export function Sidebar({
             href="https://campone.cloud/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-primary hover:underline text-center break-all"
+            className="text-xs text-primary hover:underline"
           >
             campone.cloud
           </a>
