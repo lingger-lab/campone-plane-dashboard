@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { RefreshCw, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useActivities, formatRelativeTime } from '@/hooks/useActivities';
+import { useActivities, formatRelativeTime, normalizeActionText } from '@/hooks/useActivities';
 
 export function RecentActivity() {
   const { data, isLoading, isError, refetch, isFetching } = useActivities(10);
@@ -65,7 +65,7 @@ export function RecentActivity() {
                 transition={{ duration: 0.2 }}
               >
                 <div className="h-2 w-2 rounded-full bg-primary shrink-0" />
-                <span className="font-medium shrink-0">{item.action}</span>
+                <span className="font-medium shrink-0">{normalizeActionText(item.action)}</span>
                 {item.target && (
                   <span className="text-muted-foreground truncate min-w-0" title={item.target}>
                     · {item.target}

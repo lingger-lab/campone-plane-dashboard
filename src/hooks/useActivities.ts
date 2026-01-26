@@ -80,6 +80,37 @@ export function useCreateActivity() {
 }
 
 /**
+ * 액션 텍스트 정규화 (영어 → 한글)
+ */
+export function normalizeActionText(action: string): string {
+  const actionLower = action.toLowerCase();
+
+  // 영어 → 한글 매핑
+  const mappings: [string[], string][] = [
+    [['download', 'export'], '다운로드'],
+    [['upload'], '업로드'],
+    [['create', 'add', 'new'], '생성'],
+    [['update', 'edit', 'modify'], '수정'],
+    [['delete', 'remove'], '삭제'],
+    [['login', 'sign in'], '로그인'],
+    [['logout', 'sign out'], '로그아웃'],
+    [['view', 'read', 'get'], '조회'],
+    [['send', 'publish'], '발송'],
+    [['approve'], '승인'],
+    [['reject'], '반려'],
+    [['complete', 'finish'], '완료'],
+  ];
+
+  for (const [patterns, korean] of mappings) {
+    if (patterns.some(p => actionLower === p || actionLower.includes(p))) {
+      return korean;
+    }
+  }
+
+  return action; // 매핑 없으면 원본 반환
+}
+
+/**
  * 상대 시간 표시 헬퍼 함수
  */
 export function formatRelativeTime(dateString: string): string {
