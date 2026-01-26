@@ -112,6 +112,8 @@ export const ALLOWED_ORIGINS = [
   // Studio
   'https://campone-studio-web-755458598444.asia-northeast3.run.app',
   'https://campone-studio-api-755458598444.asia-northeast3.run.app',
+  // Ops
+  'https://campone-ops-755458598444.asia-northeast3.run.app',
   // 로컬 개발
   'http://localhost:3001',
   'http://localhost:3002',
