@@ -36,12 +36,30 @@ const getActionBadge = (action: string) => {
     return <Badge variant="danger">반려</Badge>;
   }
 
+  // 삭제 계열
+  if (actionLower.includes('삭제') || actionLower.includes('delete') ||
+      actionLower.includes('제거')) {
+    return <Badge variant="danger">삭제</Badge>;
+  }
+
+  // 다운로드/내보내기 계열 (조회와 분리)
+  if (actionLower.includes('다운로드') || actionLower.includes('download') ||
+      actionLower.includes('내보내기') || actionLower.includes('export')) {
+    return <Badge variant="default">다운로드</Badge>;
+  }
+
+  // 업로드 계열 (생성과 분리)
+  if (actionLower.includes('업로드') || actionLower.includes('upload') ||
+      actionLower.includes('가져오기') || actionLower.includes('import')) {
+    return <Badge variant="info">업로드</Badge>;
+  }
+
   // 생성 계열
   if (actionLower.includes('생성') || actionLower.includes('create') ||
       actionLower.includes('추가') || actionLower.includes('등록') ||
       actionLower.includes('접수') || actionLower.includes('신규') ||
-      actionLower.includes('발생') || actionLower.includes('업로드') ||
-      actionLower.includes('upload')) {
+      actionLower.includes('발생') || actionLower.includes('add') ||
+      actionLower.includes('new')) {
     return <Badge variant="success">생성</Badge>;
   }
 
@@ -49,40 +67,51 @@ const getActionBadge = (action: string) => {
   if (actionLower.includes('수정') || actionLower.includes('update') ||
       actionLower.includes('변경') || actionLower.includes('편집') ||
       actionLower.includes('갱신') || actionLower.includes('답변') ||
-      actionLower.includes('reply') || actionLower.includes('response')) {
+      actionLower.includes('reply') || actionLower.includes('response') ||
+      actionLower.includes('edit') || actionLower.includes('modify')) {
     return <Badge variant="info">수정</Badge>;
-  }
-
-  // 삭제 계열
-  if (actionLower.includes('삭제') || actionLower.includes('delete') ||
-      actionLower.includes('제거') || actionLower.includes('취소')) {
-    return <Badge variant="danger">삭제</Badge>;
   }
 
   // 발송/전송 계열
   if (actionLower.includes('발송') || actionLower.includes('send') ||
-      actionLower.includes('전송') || actionLower.includes('발행')) {
+      actionLower.includes('전송') || actionLower.includes('발행') ||
+      actionLower.includes('publish')) {
     return <Badge variant="default">발송</Badge>;
   }
 
-  // 승인/완료 계열
-  if (actionLower.includes('승인') || actionLower.includes('approve') ||
-      actionLower.includes('완료') || actionLower.includes('처리')) {
+  // 승인 계열 (완료와 분리)
+  if (actionLower.includes('승인') || actionLower.includes('approve')) {
+    return <Badge variant="success">승인</Badge>;
+  }
+
+  // 완료/처리 계열
+  if (actionLower.includes('완료') || actionLower.includes('처리') ||
+      actionLower.includes('complete') || actionLower.includes('finish') ||
+      actionLower.includes('done')) {
     return <Badge variant="warning">완료</Badge>;
   }
 
-  // 로그인/로그아웃
-  if (actionLower.includes('로그인') || actionLower.includes('login')) {
+  // 취소 계열 (삭제와 분리)
+  if (actionLower.includes('취소') || actionLower.includes('cancel')) {
+    return <Badge variant="outline">취소</Badge>;
+  }
+
+  // 로그인
+  if (actionLower.includes('로그인') || actionLower.includes('login') ||
+      actionLower.includes('sign in')) {
     return <Badge variant="outline">로그인</Badge>;
   }
-  if (actionLower.includes('로그아웃') || actionLower.includes('logout')) {
+
+  // 로그아웃
+  if (actionLower.includes('로그아웃') || actionLower.includes('logout') ||
+      actionLower.includes('sign out')) {
     return <Badge variant="outline">로그아웃</Badge>;
   }
 
-  // 조회/분석/다운로드 계열
+  // 조회/검색 계열
   if (actionLower.includes('조회') || actionLower.includes('검색') ||
-      actionLower.includes('read') || actionLower.includes('다운로드') ||
-      actionLower.includes('download')) {
+      actionLower.includes('read') || actionLower.includes('view') ||
+      actionLower.includes('get') || actionLower.includes('분석')) {
     return <Badge variant="secondary">조회</Badge>;
   }
 
