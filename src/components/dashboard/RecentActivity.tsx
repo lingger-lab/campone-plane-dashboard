@@ -59,22 +59,26 @@ export function RecentActivity() {
             {activities.map((item) => (
               <motion.div
                 key={item.id}
-                className="flex items-center gap-2 text-sm whitespace-nowrap overflow-hidden"
+                className="flex items-center gap-2 text-sm overflow-hidden"
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.2 }}
               >
                 <div className="h-2 w-2 rounded-full bg-primary shrink-0" />
-                <span className="font-medium truncate min-w-0">{item.action}</span>
-                <Badge variant="outline" className="text-xs shrink-0">
-                  {item.module}
-                </Badge>
-                <span className="text-muted-foreground truncate min-w-0">
-                  {item.userName}
-                </span>
-                <span className="ml-auto text-muted-foreground shrink-0">
-                  {formatRelativeTime(item.createdAt)}
-                </span>
+                <span className="font-medium shrink-0">{item.action}</span>
+                {item.target && (
+                  <span className="text-muted-foreground truncate min-w-0" title={item.target}>
+                    · {item.target}
+                  </span>
+                )}
+                <div className="flex items-center gap-2 ml-auto shrink-0">
+                  <Badge variant="outline" className="text-xs">
+                    {item.module}
+                  </Badge>
+                  <span className="text-muted-foreground text-xs">
+                    {formatRelativeTime(item.createdAt)}
+                  </span>
+                </div>
               </motion.div>
             ))}
           </div>
