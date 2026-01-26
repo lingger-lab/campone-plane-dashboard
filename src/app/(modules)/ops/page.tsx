@@ -80,7 +80,7 @@ export default function OpsPage() {
           </div>
         )}
 
-        {!tokenLoading && (
+        {!tokenLoading && token && (
           <iframe
             key={iframeKey}
             src={iframeSrc}

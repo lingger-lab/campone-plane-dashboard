@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { RefreshCw, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useEmbedToken, getEmbedUrl } from '@/hooks/useEmbedToken';
+import { useEmbedToken } from '@/hooks/useEmbedToken';
 import { useTheme } from '@/components/theme-provider';
 
 const STUDIO_URL = 'https://campone-studio-web-755458598444.asia-northeast3.run.app';
@@ -82,7 +82,7 @@ export default function StudioPage() {
           </div>
         )}
 
-        {!tokenLoading && (
+        {!tokenLoading && token && (
           <iframe
             key={iframeKey}
             src={iframeSrc}
