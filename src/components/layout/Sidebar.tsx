@@ -130,8 +130,8 @@ export function Sidebar({
           className
         )}
       >
-      {/* 메인 메뉴 - 스크롤 가능 */}
-      <nav className="flex-1 min-h-0 overflow-y-auto space-y-1 p-2">
+      {/* 모듈 메뉴 (M1-M5) - 고정 (가장 중요) */}
+      <nav className="shrink-0 space-y-1 p-2">
         {menuItems.map((item) => {
           const active = isActive(item.href);
           return (
@@ -158,8 +158,9 @@ export function Sidebar({
         })}
       </nav>
 
-      {/* 채널 링크 - 고정 (스크롤 안됨) */}
-      <div className="shrink-0 border-t">
+      {/* 나머지 영역 - 스크롤 가능 */}
+      <div className="flex-1 min-h-0 overflow-y-auto border-t">
+        {/* 채널 링크 */}
         <nav className="space-y-1 p-2">
           <div className={cn('px-3 py-1 text-xs font-semibold text-muted-foreground', collapsed && 'hidden')}>
             채널 링크
@@ -187,10 +188,11 @@ export function Sidebar({
             );
           })}
         </nav>
-      </div>
 
-      {/* 하단 메뉴 - 고정 */}
-      <div className="shrink-0 border-t">
+        {/* 구분선 */}
+        <div className="mx-4 border-t" />
+
+        {/* 하단 메뉴 */}
         <nav className="space-y-1 p-2">
           {bottomItems.map((item) => {
             const active = isActive(item.href);
@@ -211,30 +213,30 @@ export function Sidebar({
             );
           })}
         </nav>
-      </div>
 
-      {/* QR 코드 섹션 - 큰 화면에서만 표시 */}
-      {!collapsed && (
-        <div className="shrink-0 border-t hidden xl:flex flex-col items-center gap-1 p-2">
-          <div className="text-xs font-semibold text-muted-foreground">공개 사이트</div>
-          <div className="bg-white p-1 rounded shadow-sm">
-            <QRCodeSVG
-              value="https://campone.cloud/"
-              size={64}
-              level="H"
-              includeMargin={false}
-            />
+        {/* QR 코드 섹션 */}
+        {!collapsed && (
+          <div className="flex flex-col items-center gap-1 p-2 border-t">
+            <div className="text-xs font-semibold text-muted-foreground">공개 사이트</div>
+            <div className="bg-white p-1 rounded shadow-sm">
+              <QRCodeSVG
+                value="https://campone.cloud/"
+                size={64}
+                level="H"
+                includeMargin={false}
+              />
+            </div>
+            <a
+              href="https://campone.cloud/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-primary hover:underline"
+            >
+              campone.cloud
+            </a>
           </div>
-          <a
-            href="https://campone.cloud/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-primary hover:underline"
-          >
-            campone.cloud
-          </a>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* 모바일: 닫기 버튼 */}
       <div className="border-t p-2 lg:hidden">
