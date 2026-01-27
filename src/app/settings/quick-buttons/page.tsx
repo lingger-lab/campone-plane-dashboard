@@ -444,10 +444,10 @@ export default function QuickButtonsPage() {
               <Input
                 value={formUrl}
                 onChange={(e) => setFormUrl(e.target.value)}
-                placeholder="예: https://example.com 또는 /video.mp4"
+                placeholder="예: https://youtube.com/watch?v=..."
               />
               <p className="text-xs text-muted-foreground mt-1">
-                외부 링크(https://...) 또는 내부 비디오 경로(/video.mp4)
+                연결할 외부 링크 URL을 입력하세요
               </p>
             </div>
             <div>
