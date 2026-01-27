@@ -138,3 +138,30 @@ model KpiCache {
 
   @@map("kpi_cache")
 }
+
+// ============================================
+// 퀵버튼 (메인 대시보드)
+// ============================================
+
+enum QuickButtonCategory {
+  video    // 영상 콘텐츠 (빨간색)
+  blog     // 블로그/네이버 콘텐츠 (초록색)
+  primary  // 주요 CTA (파란색)
+  default  // 기본 (회색)
+}
+
+model QuickButton {
+  id        String              @id @default(cuid())
+  label     String              // 버튼 텍스트
+  url       String              // 링크 URL (비디오 경로 또는 외부 URL)
+  icon      String?             // lucide 아이콘 이름 (예: "PlayCircle", "Video")
+  category  QuickButtonCategory @default(default)
+  order     Int                 @default(0)
+  isActive  Boolean             @default(true)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@index([order])
+  @@index([category])
+  @@map("quick_buttons")
+}

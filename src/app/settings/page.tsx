@@ -1,13 +1,16 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { User, Palette } from 'lucide-react';
+import { User, Palette, MousePointer2, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/components/theme-provider';
+import { hasPermission } from '@/lib/rbac';
+import type { UserRole } from '@/lib/types';
 
 export default function SettingsPage() {
   const { data: session } = useSession();
@@ -93,6 +96,29 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* 퀵버튼 관리 (Manager 이상만 표시) */}
+      {hasPermission(userRole as UserRole, 'quickButtons', 'update') && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <MousePointer2 className="h-5 w-5 text-primary" />
+              <div>
+                <CardTitle className="text-base">퀵버튼 관리</CardTitle>
+                <CardDescription>메인 대시보드에 표시되는 퀵버튼 관리</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Link href="/settings/quick-buttons">
+              <Button variant="outline" className="gap-2">
+                퀵버튼 설정
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

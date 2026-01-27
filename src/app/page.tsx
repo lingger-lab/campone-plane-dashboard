@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
@@ -17,7 +17,10 @@ import {
   Briefcase,
   GraduationCap,
   List,
+  ExternalLink,
+  LucideIcon,
 } from 'lucide-react';
+import { useQuickButtons, QuickButton } from '@/hooks/useQuickButtons';
 import { AppHeader, Sidebar, AppFooter } from '@/components/layout';
 import { KPICard, ModuleCard, RecentActivity, AlertCenter } from '@/components/dashboard';
 import { useModuleMessages } from '@/hooks/useModuleMessages';
@@ -139,6 +142,36 @@ const KPI_CONFIG: KpiConfig[] = [
   },
 ];
 
+// 퀵버튼 아이콘 매핑
+const QUICK_BUTTON_ICONS: Record<string, LucideIcon> = {
+  Video,
+  PlayCircle,
+  MapPin,
+  Users,
+  MessageCircle,
+  FileText,
+  BookOpen,
+  FileCheck,
+  CheckCircle2,
+  Newspaper,
+  List,
+  ExternalLink,
+};
+
+// 퀵버튼 카테고리별 스타일
+const CATEGORY_STYLES = {
+  primary: 'bg-primary hover:bg-primary/90 text-white',
+  video: 'bg-red-600 hover:bg-red-700 text-white',
+  blog: 'bg-[#03C75A] hover:bg-[#02b051] text-white',
+  default: 'bg-muted text-muted-foreground hover:bg-muted/80',
+};
+
+// URL이 비디오인지 확인
+const isVideoUrl = (url: string) => url.endsWith('.mp4') || url.endsWith('.webm');
+
+// URL이 외부 링크인지 확인
+const isExternalUrl = (url: string) => url.startsWith('http://') || url.startsWith('https://');
+
 // DB의 KPI 데이터를 화면에 표시할 형식으로 변환
 function mapKpiToDisplay(
   config: KpiConfig,
@@ -192,11 +225,13 @@ function mapKpiToDisplay(
 
 export default function DashboardPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [videoModalOpen, setVideoModalOpen] = useState(false);
-  const [audioModalOpen, setAudioModalOpen] = useState(false);
-  const [issueModalOpen, setIssueModalOpen] = useState(false);
-  const [visionModalOpen, setVisionModalOpen] = useState(false);
-  const [policyDetailModalOpen, setPolicyDetailModalOpen] = useState(false);
+
+  // 동적 비디오 모달 상태
+  const [videoModal, setVideoModal] = useState<{ open: boolean; url: string; label: string }>({
+    open: false,
+    url: '',
+    label: '',
+  });
 
   // iframe 모듈들로부터 메시지 수신 (활동/알림 자동 저장)
   useModuleMessages({
@@ -206,11 +241,37 @@ export default function DashboardPage() {
   // KPI 데이터 조회 (1분마다 자동 갱신)
   const { data: kpiResponse, isLoading: kpiLoading } = useKpiAll();
 
+  // 퀵버튼 데이터 조회
+  const { data: quickButtonsData } = useQuickButtons();
+  const quickButtons = quickButtonsData?.buttons || [];
+
   // KPI 설정과 DB 데이터를 매핑하여 표시용 데이터 생성
   const kpiData = useMemo(() => {
     const kpiList = kpiResponse?.kpi || [];
     return KPI_CONFIG.map((config) => mapKpiToDisplay(config, kpiList));
   }, [kpiResponse]);
+
+  // 퀵버튼 클릭 핸들러
+  const handleQuickButtonClick = useCallback((button: QuickButton) => {
+    if (isVideoUrl(button.url)) {
+      // 비디오 URL이면 모달 열기
+      setVideoModal({ open: true, url: button.url, label: button.label });
+    } else if (isExternalUrl(button.url)) {
+      // 외부 링크면 새 탭에서 열기
+      window.open(button.url, '_blank');
+    } else if (button.url !== '#') {
+      // 내부 링크면 이동
+      window.location.href = button.url;
+    }
+  }, []);
+
+  // 퀵버튼 아이콘 렌더링
+  const renderButtonIcon = useCallback((iconName: string | null) => {
+    if (!iconName) return null;
+    const IconComponent = QUICK_BUTTON_ICONS[iconName];
+    if (!IconComponent) return null;
+    return <IconComponent className="h-4 w-4" />;
+  }, []);
 
   return (
     <div className="min-h-screen bg-dynamic">
@@ -454,49 +515,97 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* 모바일 CTA 영역 */}
-            <motion.div 
+            {/* 모바일 CTA 영역 - 동적 퀵버튼 */}
+            <motion.div
               className="mt-4 space-y-3 sm:hidden"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.5, duration: 0.6 }}
             >
-              {/* 메인 CTA - 10대 공약 */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ 
-                  delay: 1.6, 
-                  duration: 0.5,
-                  type: "spring",
-                  stiffness: 150
-                }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Button
-                  className="w-full py-4 h-auto bg-primary hover:bg-primary/90 text-white text-base font-bold rounded-xl"
-                  onClick={() => window.open('https://campone.cloud/vision', '_blank')}
+              {/* 메인 CTA - primary 카테고리 버튼 (첫 번째만) */}
+              {quickButtons.filter(b => b.category === 'primary').slice(0, 1).map((button) => (
+                <motion.div
+                  key={button.id}
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{
+                    delay: 1.6,
+                    duration: 0.5,
+                    type: "spring",
+                    stiffness: 150
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  <List className="h-5 w-5 mr-2" />
-                  10대 공약 보기
-                </Button>
-              </motion.div>
+                  <Button
+                    className="w-full py-4 h-auto bg-primary hover:bg-primary/90 text-white text-base font-bold rounded-xl"
+                    onClick={() => handleQuickButtonClick(button)}
+                  >
+                    {renderButtonIcon(button.icon)}
+                    <span className="ml-2">{button.label}</span>
+                  </Button>
+                </motion.div>
+              ))}
 
-              {/* 2x2 그리드 - 영상 콘텐츠 */}
+              {/* 2x2 그리드 - 영상 콘텐츠 (video 카테고리, 최대 4개) */}
               <div className="grid grid-cols-2 gap-2">
-                {[
-                  { label: '출마선언', icon: PlayCircle, onClick: () => setVideoModalOpen(true) },
-                  { label: '공약하이라이트', icon: Video, onClick: () => setAudioModalOpen(true) },
-                  { label: '현장투어', icon: MapPin },
-                  { label: '주민인터뷰', icon: Users },
-                ].map((item, index) => (
+                {quickButtons.filter(b => b.category === 'video').slice(0, 4).map((button, index) => (
                   <motion.div
-                    key={item.label}
+                    key={button.id}
                     initial={{ opacity: 0, scale: 0.8, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ 
-                      delay: 1.7 + index * 0.1, 
+                    transition={{
+                      delay: 1.7 + index * 0.1,
+                      duration: 0.5,
+                      type: "spring",
+                      stiffness: 150
+                    }}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      className="py-3 h-auto rounded-lg font-medium w-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50"
+                      variant="ghost"
+                      onClick={() => handleQuickButtonClick(button)}
+                    >
+                      {renderButtonIcon(button.icon)}
+                      <span className="ml-1.5">{button.label}</span>
+                    </Button>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* 텍스트 링크 - 블로그 콘텐츠 */}
+              <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-sm text-muted-foreground pt-1">
+                {quickButtons.filter(b => b.category === 'blog').slice(0, 4).map((button, index) => (
+                  <React.Fragment key={button.id}>
+                    {index > 0 && <span className="text-border">·</span>}
+                    <button
+                      onClick={() => handleQuickButtonClick(button)}
+                      className="hover:text-primary transition-colors"
+                    >
+                      {button.label}
+                    </button>
+                  </React.Fragment>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* 데스크탑 CTA 영역 - 동적 퀵버튼 */}
+            <motion.div
+              className="hidden sm:block mt-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.5, duration: 0.6 }}
+            >
+              <div className="flex items-center gap-2 flex-wrap">
+                {quickButtons.map((button, index) => (
+                  <motion.div
+                    key={button.id}
+                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{
+                      delay: 1.6 + index * 0.05,
                       duration: 0.5,
                       type: "spring",
                       stiffness: 150
@@ -506,145 +615,15 @@ export default function DashboardPage() {
                   >
                     <Button
                       className={cn(
-                        "py-3 h-auto rounded-lg font-medium w-full",
-                        index < 2
-                          ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50"
-                          : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        "font-normal gap-2",
+                        button.category === 'primary' && "font-medium h-9 px-4 rounded-lg",
+                        CATEGORY_STYLES[button.category] || CATEGORY_STYLES.default
                       )}
-                      variant="ghost"
-                      onClick={item.onClick}
+                      size={button.category === 'primary' ? 'default' : 'sm'}
+                      onClick={() => handleQuickButtonClick(button)}
                     >
-                      <item.icon className="h-4 w-4 mr-1.5" />
-                      {item.label}
-                    </Button>
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* 텍스트 링크 - 블로그 콘텐츠 */}
-              <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-sm text-muted-foreground pt-1">
-                <a href="#" className="hover:text-primary transition-colors">정책팩트체크</a>
-                <span className="text-border">·</span>
-                <a href="#" className="hover:text-primary transition-colors">캠페뉴스</a>
-                <span className="text-border">·</span>
-                <a href="#" className="hover:text-primary transition-colors">비전스토리</a>
-                <span className="text-border">·</span>
-                <a href="#" className="hover:text-primary transition-colors">현장리포트</a>
-              </div>
-            </motion.div>
-
-            {/* 데스크탑 CTA 영역 */}
-            <motion.div 
-              className="hidden sm:block mt-4"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.5, duration: 0.6 }}
-            >
-              <div className="flex items-center gap-2 flex-wrap">
-                {/* 10대 공약 버튼 */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8, x: -20 }}
-                  animate={{ opacity: 1, scale: 1, x: 0 }}
-                  transition={{ 
-                    delay: 1.6, 
-                    duration: 0.5,
-                    type: "spring",
-                    stiffness: 150
-                  }}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Button
-                    className="bg-primary hover:bg-primary/90 text-white font-medium gap-2 h-9 px-4 rounded-lg"
-                    onClick={() => window.open('https://campone.cloud/vision', '_blank')}
-                  >
-                    <List className="h-4 w-4" />
-                    10대 공약
-                  </Button>
-                </motion.div>
-
-                {/* 출마선언 버튼 */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8, x: -20 }}
-                  animate={{ opacity: 1, scale: 1, x: 0 }}
-                  transition={{ 
-                    delay: 1.7, 
-                    duration: 0.5,
-                    type: "spring",
-                    stiffness: 150
-                  }}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Button
-                    className="bg-red-600 hover:bg-red-700 text-white font-normal gap-2"
-                    size="sm"
-                    onClick={() => setVideoModalOpen(true)}
-                  >
-                    <PlayCircle className="h-4 w-4" />
-                    출마선언
-                  </Button>
-                </motion.div>
-
-                {/* 영상 콘텐츠 버튼 */}
-                {[
-                  { label: '공약하이라이트', icon: Video, onClick: () => setAudioModalOpen(true) },
-                  { label: '현장투어', icon: MapPin },
-                  { label: '주민인터뷰', icon: Users },
-                  { label: '이슈에답하다', icon: MessageCircle, onClick: () => setIssueModalOpen(true) },
-                ].map((item, index) => (
-                  <motion.div
-                    key={item.label}
-                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{
-                      delay: 1.8 + index * 0.1,
-                      duration: 0.5,
-                      type: "spring",
-                      stiffness: 150
-                    }}
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Button
-                      className="bg-red-600 hover:bg-red-700 text-white font-normal gap-2"
-                      size="sm"
-                      onClick={item.onClick}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {item.label}
-                    </Button>
-                  </motion.div>
-                ))}
-
-                {/* 블로그 콘텐츠 버튼 */}
-                {[
-                  { label: '후보자비전스토리', icon: BookOpen, onClick: () => setVisionModalOpen(true) },
-                  { label: '공약상세설명', icon: FileText, onClick: () => setPolicyDetailModalOpen(true) },
-                  { label: '현장 리포트', icon: FileCheck },
-                  { label: '정책팩트체크', icon: CheckCircle2 },
-                  { label: '캠페뉴스', icon: Newspaper },
-                ].map((item, index) => (
-                  <motion.div
-                    key={item.label}
-                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ 
-                      delay: 2.2 + index * 0.1, 
-                      duration: 0.5,
-                      type: "spring",
-                      stiffness: 150
-                    }}
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Button
-                      className="bg-[#03C75A] hover:bg-[#02b051] text-white font-normal gap-2"
-                      size="sm"
-                      onClick={item.onClick}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {item.label}
+                      {renderButtonIcon(button.icon)}
+                      {button.label}
                     </Button>
                   </motion.div>
                 ))}
@@ -747,56 +726,23 @@ export default function DashboardPage() {
 
       <AppFooter sidebarCollapsed={sidebarCollapsed} />
 
-      {/* 비디오 모달 */}
-      <Dialog open={videoModalOpen} onOpenChange={setVideoModalOpen}>
+      {/* 동적 비디오 모달 */}
+      <Dialog
+        open={videoModal.open}
+        onOpenChange={(open) => setVideoModal({ ...videoModal, open })}
+      >
         <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black">
           <DialogHeader className="p-4 bg-gradient-to-r from-red-600 to-red-700">
             <DialogTitle className="text-white flex items-center gap-2">
               <PlayCircle className="h-5 w-5" />
-              출마선언 영상
+              {videoModal.label}
             </DialogTitle>
           </DialogHeader>
           <div className="aspect-video bg-black">
-            {videoModalOpen && (
+            {videoModal.open && videoModal.url && (
               <video
-                src="/candidate-hong.mp4"
-                controls
-                autoPlay
-                muted
-                playsInline
-                preload="auto"
-                className="w-full h-full object-contain"
-                onLoadedData={(e) => {
-                  // 비디오 로드 완료 후 음소거 해제 시도
-                  const video = e.currentTarget;
-                  video.muted = false;
-                }}
-                onError={(e) => {
-                  console.error('비디오 로드 실패:', e);
-                  alert('비디오를 불러올 수 없습니다. 파일을 확인해주세요.');
-                }}
-              >
-                <source src="/candidate-hong.mp4" type="video/mp4" />
-                브라우저가 비디오 태그를 지원하지 않습니다.
-              </video>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 공약하이라이트 비디오 모달 */}
-      <Dialog open={audioModalOpen} onOpenChange={setAudioModalOpen}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black">
-          <DialogHeader className="p-4 bg-gradient-to-r from-primary to-primary/80">
-            <DialogTitle className="text-white flex items-center gap-2">
-              <Video className="h-5 w-5" />
-              공약 하이라이트
-            </DialogTitle>
-          </DialogHeader>
-          <div className="aspect-video bg-black">
-            {audioModalOpen && (
-              <video
-                src="/policy-highlight.mp4"
+                key={videoModal.url}
+                src={videoModal.url}
                 controls
                 autoPlay
                 muted
@@ -812,115 +758,7 @@ export default function DashboardPage() {
                   alert('비디오를 불러올 수 없습니다. 파일을 확인해주세요.');
                 }}
               >
-                <source src="/policy-highlight.mp4" type="video/mp4" />
-                브라우저가 비디오 태그를 지원하지 않습니다.
-              </video>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 이슈에답하다 비디오 모달 */}
-      <Dialog open={issueModalOpen} onOpenChange={setIssueModalOpen}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black">
-          <DialogHeader className="p-4 bg-gradient-to-r from-orange-500 to-orange-600">
-            <DialogTitle className="text-white flex items-center gap-2">
-              <MessageCircle className="h-5 w-5" />
-              이슈에 답하다
-            </DialogTitle>
-          </DialogHeader>
-          <div className="aspect-video bg-black">
-            {issueModalOpen && (
-              <video
-                src="/issue-answer.mp4"
-                controls
-                autoPlay
-                muted
-                playsInline
-                preload="auto"
-                className="w-full h-full object-contain"
-                onLoadedData={(e) => {
-                  const video = e.currentTarget;
-                  video.muted = false;
-                }}
-                onError={(e) => {
-                  console.error('비디오 로드 실패:', e);
-                  alert('비디오를 불러올 수 없습니다. 파일을 확인해주세요.');
-                }}
-              >
-                <source src="/issue-answer.mp4" type="video/mp4" />
-                브라우저가 비디오 태그를 지원하지 않습니다.
-              </video>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 후보자비전스토리 비디오 모달 */}
-      <Dialog open={visionModalOpen} onOpenChange={setVisionModalOpen}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black">
-          <DialogHeader className="p-4 bg-gradient-to-r from-[#03C75A] to-[#02a050]">
-            <DialogTitle className="text-white flex items-center gap-2">
-              <BookOpen className="h-5 w-5" />
-              후보자 비전 스토리
-            </DialogTitle>
-          </DialogHeader>
-          <div className="aspect-video bg-black">
-            {visionModalOpen && (
-              <video
-                src="/vision-story.mp4"
-                controls
-                autoPlay
-                muted
-                playsInline
-                preload="auto"
-                className="w-full h-full object-contain"
-                onLoadedData={(e) => {
-                  const video = e.currentTarget;
-                  video.muted = false;
-                }}
-                onError={(e) => {
-                  console.error('비디오 로드 실패:', e);
-                  alert('비디오를 불러올 수 없습니다. 파일을 확인해주세요.');
-                }}
-              >
-                <source src="/vision-story.mp4" type="video/mp4" />
-                브라우저가 비디오 태그를 지원하지 않습니다.
-              </video>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 공약상세설명 비디오 모달 */}
-      <Dialog open={policyDetailModalOpen} onOpenChange={setPolicyDetailModalOpen}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black">
-          <DialogHeader className="p-4 bg-gradient-to-r from-[#03C75A] to-[#02a050]">
-            <DialogTitle className="text-white flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              공약 상세 설명
-            </DialogTitle>
-          </DialogHeader>
-          <div className="aspect-video bg-black">
-            {policyDetailModalOpen && (
-              <video
-                src="/policy-detail.mp4"
-                controls
-                autoPlay
-                muted
-                playsInline
-                preload="auto"
-                className="w-full h-full object-contain"
-                onLoadedData={(e) => {
-                  const video = e.currentTarget;
-                  video.muted = false;
-                }}
-                onError={(e) => {
-                  console.error('비디오 로드 실패:', e);
-                  alert('비디오를 불러올 수 없습니다. 파일을 확인해주세요.');
-                }}
-              >
-                <source src="/policy-detail.mp4" type="video/mp4" />
+                <source src={videoModal.url} type="video/mp4" />
                 브라우저가 비디오 태그를 지원하지 않습니다.
               </video>
             )}

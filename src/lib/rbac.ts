@@ -90,6 +90,12 @@ export const permissions: Permission[] = [
   // Channels
   { entity: 'channels', action: 'read', roles: ['Admin', 'Manager', 'Staff', 'Viewer'] },
   { entity: 'channels', action: 'update', roles: ['Admin', 'Manager'] },
+
+  // Quick Buttons (대시보드 퀵버튼)
+  { entity: 'quickButtons', action: 'read', roles: ['Admin', 'Manager', 'Staff', 'Viewer'] },
+  { entity: 'quickButtons', action: 'create', roles: ['Admin', 'Manager'] },
+  { entity: 'quickButtons', action: 'update', roles: ['Admin', 'Manager'] },
+  { entity: 'quickButtons', action: 'delete', roles: ['Admin', 'Manager'] },
 ];
 
 /**

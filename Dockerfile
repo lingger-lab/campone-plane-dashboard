@@ -31,6 +31,10 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
+# Install sharp for image optimization
+RUN apk add --no-cache libc6-compat
+RUN npm install -g sharp
+
 # Set environment variables
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -46,6 +50,14 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
+# Copy Prisma files for db push at runtime
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/prisma ./prisma
+
+# Copy sharp from global install
+RUN cp -r /usr/local/lib/node_modules/sharp ./node_modules/sharp || true
+
 # Set correct permissions
 RUN chown -R nextjs:nodejs /app
 
@@ -55,5 +67,5 @@ USER nextjs
 # Expose port
 EXPOSE 8080
 
-# Start the application
-CMD ["node", "server.js"]
+# Start the application with db push
+CMD sh -c "npx prisma db push --skip-generate --accept-data-loss 2>/dev/null || true; exec node server.js"
