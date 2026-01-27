@@ -20,7 +20,6 @@ import {
   Link as LinkIcon,
 } from 'lucide-react';
 import { SiYoutube, SiKakaotalk, SiInstagram, SiNaver } from 'react-icons/si';
-import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useChannels, getChannelIconColor } from '@/hooks/useChannels';
@@ -214,28 +213,6 @@ export function Sidebar({
           })}
         </nav>
 
-        {/* QR 코드 섹션 */}
-        {!collapsed && (
-          <div className="flex flex-col items-center gap-1 p-2 border-t">
-            <div className="text-xs font-semibold text-muted-foreground">공개 사이트</div>
-            <div className="bg-white p-1 rounded shadow-sm">
-              <QRCodeSVG
-                value="https://campone.cloud/"
-                size={64}
-                level="H"
-                includeMargin={false}
-              />
-            </div>
-            <a
-              href="https://campone.cloud/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-primary hover:underline"
-            >
-              campone.cloud
-            </a>
-          </div>
-        )}
       </div>
 
       {/* 모바일: 닫기 버튼 */}

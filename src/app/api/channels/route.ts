@@ -123,12 +123,13 @@ export async function POST(request: NextRequest) {
 
     // 트랜잭션으로 모든 채널 업서트
     const results = await prisma.$transaction(
-      channels.map((ch: { key: string; url?: string; label?: string; visible?: boolean; order?: number }) =>
+      channels.map((ch: { key: string; url?: string; label?: string; icon?: string; visible?: boolean; order?: number }) =>
         prisma.channelLink.upsert({
           where: { key: ch.key },
           update: {
             url: ch.url,
             label: ch.label,
+            icon: ch.icon,
             visible: ch.visible,
             order: ch.order,
           },
@@ -136,6 +137,7 @@ export async function POST(request: NextRequest) {
             key: ch.key,
             url: ch.url || '',
             label: ch.label || ch.key,
+            icon: ch.icon || null,
             visible: ch.visible ?? true,
             order: ch.order ?? 99,
           },
