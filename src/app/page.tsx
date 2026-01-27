@@ -18,9 +18,14 @@ import {
   GraduationCap,
   List,
   ExternalLink,
+  Award,
+  Building,
+  Heart,
+  Star,
   LucideIcon,
 } from 'lucide-react';
 import { useQuickButtons, QuickButton } from '@/hooks/useQuickButtons';
+import { useCampaignProfile, CareerItem } from '@/hooks/useCampaignProfile';
 import { AppHeader, Sidebar, AppFooter } from '@/components/layout';
 import { KPICard, ModuleCard, RecentActivity, AlertCenter } from '@/components/dashboard';
 import { useModuleMessages } from '@/hooks/useModuleMessages';
@@ -158,6 +163,18 @@ const QUICK_BUTTON_ICONS: Record<string, LucideIcon> = {
   ExternalLink,
 };
 
+// 경력 아이콘 매핑
+const CAREER_ICONS: Record<string, LucideIcon> = {
+  Briefcase,
+  GraduationCap,
+  Users,
+  Award,
+  Building,
+  Heart,
+  Star,
+  MapPin,
+};
+
 // 퀵버튼 카테고리별 스타일
 const CATEGORY_STYLES = {
   primary: 'bg-primary hover:bg-primary/90 text-white',
@@ -244,6 +261,10 @@ export default function DashboardPage() {
   // 퀵버튼 데이터 조회
   const { data: quickButtonsData } = useQuickButtons();
   const quickButtons = quickButtonsData?.buttons || [];
+
+  // 캠페인 프로필 데이터 조회
+  const { data: profileData } = useCampaignProfile();
+  const profile = profileData?.profile;
 
   // KPI 설정과 DB 데이터를 매핑하여 표시용 데이터 생성
   const kpiData = useMemo(() => {
@@ -344,8 +365,8 @@ export default function DashboardPage() {
                   className="rounded-xl"
                 >
                   <Image
-                    src="/candidate.jpg"
-                    alt="유해남 후보"
+                    src={profile?.photoUrl || '/candidate.jpg'}
+                    alt={profile?.candidateName || '후보자'}
                     width={120}
                     height={120}
                     className="w-20 h-20 sm:w-[120px] sm:h-[120px] rounded-xl object-cover shadow-md"
@@ -362,7 +383,7 @@ export default function DashboardPage() {
                   className="hidden w-20 h-20 sm:w-[120px] sm:h-[120px] items-center justify-center rounded-xl bg-primary text-white font-bold text-xl sm:text-2xl shadow-md"
                   style={{ display: 'none' }}
                 >
-                  유
+                  {(profile?.candidateName || '후').charAt(0)}
                 </div>
               </motion.div>
 
@@ -381,18 +402,18 @@ export default function DashboardPage() {
                         damping: 10
                       }}
                     >
-                      <motion.h1 
+                      <motion.h1
                         className="text-xl sm:text-2xl font-bold text-primary"
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ 
+                        transition={{
                           delay: 0.6,
                           duration: 0.6,
                           type: "spring",
                           stiffness: 200
                         }}
                       >
-                        유해남 후보 선거대책본부
+                        {profile?.candidateName || '후보자명'} {profile?.orgName || '선거대책본부'}
                       </motion.h1>
                       <motion.p
                         className="text-sm sm:text-base text-muted-foreground font-medium mt-0.5"
@@ -403,87 +424,57 @@ export default function DashboardPage() {
                           duration: 0.6
                         }}
                       >
-                        사천시장 후보
+                        {profile?.candidateTitle || '후보'}
                       </motion.p>
                     </motion.div>
 
                     {/* 경력 정보 - 모바일: 가로 스크롤, 데스크탑: 세로 */}
-                    <motion.div 
-                      className="flex sm:flex-col gap-3 sm:gap-1 mt-2 overflow-x-auto pb-1 sm:pb-0 justify-center sm:justify-center lg:justify-center"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.8, duration: 0.6 }}
-                    >
-                      {[
-                        { icon: Briefcase, text: '행정경력 15년' },
-                        { icon: GraduationCap, text: '부산대 교수' },
-                        { icon: Users, text: '사천시 당협위원장' },
-                      ].map((item, index) => (
-                        <motion.div
-                          key={index}
-                          className="flex items-center gap-1.5 text-xs sm:text-sm whitespace-nowrap"
-                          initial={{ opacity: 0, x: -20, scale: 0.8 }}
-                          animate={{ opacity: 1, x: 0, scale: 1 }}
-                          transition={{
-                            delay: 0.9 + index * 0.15,
-                            duration: 0.5,
-                            type: "spring",
-                            stiffness: 150
-                          }}
-                          whileHover={{ 
-                            scale: 1.1,
-                            x: 5,
-                            transition: { duration: 0.2 }
-                          }}
-                        >
-                          <item.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
-                          <span>{item.text}</span>
-                        </motion.div>
-                      ))}
-                    </motion.div>
+                    {(profile?.careers || []).length > 0 && (
+                      <motion.div
+                        className="flex sm:flex-col gap-3 sm:gap-1 mt-2 overflow-x-auto pb-1 sm:pb-0 justify-center sm:justify-center lg:justify-center"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.8, duration: 0.6 }}
+                      >
+                        {(profile?.careers || []).map((item: CareerItem, index: number) => {
+                          const IconComponent = CAREER_ICONS[item.icon] || Briefcase;
+                          return (
+                            <motion.div
+                              key={index}
+                              className="flex items-center gap-1.5 text-xs sm:text-sm whitespace-nowrap"
+                              initial={{ opacity: 0, x: -20, scale: 0.8 }}
+                              animate={{ opacity: 1, x: 0, scale: 1 }}
+                              transition={{
+                                delay: 0.9 + index * 0.15,
+                                duration: 0.5,
+                                type: "spring",
+                                stiffness: 150
+                              }}
+                              whileHover={{
+                                scale: 1.1,
+                                x: 5,
+                                transition: { duration: 0.2 }
+                              }}
+                            >
+                              <IconComponent className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
+                              <span>{item.text}</span>
+                            </motion.div>
+                          );
+                        })}
+                      </motion.div>
+                    )}
                   </div>
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0, rotate: -180 }}
-                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                    transition={{
-                      delay: 1.2,
-                      duration: 0.6,
-                      type: "spring",
-                      stiffness: 200
-                    }}
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                  >
-                    <motion.div
-                      animate={{
-                        boxShadow: [
-                          "0 0 0 0 rgba(34, 197, 94, 0.4)",
-                          "0 0 0 8px rgba(34, 197, 94, 0)",
-                          "0 0 0 0 rgba(34, 197, 94, 0)",
-                        ],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
-                      className="rounded-full"
-                    >
-                      <Badge variant="success" className="px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm shrink-0">
-                        Active
-                      </Badge>
-                    </motion.div>
-                  </motion.div>
                 </div>
 
                 {/* 슬로건 - 데스크탑만 표시 */}
-                <motion.div 
-                  className="hidden sm:flex items-center gap-2 flex-wrap pt-2"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 1.3, duration: 0.6 }}
-                >
-                  {['국민과 함께하는 정치', '청년에게 희망을', '경제 성장의 새 길'].map(
-                    (slogan, i) => (
+                {(profile?.slogans || []).length > 0 && (
+                  <motion.div
+                    className="hidden sm:flex items-center gap-2 flex-wrap pt-2"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1.3, duration: 0.6 }}
+                  >
+                    {(profile?.slogans || []).map((slogan: string, i: number) => (
                       <motion.div
                         key={i}
                         className={cn(
@@ -500,8 +491,8 @@ export default function DashboardPage() {
                           type: "spring",
                           stiffness: 150
                         }}
-                        whileHover={{ 
-                          scale: 1.1, 
+                        whileHover={{
+                          scale: 1.1,
                           y: -2,
                           transition: { duration: 0.2 }
                         }}
@@ -509,9 +500,9 @@ export default function DashboardPage() {
                       >
                         {slogan}
                       </motion.div>
-                    )
-                  )}
-                </motion.div>
+                    ))}
+                  </motion.div>
+                )}
               </div>
             </div>
 

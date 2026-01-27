@@ -140,6 +140,23 @@ model KpiCache {
 }
 
 // ============================================
+// 캠페인 프로필 (메인 대시보드 헤더)
+// ============================================
+
+model CampaignProfile {
+  id             String   @id @default("main")  // 단일 레코드
+  candidateName  String   @default("후보자명")   // 후보자 이름
+  candidateTitle String   @default("OO시장 후보") // 직함
+  orgName        String   @default("선거대책본부") // 조직명
+  photoUrl       String?                         // 후보자 사진 URL
+  careers        Json     @default("[]")         // 경력 항목 [{icon: string, text: string}]
+  slogans        Json     @default("[]")         // 슬로건 목록 [string]
+  updatedAt      DateTime @updatedAt
+
+  @@map("campaign_profile")
+}
+
+// ============================================
 // 퀵버튼 (메인 대시보드)
 // ============================================
 

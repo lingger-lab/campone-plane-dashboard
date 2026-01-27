@@ -1,0 +1,428 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import {
+  ChevronLeft,
+  Save,
+  RefreshCw,
+  X,
+  Plus,
+  Trash2,
+  Briefcase,
+  GraduationCap,
+  Users,
+  Award,
+  Building,
+  Heart,
+  Star,
+  MapPin,
+  AlertCircle,
+} from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { cn } from '@/lib/utils';
+import { useCampaignProfile, useUpdateCampaignProfile, CareerItem } from '@/hooks/useCampaignProfile';
+import { hasPermission } from '@/lib/rbac';
+import type { UserRole } from '@/lib/types';
+
+// 아이콘 옵션
+const ICON_OPTIONS = [
+  { key: 'Briefcase', label: '서류가방', Icon: Briefcase },
+  { key: 'GraduationCap', label: '학사모', Icon: GraduationCap },
+  { key: 'Users', label: '사람들', Icon: Users },
+  { key: 'Award', label: '수상', Icon: Award },
+  { key: 'Building', label: '건물', Icon: Building },
+  { key: 'Heart', label: '하트', Icon: Heart },
+  { key: 'Star', label: '별', Icon: Star },
+  { key: 'MapPin', label: '위치', Icon: MapPin },
+];
+
+function getIconComponent(iconKey: string) {
+  const found = ICON_OPTIONS.find((opt) => opt.key === iconKey);
+  return found?.Icon || Briefcase;
+}
+
+export default function CampaignProfilePage() {
+  const { data: session } = useSession();
+  const userRole = (session?.user as { role?: UserRole })?.role || 'Viewer';
+  const canEdit = hasPermission(userRole, 'settings', 'update');
+
+  const { data: profileData, isLoading, isError, refetch } = useCampaignProfile();
+  const updateProfile = useUpdateCampaignProfile();
+
+  // 폼 상태
+  const [candidateName, setCandidateName] = useState('');
+  const [candidateTitle, setCandidateTitle] = useState('');
+  const [orgName, setOrgName] = useState('');
+  const [photoUrl, setPhotoUrl] = useState('');
+  const [careers, setCareers] = useState<CareerItem[]>([]);
+  const [slogans, setSlogans] = useState<string[]>([]);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // 서버 데이터로 초기화
+  useEffect(() => {
+    if (profileData?.profile) {
+      const p = profileData.profile;
+      setCandidateName(p.candidateName);
+      setCandidateTitle(p.candidateTitle);
+      setOrgName(p.orgName);
+      setPhotoUrl(p.photoUrl || '');
+      setCareers(p.careers || []);
+      setSlogans(p.slogans || []);
+      setHasChanges(false);
+    }
+  }, [profileData]);
+
+  // 경력 추가
+  const addCareer = () => {
+    setCareers([...careers, { icon: 'Briefcase', text: '' }]);
+    setHasChanges(true);
+  };
+
+  // 경력 삭제
+  const removeCareer = (index: number) => {
+    setCareers(careers.filter((_, i) => i !== index));
+    setHasChanges(true);
+  };
+
+  // 경력 수정
+  const updateCareer = (index: number, field: 'icon' | 'text', value: string) => {
+    const newCareers = [...careers];
+    newCareers[index] = { ...newCareers[index], [field]: value };
+    setCareers(newCareers);
+    setHasChanges(true);
+  };
+
+  // 슬로건 추가
+  const addSlogan = () => {
+    setSlogans([...slogans, '']);
+    setHasChanges(true);
+  };
+
+  // 슬로건 삭제
+  const removeSlogan = (index: number) => {
+    setSlogans(slogans.filter((_, i) => i !== index));
+    setHasChanges(true);
+  };
+
+  // 슬로건 수정
+  const updateSlogan = (index: number, value: string) => {
+    const newSlogans = [...slogans];
+    newSlogans[index] = value;
+    setSlogans(newSlogans);
+    setHasChanges(true);
+  };
+
+  // 저장
+  const handleSave = async () => {
+    try {
+      await updateProfile.mutateAsync({
+        candidateName,
+        candidateTitle,
+        orgName,
+        photoUrl: photoUrl || null,
+        careers,
+        slogans,
+      });
+      setHasChanges(false);
+    } catch (error) {
+      console.error('Failed to save profile:', error);
+    }
+  };
+
+  // 되돌리기
+  const handleReset = () => {
+    if (profileData?.profile) {
+      const p = profileData.profile;
+      setCandidateName(p.candidateName);
+      setCandidateTitle(p.candidateTitle);
+      setOrgName(p.orgName);
+      setPhotoUrl(p.photoUrl || '');
+      setCareers(p.careers || []);
+      setSlogans(p.slogans || []);
+      setHasChanges(false);
+    }
+  };
+
+  // 필드 변경 감지
+  const handleFieldChange = () => {
+    setHasChanges(true);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="container max-w-4xl mx-auto p-6 flex items-center justify-center min-h-[400px]">
+        <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="container max-w-4xl mx-auto p-6">
+        <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+          <AlertCircle className="h-12 w-12 text-destructive" />
+          <p className="text-muted-foreground">프로필 정보를 불러올 수 없습니다</p>
+          <Button variant="outline" onClick={() => refetch()}>
+            다시 시도
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container max-w-4xl mx-auto p-6 space-y-6">
+      {/* 헤더 */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/settings">
+            <Button variant="ghost" size="icon">
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold">캠페인 프로필</h1>
+            <p className="text-muted-foreground">메인 대시보드 상단의 후보자 정보</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {!canEdit && <Badge variant="secondary">읽기 전용</Badge>}
+          {canEdit && hasChanges && (
+            <>
+              <Button variant="outline" size="sm" onClick={handleReset}>
+                <X className="h-4 w-4 mr-1" />
+                되돌리기
+              </Button>
+              <Button size="sm" onClick={handleSave} disabled={updateProfile.isPending}>
+                {updateProfile.isPending ? (
+                  <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 mr-1" />
+                )}
+                저장
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* 기본 정보 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">기본 정보</CardTitle>
+          <CardDescription>후보자 이름, 직함 등 기본 정보를 설정합니다.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-1 block">후보자 이름 *</label>
+              <Input
+                value={candidateName}
+                onChange={(e) => {
+                  setCandidateName(e.target.value);
+                  handleFieldChange();
+                }}
+                placeholder="예: 홍길동"
+                disabled={!canEdit}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">직함 *</label>
+              <Input
+                value={candidateTitle}
+                onChange={(e) => {
+                  setCandidateTitle(e.target.value);
+                  handleFieldChange();
+                }}
+                placeholder="예: OO시장 후보"
+                disabled={!canEdit}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1 block">조직명</label>
+            <Input
+              value={orgName}
+              onChange={(e) => {
+                setOrgName(e.target.value);
+                handleFieldChange();
+              }}
+              placeholder="예: 선거대책본부"
+              disabled={!canEdit}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1 block">사진 URL</label>
+            <Input
+              value={photoUrl}
+              onChange={(e) => {
+                setPhotoUrl(e.target.value);
+                handleFieldChange();
+              }}
+              placeholder="예: /candidate.jpg 또는 https://..."
+              disabled={!canEdit}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              public 폴더의 이미지 경로 또는 외부 URL을 입력하세요.
+            </p>
+          </div>
+          {photoUrl && (
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-muted-foreground">미리보기:</span>
+              <div className="relative w-20 h-20 rounded-xl overflow-hidden border">
+                <Image
+                  src={photoUrl}
+                  alt="후보자 사진"
+                  fill
+                  className="object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 경력 정보 */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base">경력 정보</CardTitle>
+              <CardDescription>메인 대시보드에 표시될 주요 경력을 설정합니다.</CardDescription>
+            </div>
+            {canEdit && (
+              <Button variant="outline" size="sm" onClick={addCareer}>
+                <Plus className="h-4 w-4 mr-1" />
+                추가
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {careers.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground">
+              등록된 경력이 없습니다.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {careers.map((career, index) => {
+                const IconComponent = getIconComponent(career.icon);
+                return (
+                  <div key={index} className="flex items-center gap-3">
+                    <Select
+                      value={career.icon}
+                      onValueChange={(value) => updateCareer(index, 'icon', value)}
+                      disabled={!canEdit}
+                    >
+                      <SelectTrigger className="w-[140px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ICON_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.key} value={opt.key}>
+                            <div className="flex items-center gap-2">
+                              <opt.Icon className="h-4 w-4" />
+                              <span>{opt.label}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      value={career.text}
+                      onChange={(e) => updateCareer(index, 'text', e.target.value)}
+                      placeholder="예: 행정경력 15년"
+                      className="flex-1"
+                      disabled={!canEdit}
+                    />
+                    {canEdit && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => removeCareer(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 슬로건 */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base">슬로건</CardTitle>
+              <CardDescription>메인 대시보드에 표시될 슬로건을 설정합니다. (데스크탑만 표시)</CardDescription>
+            </div>
+            {canEdit && (
+              <Button variant="outline" size="sm" onClick={addSlogan}>
+                <Plus className="h-4 w-4 mr-1" />
+                추가
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {slogans.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground">
+              등록된 슬로건이 없습니다.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {slogans.map((slogan, index) => (
+                <div key={index} className="flex items-center gap-3">
+                  <Badge variant={index === 0 ? 'default' : 'secondary'} className="shrink-0">
+                    {index + 1}
+                  </Badge>
+                  <Input
+                    value={slogan}
+                    onChange={(e) => updateSlogan(index, e.target.value)}
+                    placeholder="예: 국민과 함께하는 정치"
+                    className="flex-1"
+                    disabled={!canEdit}
+                  />
+                  {canEdit && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => removeSlogan(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground mt-3">
+            첫 번째 슬로건은 강조 스타일로 표시됩니다.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

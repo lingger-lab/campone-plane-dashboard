@@ -57,7 +57,7 @@ steps:
       - '--set-env-vars'
       - 'NEXTAUTH_URL=https://campone-dashboard-755458598444.asia-northeast3.run.app'
       - '--set-secrets'
-      - 'NEXTAUTH_SECRET=campone-admin-secret:latest,DATABASE_URL=DATABASE_URL_DASHBOARD:latest,EMBED_JWT_SECRET=embed-jwt-secret:latest'
+      - 'NEXTAUTH_SECRET=campone-admin-secret:latest,DATABASE_URL=DATABASE_URL_DASHBOARD:latest,EMBED_JWT_SECRET=embed-jwt-secret:latest,INTERNAL_API_KEY=dashboard-api-key:latest'
 
 images:
   - 'gcr.io/$PROJECT_ID/campone-dashboard:$COMMIT_SHA'

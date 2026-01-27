@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { User, Palette, MousePointer2, Link2, ChevronRight } from 'lucide-react';
+import { User, Palette, MousePointer2, Link2, UserCircle, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -96,6 +96,29 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* 캠페인 프로필 관리 (Manager 이상만 표시) */}
+      {hasPermission(userRole as UserRole, 'settings', 'update') && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <UserCircle className="h-5 w-5 text-primary" />
+              <div>
+                <CardTitle className="text-base">캠페인 프로필</CardTitle>
+                <CardDescription>메인 대시보드 상단의 후보자 정보 관리</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Link href="/settings/campaign-profile">
+              <Button variant="outline" className="gap-2">
+                프로필 설정
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
 
       {/* 퀵버튼 관리 (Manager 이상만 표시) */}
       {hasPermission(userRole as UserRole, 'quickButtons', 'update') && (
