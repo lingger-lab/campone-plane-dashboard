@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { User, Palette, MousePointer2, ChevronRight } from 'lucide-react';
+import { User, Palette, MousePointer2, Link2, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -113,6 +113,29 @@ export default function SettingsPage() {
             <Link href="/settings/quick-buttons">
               <Button variant="outline" className="gap-2">
                 퀵버튼 설정
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 채널 링크 관리 (Manager 이상만 표시) */}
+      {hasPermission(userRole as UserRole, 'channels', 'update') && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Link2 className="h-5 w-5 text-primary" />
+              <div>
+                <CardTitle className="text-base">채널 링크 관리</CardTitle>
+                <CardDescription>사이드바에 표시되는 외부 채널 링크 관리</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Link href="/settings/channel-links">
+              <Button variant="outline" className="gap-2">
+                채널 링크 설정
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </Link>
