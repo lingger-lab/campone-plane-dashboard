@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Pencil,
@@ -83,6 +84,7 @@ interface QuickButton {
 
 export default function QuickButtonsPage() {
   const { data: session } = useSession();
+  const queryClient = useQueryClient();
   const [buttons, setButtons] = useState<QuickButton[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -114,6 +116,8 @@ export default function QuickButtonsPage() {
       const res = await fetch('/api/quick-buttons');
       const data = await res.json();
       setButtons(data.buttons || []);
+      // 메인 페이지의 React Query 캐시도 무효화
+      queryClient.invalidateQueries({ queryKey: ['quickButtons'] });
     } catch (error) {
       console.error('Failed to fetch buttons:', error);
     } finally {
