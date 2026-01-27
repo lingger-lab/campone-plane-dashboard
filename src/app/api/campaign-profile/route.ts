@@ -5,6 +5,9 @@ import { prisma } from '@/lib/prisma';
 import { hasPermission } from '@/lib/rbac';
 import type { UserRole } from '@/lib/types';
 
+// 정적 라우트로 빌드되면 PUT이 무시되므로 강제 동적 설정
+export const dynamic = 'force-dynamic';
+
 // 기본 프로필 데이터
 const defaultProfile = {
   id: 'main',
