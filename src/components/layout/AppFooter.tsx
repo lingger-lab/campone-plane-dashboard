@@ -1,48 +1,50 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
-import { MapPin, Phone, Mail, Clock, ExternalLink, Sun, Moon, Monitor } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Sun, Moon, Monitor, Link as LinkIcon } from 'lucide-react';
 import { SiYoutube, SiKakaotalk, SiInstagram, SiNaver } from 'react-icons/si';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/components/theme-provider';
 import { cn } from '@/lib/utils';
+import { useChannels, getChannelIconColor } from '@/hooks/useChannels';
+import { useCampaignProfile } from '@/hooks/useCampaignProfile';
 
 interface AppFooterProps {
   sidebarCollapsed?: boolean;
   className?: string;
 }
 
-// 소셜 미디어 링크
-const socialLinks = [
-  { icon: SiYoutube, label: '유튜브', href: 'https://www.youtube.com/@CampOne-w9p', color: 'text-red-600' },
-  { icon: SiKakaotalk, label: '카카오톡', href: 'https://open.kakao.com/o/gQ9XBl9h', color: 'text-yellow-500' },
-  { icon: SiInstagram, label: '인스타그램', href: 'https://instagram.com/hongdemo', color: 'text-pink-600' },
-  { icon: SiNaver, label: '네이버', href: 'https://blog.naver.com/nineuri/224131041233', color: 'text-[#03C75A]' },
-];
-
-// 시스템 상태 인디케이터
-const systemStatus = [
-  { label: 'API', status: 'online' },
-  { label: 'Queue', status: 'online' },
-  { label: 'Deploy', status: 'online' },
-];
+// 아이콘 키 → 컴포넌트 매핑
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  youtube: SiYoutube,
+  kakao: SiKakaotalk,
+  instagram: SiInstagram,
+  naver: SiNaver,
+};
 
 export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProps) {
   const { theme, setTheme } = useTheme();
+  const { data: channelsData } = useChannels();
+  const { data: profileData } = useCampaignProfile();
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'online':
-        return 'bg-green-500';
-      case 'warning':
-        return 'bg-yellow-500';
-      case 'offline':
-        return 'bg-red-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
+  // 채널 데이터로 소셜 링크 구성
+  const socialLinks = useMemo(() => {
+    const channels = channelsData?.channels || [];
+    return channels
+      .filter((ch) => ch.visible)
+      .sort((a, b) => a.order - b.order)
+      .map((ch) => ({
+        key: ch.key,
+        icon: iconMap[ch.icon || ''] || LinkIcon,
+        label: ch.label,
+        href: ch.url,
+        color: getChannelIconColor(ch.icon),
+      }));
+  }, [channelsData]);
+
+  // 프로필 데이터
+  const profile = profileData?.profile;
 
   return (
     <footer
@@ -58,23 +60,33 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           {/* 선거대책본부 정보 */}
           <div className="space-y-4">
-            <h3 className="text-lg font-bold text-foreground">유해남 후보 선거대책본부</h3>
+            <h3 className="text-lg font-bold text-foreground">
+              {profile?.candidateName || '후보자명'} {profile?.orgName || '선거대책본부'}
+            </h3>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              사천시장 후보<br />
-              국민과 함께하는 정치, 청년에게 희망을, 경제 성장의 새 길
+              {profile?.candidateTitle || 'OO시장 후보'}
+              {profile?.description && (
+                <>
+                  <br />
+                  {profile.description}
+                </>
+              )}
             </p>
             <div className="flex items-center gap-3 pt-2">
-              {socialLinks.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  target="_blank"
-                  className={cn('transition-transform hover:scale-110', item.color)}
-                  title={item.label}
-                >
-                  <item.icon className="h-5 w-5" />
-                </Link>
-              ))}
+              {socialLinks.map((item) => {
+                const IconComponent = item.icon;
+                return (
+                  <Link
+                    key={item.key}
+                    href={item.href}
+                    target="_blank"
+                    className={cn('transition-transform hover:scale-110', item.color)}
+                    title={item.label}
+                  >
+                    <IconComponent className="h-5 w-5" />
+                  </Link>
+                );
+              })}
             </div>
           </div>
 
@@ -82,22 +94,33 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
           <div className="space-y-4">
             <h3 className="text-lg font-bold text-foreground">연락처</h3>
             <ul className="space-y-3 text-sm text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <MapPin className="h-4 w-4 mt-0.5 text-primary shrink-0" />
-                <span>경남 사천시 사천읍 중앙로 123<br />유해남 선거사무소 2층</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-primary shrink-0" />
-                <span>055-123-4567</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-primary shrink-0" />
-                <span>contact@hongdemo.com</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-primary shrink-0" />
-                <span>평일 09:00 - 18:00</span>
-              </li>
+              {profile?.address && (
+                <li className="flex items-start gap-2">
+                  <MapPin className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                  <span>{profile.address}</span>
+                </li>
+              )}
+              {profile?.phone && (
+                <li className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-primary shrink-0" />
+                  <span>{profile.phone}</span>
+                </li>
+              )}
+              {profile?.email && (
+                <li className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-primary shrink-0" />
+                  <span>{profile.email}</span>
+                </li>
+              )}
+              {profile?.hours && (
+                <li className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-primary shrink-0" />
+                  <span>{profile.hours}</span>
+                </li>
+              )}
+              {!profile?.address && !profile?.phone && !profile?.email && !profile?.hours && (
+                <li className="text-muted-foreground/50">설정에서 연락처 정보를 입력하세요</li>
+              )}
             </ul>
           </div>
 
@@ -175,17 +198,6 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
               </div>
             </div>
 
-            {/* 시스템 상태 */}
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span>시스템 상태:</span>
-              {systemStatus.map((item) => (
-                <div key={item.label} className="flex items-center gap-1">
-                  <span className={cn('h-2 w-2 rounded-full', getStatusColor(item.status))} />
-                  <span>{item.label}</span>
-                </div>
-              ))}
-            </div>
-
             {/* 버전 */}
             <div className="text-xs">
               <span className="rounded bg-muted px-2 py-1 font-mono text-muted-foreground">v1.0.0-demo</span>
@@ -199,7 +211,7 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
         <div className="container max-w-7xl mx-auto px-6 py-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
             <div className="text-center md:text-left">
-              <p>© 2025 유해남 후보 선거대책본부. All rights reserved.</p>
+              <p>© {new Date().getFullYear()} {profile?.candidateName || '후보자명'} {profile?.orgName || '선거대책본부'}. All rights reserved.</p>
               <p className="mt-1">
                 본 사이트는 공직선거법에 따라 운영됩니다. | 선거비용 제한액 준수
               </p>

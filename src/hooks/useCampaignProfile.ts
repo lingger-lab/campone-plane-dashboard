@@ -13,6 +13,12 @@ export interface CampaignProfile {
   photoUrl: string | null;
   careers: CareerItem[];
   slogans: string[];
+  // 연락처 정보 (푸터용)
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  hours: string | null;
+  description: string | null;
 }
 
 interface ProfileResponse {

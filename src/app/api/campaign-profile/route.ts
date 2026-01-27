@@ -18,6 +18,12 @@ const defaultProfile = {
     { icon: 'Users', text: '경력 3' },
   ],
   slogans: ['슬로건 1', '슬로건 2', '슬로건 3'],
+  // 연락처 정보 (푸터용)
+  address: null,
+  phone: null,
+  email: null,
+  hours: null,
+  description: null,
 };
 
 // GET: 캠페인 프로필 조회
@@ -56,7 +62,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { candidateName, candidateTitle, orgName, photoUrl, careers, slogans } = body;
+    const { candidateName, candidateTitle, orgName, photoUrl, careers, slogans, address, phone, email, hours, description } = body;
 
     const profile = await prisma.campaignProfile.upsert({
       where: { id: 'main' },
@@ -67,6 +73,11 @@ export async function PUT(request: NextRequest) {
         ...(photoUrl !== undefined && { photoUrl }),
         ...(careers !== undefined && { careers }),
         ...(slogans !== undefined && { slogans }),
+        ...(address !== undefined && { address }),
+        ...(phone !== undefined && { phone }),
+        ...(email !== undefined && { email }),
+        ...(hours !== undefined && { hours }),
+        ...(description !== undefined && { description }),
       },
       create: {
         id: 'main',
@@ -76,6 +87,11 @@ export async function PUT(request: NextRequest) {
         photoUrl: photoUrl || defaultProfile.photoUrl,
         careers: careers || defaultProfile.careers,
         slogans: slogans || defaultProfile.slogans,
+        address: address || null,
+        phone: phone || null,
+        email: email || null,
+        hours: hours || null,
+        description: description || null,
       },
     });
 

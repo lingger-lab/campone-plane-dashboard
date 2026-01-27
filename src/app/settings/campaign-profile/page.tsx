@@ -19,11 +19,15 @@ import {
   Star,
   MapPin,
   AlertCircle,
+  Phone,
+  Mail,
+  Clock,
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import {
   Select,
@@ -69,6 +73,12 @@ export default function CampaignProfilePage() {
   const [photoUrl, setPhotoUrl] = useState('');
   const [careers, setCareers] = useState<CareerItem[]>([]);
   const [slogans, setSlogans] = useState<string[]>([]);
+  // 연락처 정보 (푸터용)
+  const [address, setAddress] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [hours, setHours] = useState('');
+  const [description, setDescription] = useState('');
   const [hasChanges, setHasChanges] = useState(false);
 
   // 서버 데이터로 초기화
@@ -81,6 +91,12 @@ export default function CampaignProfilePage() {
       setPhotoUrl(p.photoUrl || '');
       setCareers(p.careers || []);
       setSlogans(p.slogans || []);
+      // 연락처 정보
+      setAddress(p.address || '');
+      setPhone(p.phone || '');
+      setEmail(p.email || '');
+      setHours(p.hours || '');
+      setDescription(p.description || '');
       setHasChanges(false);
     }
   }, [profileData]);
@@ -135,6 +151,11 @@ export default function CampaignProfilePage() {
         photoUrl: photoUrl || null,
         careers,
         slogans,
+        address: address || null,
+        phone: phone || null,
+        email: email || null,
+        hours: hours || null,
+        description: description || null,
       });
       setHasChanges(false);
     } catch (error) {
@@ -152,6 +173,11 @@ export default function CampaignProfilePage() {
       setPhotoUrl(p.photoUrl || '');
       setCareers(p.careers || []);
       setSlogans(p.slogans || []);
+      setAddress(p.address || '');
+      setPhone(p.phone || '');
+      setEmail(p.email || '');
+      setHours(p.hours || '');
+      setDescription(p.description || '');
       setHasChanges(false);
     }
   };
@@ -421,6 +447,91 @@ export default function CampaignProfilePage() {
           <p className="text-xs text-muted-foreground mt-3">
             첫 번째 슬로건은 강조 스타일로 표시됩니다.
           </p>
+        </CardContent>
+      </Card>
+
+      {/* 연락처 정보 (푸터용) */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">연락처 정보</CardTitle>
+          <CardDescription>푸터에 표시될 연락처 및 선거사무소 정보를 설정합니다.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-1 block">
+              <MapPin className="h-4 w-4 inline mr-1" />
+              주소
+            </label>
+            <Input
+              value={address}
+              onChange={(e) => {
+                setAddress(e.target.value);
+                handleFieldChange();
+              }}
+              placeholder="예: 경남 사천시 사천읍 중앙로 123"
+              disabled={!canEdit}
+            />
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-1 block">
+                <Phone className="h-4 w-4 inline mr-1" />
+                전화번호
+              </label>
+              <Input
+                value={phone}
+                onChange={(e) => {
+                  setPhone(e.target.value);
+                  handleFieldChange();
+                }}
+                placeholder="예: 055-123-4567"
+                disabled={!canEdit}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">
+                <Mail className="h-4 w-4 inline mr-1" />
+                이메일
+              </label>
+              <Input
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  handleFieldChange();
+                }}
+                placeholder="예: contact@example.com"
+                disabled={!canEdit}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1 block">
+              <Clock className="h-4 w-4 inline mr-1" />
+              운영시간
+            </label>
+            <Input
+              value={hours}
+              onChange={(e) => {
+                setHours(e.target.value);
+                handleFieldChange();
+              }}
+              placeholder="예: 평일 09:00 - 18:00"
+              disabled={!canEdit}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1 block">소개글</label>
+            <Textarea
+              value={description}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                handleFieldChange();
+              }}
+              placeholder="선거캠프 소개글을 입력하세요"
+              rows={3}
+              disabled={!canEdit}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>

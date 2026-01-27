@@ -428,10 +428,10 @@ export default function DashboardPage() {
                       </motion.p>
                     </motion.div>
 
-                    {/* 경력 정보 - 모바일: 가로 스크롤, 데스크탑: 세로 */}
+                    {/* 경력 정보 */}
                     {(profile?.careers || []).length > 0 && (
                       <motion.div
-                        className="flex sm:flex-col gap-3 sm:gap-1 mt-2 overflow-x-auto pb-1 sm:pb-0 justify-center sm:justify-center lg:justify-center"
+                        className="flex flex-wrap sm:flex-col gap-2 sm:gap-1 mt-2 justify-center"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.8, duration: 0.6 }}
