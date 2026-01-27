@@ -451,8 +451,7 @@ export default function DashboardPage() {
                                 stiffness: 150
                               }}
                               whileHover={{
-                                scale: 1.1,
-                                x: 5,
+                                color: "var(--primary)",
                                 transition: { duration: 0.2 }
                               }}
                             >
