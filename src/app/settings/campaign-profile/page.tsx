@@ -298,7 +298,7 @@ export default function CampaignProfilePage() {
                 setPhotoUrl(e.target.value);
                 handleFieldChange();
               }}
-              placeholder="예: /candidate.jpg 또는 https://..."
+              placeholder="예: /candidate.png 또는 https://..."
               disabled={!canEdit}
             />
             <p className="text-xs text-muted-foreground mt-1">

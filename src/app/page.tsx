@@ -365,7 +365,7 @@ export default function DashboardPage() {
                   className="rounded-xl"
                 >
                   <Image
-                    src={profile?.photoUrl || '/candidate.jpg'}
+                    src={profile?.photoUrl || '/candidate.png'}
                     alt={profile?.candidateName || '후보자'}
                     width={120}
                     height={120}
