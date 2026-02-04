@@ -10,16 +10,23 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: '이메일', type: 'email', placeholder: 'admin@campone.kr' },
         password: { label: '비밀번호', type: 'password' },
+        tenantId: { label: '테넌트 ID', type: 'text' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        if (!credentials?.email || !credentials?.password || !credentials?.tenantId) {
           return null;
         }
 
+        const { email, password, tenantId } = credentials;
+
         try {
-          // DB에서 사용자 조회
+          // TODO: 프로덕션에서는 테넌트별 DB에서 조회
+          // const tenantPrisma = await getTenantPrisma(tenantId);
+          // const user = await tenantPrisma.user.findUnique({ ... });
+
+          // 개발 환경: 기존 단일 DB 사용
           const user = await prisma.user.findUnique({
-            where: { email: credentials.email },
+            where: { email },
           });
 
           if (!user || !user.isActive) {
@@ -27,10 +34,7 @@ export const authOptions: NextAuthOptions = {
           }
 
           // 비밀번호 검증
-          const isValidPassword = await bcrypt.compare(
-            credentials.password,
-            user.password
-          );
+          const isValidPassword = await bcrypt.compare(password, user.password);
 
           if (!isValidPassword) {
             return null;
@@ -47,6 +51,7 @@ export const authOptions: NextAuthOptions = {
             email: user.email,
             name: user.name,
             role: user.role,
+            tenantId, // 테넌트 ID 포함
             avatar: user.avatar,
           };
         } catch (error) {
@@ -65,6 +70,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.tenantId = user.tenantId;
         token.avatar = user.avatar;
       }
       return token;
@@ -73,6 +79,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
+        session.user.tenantId = token.tenantId as string;
         session.user.avatar = token.avatar as string | null;
       }
       return session;
