@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 
 interface EmbedTokenResult {
   token: string | null;
+  tenantId: string | null;
   isLoading: boolean;
   error: string | null;
   refetch: () => void;
@@ -9,6 +10,7 @@ interface EmbedTokenResult {
 
 export function useEmbedToken(): EmbedTokenResult {
   const [token, setToken] = useState<string | null>(null);
+  const [tenantId, setTenantId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,9 +28,11 @@ export function useEmbedToken(): EmbedTokenResult {
 
       const data = await response.json();
       setToken(data.token);
+      setTenantId(data.tenantId || null);
     } catch (err) {
       setError(err instanceof Error ? err.message : '알 수 없는 오류');
       setToken(null);
+      setTenantId(null);
     } finally {
       setIsLoading(false);
     }
@@ -42,18 +46,21 @@ export function useEmbedToken(): EmbedTokenResult {
     return () => clearInterval(interval);
   }, []);
 
-  return { token, isLoading, error, refetch: fetchToken };
+  return { token, tenantId, isLoading, error, refetch: fetchToken };
 }
 
 export type ThemeType = 'light' | 'dark' | 'system';
 
 /**
- * 서비스 URL에 토큰과 테마를 추가하는 헬퍼 함수
+ * 서비스 URL에 토큰, 테넌트, 테마를 추가하는 헬퍼 함수
  */
 export function getEmbedUrl(
   baseUrl: string,
   token: string | null,
-  theme?: ThemeType
+  options?: {
+    tenantId?: string | null;
+    theme?: ThemeType;
+  }
 ): string {
   if (!token) return baseUrl;
 
@@ -62,9 +69,14 @@ export function getEmbedUrl(
   url.pathname = '/embed';
   url.searchParams.set('token', token);
 
+  // 테넌트 ID 전달
+  if (options?.tenantId) {
+    url.searchParams.set('tenant', options.tenantId);
+  }
+
   // 테마 전달 (system인 경우 실제 적용된 테마로 변환)
-  if (theme) {
-    url.searchParams.set('theme', theme);
+  if (options?.theme) {
+    url.searchParams.set('theme', options.theme);
   }
 
   return url.toString();

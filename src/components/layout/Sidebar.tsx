@@ -23,6 +23,7 @@ import { SiYoutube, SiKakaotalk, SiInstagram, SiNaver } from 'react-icons/si';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useChannels, getChannelIconColor } from '@/hooks/useChannels';
+import { useTenant } from '@/lib/tenant/TenantContext';
 
 interface SidebarProps {
   collapsed?: boolean;
@@ -32,20 +33,21 @@ interface SidebarProps {
   className?: string;
 }
 
-const menuItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
-  { icon: TrendingUp, label: 'Insights', href: '/pulse', badge: 'M1' },
-  { icon: Palette, label: 'Studio', href: '/studio', badge: 'M2' },
-  { icon: FileCheck, label: 'Policy Lab', href: '/policy', badge: 'M3' },
-  { icon: ListChecks, label: 'Ops', href: '/ops', badge: 'M4' },
-  { icon: Users, label: 'Civic Hub', href: '/hub', badge: 'M5' },
+// pathSuffix로 변경 (tenant prefix는 동적으로 추가)
+const menuItemsBase = [
+  { icon: LayoutDashboard, label: 'Dashboard', pathSuffix: '' },
+  { icon: TrendingUp, label: 'Insights', pathSuffix: '/pulse', badge: 'M1' },
+  { icon: Palette, label: 'Studio', pathSuffix: '/studio', badge: 'M2' },
+  { icon: FileCheck, label: 'Policy Lab', pathSuffix: '/policy', badge: 'M3' },
+  { icon: ListChecks, label: 'Ops', pathSuffix: '/ops', badge: 'M4' },
+  { icon: Users, label: 'Civic Hub', pathSuffix: '/hub', badge: 'M5' },
 ];
 
-const bottomItems = [
-  { icon: Shield, label: '권한/역할', href: '/roles' },
-  { icon: History, label: '활동 & 알림', href: '/audit' },
-  { icon: Settings, label: '설정', href: '/settings' },
-  { icon: HelpCircle, label: '도움말', href: '/help' },
+const bottomItemsBase = [
+  { icon: Shield, label: '권한/역할', pathSuffix: '/roles' },
+  { icon: History, label: '활동 & 알림', pathSuffix: '/audit' },
+  { icon: Settings, label: '설정', pathSuffix: '/settings' },
+  { icon: HelpCircle, label: '도움말', pathSuffix: '/help' },
 ];
 
 // 아이콘 키 → 컴포넌트 매핑
@@ -66,6 +68,24 @@ export function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const { data: channelsData } = useChannels();
+  const { tenantId } = useTenant();
+
+  // 테넌트 prefix가 적용된 메뉴 아이템
+  const menuItems = useMemo(() => {
+    const prefix = tenantId ? `/${tenantId}` : '';
+    return menuItemsBase.map((item) => ({
+      ...item,
+      href: prefix + item.pathSuffix || prefix || '/',
+    }));
+  }, [tenantId]);
+
+  const bottomItems = useMemo(() => {
+    const prefix = tenantId ? `/${tenantId}` : '';
+    return bottomItemsBase.map((item) => ({
+      ...item,
+      href: prefix + item.pathSuffix,
+    }));
+  }, [tenantId]);
 
   // 표시할 채널 링크 (visible=true만)
   const channelLinks = useMemo(() => {
@@ -103,7 +123,11 @@ export function Sidebar({
   }, [mobileOpen, onMobileClose]);
 
   const isActive = (href: string) => {
-    if (href === '/') return pathname === '/';
+    // 테넌트 루트 경로 체크
+    const tenantRoot = tenantId ? `/${tenantId}` : '/';
+    if (href === tenantRoot || href === '/') {
+      return pathname === tenantRoot;
+    }
     return pathname.startsWith(href);
   };
 

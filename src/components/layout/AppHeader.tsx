@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useAlerts, useMarkAlertAsRead, getAlertStyles, Alert } from '@/hooks/useAlerts';
+import { useTenant } from '@/lib/tenant/TenantContext';
 
 interface AppHeaderProps {
   onMenuClick?: () => void;
@@ -35,6 +36,7 @@ export function AppHeader({ onMenuClick, className }: AppHeaderProps) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const { data: session } = useSession();
+  const { tenantId, config } = useTenant();
 
   // 알림 데이터 조회
   const { data: alertsData, isLoading: alertsLoading } = useAlerts(10);
@@ -42,6 +44,10 @@ export function AppHeader({ onMenuClick, className }: AppHeaderProps) {
 
   const unreadCount = alertsData?.unreadCount ?? 0;
   const alerts = alertsData?.alerts ?? [];
+
+  // 테넌트 기반 경로
+  const dashboardPath = tenantId ? `/${tenantId}` : '/';
+  const auditPath = tenantId ? `/${tenantId}/audit` : '/audit';
 
   const handleLogout = () => {
     signOut({ callbackUrl: '/login' });
@@ -66,7 +72,7 @@ export function AppHeader({ onMenuClick, className }: AppHeaderProps) {
           <Menu className="h-5 w-5" />
         </Button>
 
-        <Link href="/" className="flex items-center gap-2">
+        <Link href={dashboardPath} className="flex items-center gap-2">
           <Image
             src="/camponelogo.svg"
             alt="CampOne"
@@ -78,11 +84,11 @@ export function AppHeader({ onMenuClick, className }: AppHeaderProps) {
           />
         </Link>
 
-        {/* 캠페인 스위처 */}
+        {/* 캠페인/테넌트 표시 */}
         <div className="hidden items-center gap-2 md:flex">
           <span className="text-sm text-muted-foreground">|</span>
           <Button variant="ghost" size="sm" className="gap-1">
-            유해남 캠페인
+            {config?.displayName || config?.name || tenantId || '캠페인'}
             <Badge variant="success" className="ml-1">
               Active
             </Badge>
@@ -194,7 +200,7 @@ export function AppHeader({ onMenuClick, className }: AppHeaderProps) {
 
                 <div className="border-t p-2">
                   <Link
-                    href="/audit?tab=alerts"
+                    href={`${auditPath}?tab=alerts`}
                     className="block w-full rounded-md px-3 py-2 text-center text-sm text-primary hover:bg-muted transition-colors"
                     onClick={() => setNotificationOpen(false)}
                   >

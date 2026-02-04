@@ -9,6 +9,7 @@ import { useTheme } from '@/components/theme-provider';
 import { cn } from '@/lib/utils';
 import { useChannels, getChannelIconColor } from '@/hooks/useChannels';
 import { useCampaignProfile } from '@/hooks/useCampaignProfile';
+import { useTenant } from '@/lib/tenant/TenantContext';
 
 interface AppFooterProps {
   sidebarCollapsed?: boolean;
@@ -27,6 +28,10 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
   const { theme, setTheme } = useTheme();
   const { data: channelsData } = useChannels();
   const { data: profileData } = useCampaignProfile();
+  const { tenantId } = useTenant();
+
+  // 테넌트 기반 경로 생성
+  const basePath = tenantId ? `/${tenantId}` : '';
 
   // 채널 데이터로 소셜 링크 구성
   const socialLinks = useMemo(() => {
@@ -129,32 +134,32 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
             <h3 className="text-lg font-bold text-foreground">바로가기</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link href={basePath || '/'} className="text-muted-foreground hover:text-primary transition-colors">
                   대시보드
                 </Link>
               </li>
               <li>
-                <Link href="/pulse" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link href={`${basePath}/pulse`} className="text-muted-foreground hover:text-primary transition-colors">
                   인사이트
                 </Link>
               </li>
               <li>
-                <Link href="/studio" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link href={`${basePath}/studio`} className="text-muted-foreground hover:text-primary transition-colors">
                   스튜디오
                 </Link>
               </li>
               <li>
-                <Link href="/policy" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link href={`${basePath}/policy`} className="text-muted-foreground hover:text-primary transition-colors">
                   정책연구
                 </Link>
               </li>
               <li>
-                <Link href="/ops" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link href={`${basePath}/ops`} className="text-muted-foreground hover:text-primary transition-colors">
                   운영관리
                 </Link>
               </li>
               <li>
-                <Link href="/hub" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link href={`${basePath}/hub`} className="text-muted-foreground hover:text-primary transition-colors">
                   시민소통
                 </Link>
               </li>
