@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import bcrypt from 'bcryptjs';
-import prisma from '@/lib/prisma';
+import { getTenantFromRequest } from '@/lib/api/tenant-helper';
 import { authOptions } from '@/lib/auth';
 import { UserRole } from '@prisma/client';
 
@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    const { prisma } = await getTenantFromRequest();
     const { searchParams } = new URL(request.url);
     const role = searchParams.get('role');
 
@@ -56,6 +57,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    const { prisma } = await getTenantFromRequest();
     const body = await request.json();
     const { email, name, password, role = 'Staff' } = body;
 

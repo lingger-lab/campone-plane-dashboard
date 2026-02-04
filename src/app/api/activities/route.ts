@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import prisma from '@/lib/prisma';
+import { getTenantFromRequest } from '@/lib/api/tenant-helper';
 import { authOptions } from '@/lib/auth';
 
 // 활동 목록 조회
@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { prisma } = await getTenantFromRequest();
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '20');
     const moduleFilter = searchParams.get('module'); // 특정 모듈만 필터링
@@ -56,6 +57,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { prisma } = await getTenantFromRequest();
     const body = await request.json();
     const { action, module: moduleName, target, details, userId, userName } = body;
 

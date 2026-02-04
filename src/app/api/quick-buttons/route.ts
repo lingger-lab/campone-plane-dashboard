@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { getTenantFromRequest } from '@/lib/api/tenant-helper';
 import { hasPermission } from '@/lib/rbac';
 import type { UserRole } from '@/lib/types';
 
 // GET: 퀵버튼 목록 조회 (인증 불필요 - 공개)
 export async function GET() {
   try {
+    const { prisma } = await getTenantFromRequest();
     const buttons = await prisma.quickButton.findMany({
       where: { isActive: true },
       orderBy: { order: 'asc' },
@@ -35,6 +36,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
 
+    const { prisma } = await getTenantFromRequest();
     const body = await request.json();
     const { label, url, icon, category, order } = body;
 
@@ -84,6 +86,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
 
+    const { prisma } = await getTenantFromRequest();
     const body = await request.json();
     const { id, label, url, icon, category, order, isActive } = body;
 
@@ -125,6 +128,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
 
+    const { prisma } = await getTenantFromRequest();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -158,6 +162,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
 
+    const { prisma } = await getTenantFromRequest();
     const body = await request.json();
     const { buttons } = body;
 

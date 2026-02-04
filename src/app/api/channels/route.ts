@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { getTenantFromRequest } from '@/lib/api/tenant-helper';
 import { hasPermission } from '@/lib/rbac';
 import type { UserRole } from '@/lib/types';
 
@@ -29,6 +29,7 @@ const hiddenChannelKeys = ['bannerDesigner'];
 // GET: 채널 목록 조회
 export async function GET() {
   try {
+    const { prisma } = await getTenantFromRequest();
     const channels = await prisma.channelLink.findMany({
       orderBy: { order: 'asc' },
     });
@@ -68,6 +69,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
 
+    const { prisma } = await getTenantFromRequest();
     const body = await request.json();
     const { key, url, label, visible, order } = body;
 
@@ -114,6 +116,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
 
+    const { prisma } = await getTenantFromRequest();
     const body = await request.json();
     const { channels } = body;
 

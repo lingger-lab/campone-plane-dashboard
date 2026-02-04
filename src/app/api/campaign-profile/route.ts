@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { getTenantFromRequest } from '@/lib/api/tenant-helper';
 import { hasPermission } from '@/lib/rbac';
 import type { UserRole } from '@/lib/types';
 
@@ -32,6 +32,7 @@ const defaultProfile = {
 // GET: 캠페인 프로필 조회
 export async function GET() {
   try {
+    const { prisma } = await getTenantFromRequest();
     const profile = await prisma.campaignProfile.findUnique({
       where: { id: 'main' },
     });
@@ -64,6 +65,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
 
+    const { prisma } = await getTenantFromRequest();
     const body = await request.json();
     const { candidateName, candidateTitle, orgName, photoUrl, careers, slogans, address, phone, email, hours, description } = body;
 

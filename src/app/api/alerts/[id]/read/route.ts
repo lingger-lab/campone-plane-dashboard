@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import prisma from '@/lib/prisma';
+import { getTenantFromRequest } from '@/lib/api/tenant-helper';
 import { authOptions } from '@/lib/auth';
 
 // 알림 읽음 처리
@@ -14,6 +14,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { prisma } = await getTenantFromRequest();
     const alertId = params.id;
 
     // 해당 사용자의 알림만 업데이트

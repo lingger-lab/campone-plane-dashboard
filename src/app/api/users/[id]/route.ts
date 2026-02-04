@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import bcrypt from 'bcryptjs';
-import prisma from '@/lib/prisma';
+import { getTenantFromRequest } from '@/lib/api/tenant-helper';
 import { authOptions } from '@/lib/auth';
 
 // 개별 사용자 조회
@@ -19,6 +19,7 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    const { prisma } = await getTenantFromRequest();
     const user = await prisma.user.findUnique({
       where: { id: params.id },
       select: {
@@ -61,6 +62,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    const { prisma } = await getTenantFromRequest();
     const body = await request.json();
     const { name, role, password, isActive } = body;
 
@@ -110,6 +112,8 @@ export async function DELETE(
     if (session.user.role !== 'Admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
+
+    const { prisma } = await getTenantFromRequest();
 
     // 자기 자신은 비활성화 불가
     if (params.id === session.user.id) {

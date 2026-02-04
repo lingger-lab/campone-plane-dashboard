@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import prisma from '@/lib/prisma';
+import { getTenantFromRequest } from '@/lib/api/tenant-helper';
 import { authOptions } from '@/lib/auth';
 
 const ROLE_INFO = {
@@ -20,6 +20,8 @@ export async function GET() {
     if (session.user.role !== 'Admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
+
+    const { prisma } = await getTenantFromRequest();
 
     // 역할별 사용자 수 집계
     const roleCounts = await prisma.user.groupBy({
