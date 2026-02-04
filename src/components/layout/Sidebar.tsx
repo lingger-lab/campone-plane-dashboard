@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useChannels, getChannelIconColor } from '@/hooks/useChannels';
 import { useTenant } from '@/lib/tenant/TenantContext';
+import type { TenantFeatures } from '@/lib/tenant/types';
 
 interface SidebarProps {
   collapsed?: boolean;
@@ -34,13 +35,14 @@ interface SidebarProps {
 }
 
 // pathSuffix로 변경 (tenant prefix는 동적으로 추가)
+// featureKey: config.features의 키와 매핑
 const menuItemsBase = [
-  { icon: LayoutDashboard, label: 'Dashboard', pathSuffix: '' },
-  { icon: TrendingUp, label: 'Insights', pathSuffix: '/pulse', badge: 'M1' },
-  { icon: Palette, label: 'Studio', pathSuffix: '/studio', badge: 'M2' },
-  { icon: FileCheck, label: 'Policy Lab', pathSuffix: '/policy', badge: 'M3' },
-  { icon: ListChecks, label: 'Ops', pathSuffix: '/ops', badge: 'M4' },
-  { icon: Users, label: 'Civic Hub', pathSuffix: '/hub', badge: 'M5' },
+  { icon: LayoutDashboard, label: 'Dashboard', pathSuffix: '', featureKey: null },
+  { icon: TrendingUp, label: 'Insights', pathSuffix: '/pulse', badge: 'M1', featureKey: 'pulse' as keyof TenantFeatures },
+  { icon: Palette, label: 'Studio', pathSuffix: '/studio', badge: 'M2', featureKey: 'studio' as keyof TenantFeatures },
+  { icon: FileCheck, label: 'Policy Lab', pathSuffix: '/policy', badge: 'M3', featureKey: 'policy' as keyof TenantFeatures },
+  { icon: ListChecks, label: 'Ops', pathSuffix: '/ops', badge: 'M4', featureKey: 'ops' as keyof TenantFeatures },
+  { icon: Users, label: 'Civic Hub', pathSuffix: '/hub', badge: 'M5', featureKey: 'hub' as keyof TenantFeatures },
 ];
 
 const bottomItemsBase = [
@@ -68,16 +70,23 @@ export function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const { data: channelsData } = useChannels();
-  const { tenantId } = useTenant();
+  const { tenantId, config } = useTenant();
 
-  // 테넌트 prefix가 적용된 메뉴 아이템
+  // 테넌트 prefix가 적용된 메뉴 아이템 (features 설정에 따라 필터링)
   const menuItems = useMemo(() => {
     const prefix = tenantId ? `/${tenantId}` : '';
-    return menuItemsBase.map((item) => ({
-      ...item,
-      href: prefix + item.pathSuffix || prefix || '/',
-    }));
-  }, [tenantId]);
+    return menuItemsBase
+      .filter((item) => {
+        // Dashboard는 항상 표시
+        if (!item.featureKey) return true;
+        // features 설정에 따라 필터링 (기본값: true)
+        return config.features?.[item.featureKey] !== false;
+      })
+      .map((item) => ({
+        ...item,
+        href: prefix + item.pathSuffix || prefix || '/',
+      }));
+  }, [tenantId, config.features]);
 
   const bottomItems = useMemo(() => {
     const prefix = tenantId ? `/${tenantId}` : '';
