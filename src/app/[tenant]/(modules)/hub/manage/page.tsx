@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import {
   ArrowLeft,
   Plus,
@@ -44,6 +45,8 @@ const inboxItems = [
 ];
 
 export default function HubManagePage() {
+  const params = useParams();
+  const tenant = params.tenant as string;
   const [activeTab, setActiveTab] = useState<Tab>('segments');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -60,7 +63,7 @@ export default function HubManagePage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
-            <Link href="/hub">
+            <Link href={`/${tenant}/hub`}>
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>

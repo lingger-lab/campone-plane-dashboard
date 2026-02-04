@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import {
   ArrowLeft,
   Plus,
@@ -67,6 +68,8 @@ const getPriorityBadge = (priority: string) => {
 };
 
 export default function OpsManagePage() {
+  const params = useParams();
+  const tenant = params.tenant as string;
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
 
   const columns: { status: TaskStatus; title: string }[] = [
@@ -87,7 +90,7 @@ export default function OpsManagePage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
-            <Link href="/ops">
+            <Link href={`/${tenant}/ops`}>
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>

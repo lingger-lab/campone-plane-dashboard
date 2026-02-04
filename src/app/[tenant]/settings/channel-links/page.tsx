@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import {
   ExternalLink,
   Edit2,
@@ -61,6 +62,8 @@ function renderIcon(iconKey: string) {
 }
 
 export default function ChannelLinksPage() {
+  const params = useParams();
+  const tenant = params.tenant as string;
   const { data: session } = useSession();
   const userRole = (session?.user as { role?: UserRole })?.role || 'Viewer';
   const canEdit = hasPermission(userRole, 'channels', 'update');
@@ -224,7 +227,7 @@ export default function ChannelLinksPage() {
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/settings">
+          <Link href={`/${tenant}/settings`}>
             <Button variant="ghost" size="icon">
               <ChevronLeft className="h-5 w-5" />
             </Button>

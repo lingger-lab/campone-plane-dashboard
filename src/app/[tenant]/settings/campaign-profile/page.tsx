@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useParams } from 'next/navigation';
 import {
   ChevronLeft,
   Save,
@@ -59,6 +60,8 @@ function getIconComponent(iconKey: string) {
 }
 
 export default function CampaignProfilePage() {
+  const params = useParams();
+  const tenant = params.tenant as string;
   const { data: session } = useSession();
   const userRole = (session?.user as { role?: UserRole })?.role || 'Viewer';
   const canEdit = hasPermission(userRole, 'settings', 'update');
@@ -214,7 +217,7 @@ export default function CampaignProfilePage() {
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/settings">
+          <Link href={`/${tenant}/settings`}>
             <Button variant="ghost" size="icon">
               <ChevronLeft className="h-5 w-5" />
             </Button>

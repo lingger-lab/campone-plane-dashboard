@@ -3,18 +3,20 @@
 import React, { useState } from 'react';
 import { RefreshCw, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useEmbedToken, getEmbedUrl } from '@/hooks/useEmbedToken';
+import { useEmbedToken, getEmbedUrl, ThemeType } from '@/hooks/useEmbedToken';
 import { useTheme } from '@/components/theme-provider';
+import { useTenant } from '@/lib/tenant/TenantContext';
 
-const POLICY_LAB_URL = 'https://campone-policy-755458598444.asia-northeast3.run.app';
+const OPS_URL = 'https://campone-ops-755458598444.asia-northeast3.run.app';
 
-export default function PolicyLabPage() {
+export default function OpsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [iframeKey, setIframeKey] = useState(0);
 
-  const { token, isLoading: tokenLoading, error: tokenError } = useEmbedToken();
+  const { token, tenantId: tokenTenantId, isLoading: tokenLoading, error: tokenError } = useEmbedToken();
   const { resolvedTheme } = useTheme();
+  const { tenantId } = useTenant();
 
   const handleRefresh = () => {
     setIframeKey((prev) => prev + 1);
@@ -22,17 +24,20 @@ export default function PolicyLabPage() {
     setHasError(false);
   };
 
-  // 토큰이 준비되면 /embed?token=xxx&theme=xxx 형태로, 아니면 기본 URL
-  const iframeSrc = token ? getEmbedUrl(POLICY_LAB_URL, token, resolvedTheme) : POLICY_LAB_URL;
+  // 토큰이 준비되면 /embed?token=xxx&tenant=xxx&theme=xxx 형태로, 아니면 기본 URL
+  const iframeSrc = token ? getEmbedUrl(OPS_URL, token, {
+    tenantId: tenantId || tokenTenantId,
+    theme: resolvedTheme as ThemeType,
+  }) : OPS_URL;
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
       {/* 툴바 */}
       <div className="flex items-center justify-between px-4 py-2 bg-background border-b shrink-0">
         <div className="flex items-center gap-3">
-          <h1 className="font-semibold text-lg">Policy Lab</h1>
+          <h1 className="font-semibold text-lg">Ops</h1>
           <span className="text-xs text-muted-foreground hidden sm:inline">
-            정책 관리 · 공약 로드맵
+            캠프 운영 · 체크리스트
           </span>
           {(isLoading || tokenLoading) && (
             <span className="text-xs text-blue-600 animate-pulse">로딩 중...</span>
@@ -56,7 +61,7 @@ export default function PolicyLabPage() {
             <div className="flex flex-col items-center gap-3">
               <RefreshCw className="h-8 w-8 animate-spin text-primary" />
               <span className="text-sm text-muted-foreground">
-                {tokenLoading ? '인증 준비 중...' : 'Policy Lab 모듈 로딩 중...'}
+                {tokenLoading ? '인증 준비 중...' : 'Ops 모듈 로딩 중...'}
               </span>
             </div>
           </div>
@@ -70,7 +75,7 @@ export default function PolicyLabPage() {
               <div>
                 <p className="font-medium">연결할 수 없습니다</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {tokenError || 'Policy Lab 서비스에 연결하는 중 문제가 발생했습니다.'}
+                  {tokenError || 'Ops 서비스에 연결하는 중 문제가 발생했습니다.'}
                 </p>
               </div>
               <Button onClick={handleRefresh} variant="outline" size="sm">
@@ -84,7 +89,7 @@ export default function PolicyLabPage() {
           <iframe
             key={iframeKey}
             src={iframeSrc}
-            title="Policy Lab Module"
+            title="Ops Module"
             className="w-full h-full border-0"
             onLoad={() => setIsLoading(false)}
             onError={() => {

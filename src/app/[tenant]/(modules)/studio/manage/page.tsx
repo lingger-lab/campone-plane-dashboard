@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import {
   ArrowLeft,
   Plus,
@@ -115,6 +116,8 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function StudioManagePage() {
+  const params = useParams();
+  const tenant = params.tenant as string;
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [contentType, setContentType] = useState<ContentType>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -132,7 +135,7 @@ export default function StudioManagePage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
-            <Link href="/studio">
+            <Link href={`/${tenant}/studio`}>
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>
@@ -143,7 +146,7 @@ export default function StudioManagePage() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
-            <Link href="/studio/banners">
+            <Link href={`/${tenant}/studio/banners`}>
               <PenTool className="mr-2 h-4 w-4" />
               현수막 디자인
             </Link>

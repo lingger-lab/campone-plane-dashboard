@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import {
   ArrowLeft,
   TrendingUp,
@@ -49,13 +50,16 @@ const alerts = [
 ];
 
 export default function InsightsManagePage() {
+  const params = useParams();
+  const tenant = params.tenant as string;
+
   return (
     <div className="container max-w-7xl mx-auto p-6 space-y-6">
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
-            <Link href="/pulse">
+            <Link href={`/${tenant}/pulse`}>
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>

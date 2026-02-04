@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { ArrowLeft, Download, Eye, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +19,8 @@ const presets = [
 ];
 
 export default function BannerDesignerPage() {
+  const params = useParams();
+  const tenant = params.tenant as string;
   const [selectedPreset, setSelectedPreset] = useState<string | null>('bp001');
   const [formData, setFormData] = useState({
     candidate: '유해남',
@@ -37,7 +40,7 @@ export default function BannerDesignerPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
-            <Link href="/studio/manage">
+            <Link href={`/${tenant}/studio/manage`}>
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>

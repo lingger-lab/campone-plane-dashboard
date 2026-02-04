@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import {
   ArrowLeft,
   Plus,
@@ -103,6 +104,8 @@ const getStatusLabel = (status: string) => {
 };
 
 export default function PolicyManagePage() {
+  const params = useParams();
+  const tenant = params.tenant as string;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
@@ -124,7 +127,7 @@ export default function PolicyManagePage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
-            <Link href="/policy">
+            <Link href={`/${tenant}/policy`}>
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>

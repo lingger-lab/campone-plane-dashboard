@@ -3,18 +3,20 @@
 import React, { useState } from 'react';
 import { RefreshCw, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useEmbedToken, getEmbedUrl } from '@/hooks/useEmbedToken';
+import { useEmbedToken, getEmbedUrl, ThemeType } from '@/hooks/useEmbedToken';
 import { useTheme } from '@/components/theme-provider';
+import { useTenant } from '@/lib/tenant/TenantContext';
 
-const OPS_URL = 'https://campone-ops-755458598444.asia-northeast3.run.app';
+const CIVIC_HUB_URL = 'https://campone-civic-hub-755458598444.asia-northeast3.run.app';
 
-export default function OpsPage() {
+export default function CivicHubPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [iframeKey, setIframeKey] = useState(0);
 
-  const { token, isLoading: tokenLoading, error: tokenError } = useEmbedToken();
+  const { token, tenantId: tokenTenantId, isLoading: tokenLoading, error: tokenError } = useEmbedToken();
   const { resolvedTheme } = useTheme();
+  const { tenantId } = useTenant();
 
   const handleRefresh = () => {
     setIframeKey((prev) => prev + 1);
@@ -22,17 +24,20 @@ export default function OpsPage() {
     setHasError(false);
   };
 
-  // 토큰이 준비되면 /embed?token=xxx&theme=xxx 형태로, 아니면 기본 URL
-  const iframeSrc = token ? getEmbedUrl(OPS_URL, token, resolvedTheme) : OPS_URL;
+  // 토큰이 준비되면 /embed?token=xxx&tenant=xxx&theme=xxx 형태로, 아니면 기본 URL
+  const iframeSrc = token ? getEmbedUrl(CIVIC_HUB_URL, token, {
+    tenantId: tenantId || tokenTenantId,
+    theme: resolvedTheme as ThemeType,
+  }) : CIVIC_HUB_URL;
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
       {/* 툴바 */}
       <div className="flex items-center justify-between px-4 py-2 bg-background border-b shrink-0">
         <div className="flex items-center gap-3">
-          <h1 className="font-semibold text-lg">Ops</h1>
+          <h1 className="font-semibold text-lg">Civic Hub</h1>
           <span className="text-xs text-muted-foreground hidden sm:inline">
-            캠프 운영 · 체크리스트
+            시민 소통 · Q&A 관리
           </span>
           {(isLoading || tokenLoading) && (
             <span className="text-xs text-blue-600 animate-pulse">로딩 중...</span>
@@ -56,7 +61,7 @@ export default function OpsPage() {
             <div className="flex flex-col items-center gap-3">
               <RefreshCw className="h-8 w-8 animate-spin text-primary" />
               <span className="text-sm text-muted-foreground">
-                {tokenLoading ? '인증 준비 중...' : 'Ops 모듈 로딩 중...'}
+                {tokenLoading ? '인증 준비 중...' : 'Civic Hub 모듈 로딩 중...'}
               </span>
             </div>
           </div>
@@ -70,7 +75,7 @@ export default function OpsPage() {
               <div>
                 <p className="font-medium">연결할 수 없습니다</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {tokenError || 'Ops 서비스에 연결하는 중 문제가 발생했습니다.'}
+                  {tokenError || 'Civic Hub 서비스에 연결하는 중 문제가 발생했습니다.'}
                 </p>
               </div>
               <Button onClick={handleRefresh} variant="outline" size="sm">
@@ -84,7 +89,7 @@ export default function OpsPage() {
           <iframe
             key={iframeKey}
             src={iframeSrc}
-            title="Ops Module"
+            title="Civic Hub Module"
             className="w-full h-full border-0"
             onLoad={() => setIsLoading(false)}
             onError={() => {
