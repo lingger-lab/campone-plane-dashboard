@@ -1,30 +1,44 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient as SystemPrismaClient } from "@prisma/client";
+import { PrismaClient as TenantPrismaClient } from "@prisma/client-tenant";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 import { getTenantConfig } from "./tenant/config-loader";
 
+// ============================================
+// v1.4 2계층 DB 구조
+// - systemDb: campone_system (인증, 감사, 사용량)
+// - tenantDb: camp_{tenant}_db (업무 데이터)
+// ============================================
+
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-  pool: pg.Pool | undefined;
-  tenantClients: Map<string, PrismaClient> | undefined;
-  tenantPools: Map<string, pg.Pool> | undefined;
+  systemClient: SystemPrismaClient | undefined;
+  tenantClients: Map<string, TenantPrismaClient> | undefined;
 };
 
 /**
- * Prisma 클라이언트 생성
+ * Cloud SQL 소켓 연결 여부 판별
+ * ?host=/cloudsql/... 형태면 Unix 소켓 → SSL 불필요
  */
-function createPrismaClient(connectionString?: string): PrismaClient {
+function isCloudSqlSocket(url?: string): boolean {
+  return !!url && url.includes("/cloudsql/");
+}
+
+/**
+ * 시스템 DB 클라이언트 생성
+ */
+function createSystemClient(): SystemPrismaClient {
+  const connectionString =
+    process.env.SYSTEM_DATABASE_URL || process.env.DATABASE_URL;
+
   const pool = new pg.Pool({
-    connectionString: connectionString || process.env.DATABASE_URL,
-    ssl: {
-      rejectUnauthorized: false,
-    },
-    max: 10, // 커넥션 풀 크기
+    connectionString,
+    ssl: isCloudSqlSocket(connectionString) ? false : { rejectUnauthorized: false },
+    max: 10,
   });
 
   const adapter = new PrismaPg(pool);
 
-  return new PrismaClient({
+  return new SystemPrismaClient({
     adapter,
     log:
       process.env.NODE_ENV === "development"
@@ -33,87 +47,120 @@ function createPrismaClient(connectionString?: string): PrismaClient {
   });
 }
 
-// 기본 Prisma 클라이언트 (마이그레이션, 시드 등에 사용)
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+/**
+ * 테넌트 DB 클라이언트 생성
+ */
+function createTenantClient(connectionString: string): TenantPrismaClient {
+  const pool = new pg.Pool({
+    connectionString,
+    ssl: isCloudSqlSocket(connectionString) ? false : { rejectUnauthorized: false },
+    max: 10,
+  });
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+  const adapter = new PrismaPg(pool);
+
+  return new TenantPrismaClient({
+    adapter,
+    log:
+      process.env.NODE_ENV === "development"
+        ? ["query", "error", "warn"]
+        : ["error"],
+  });
 }
 
-// 테넌트별 클라이언트 캐시
-const tenantClients = globalForPrisma.tenantClients ?? new Map<string, PrismaClient>();
-const tenantPools = globalForPrisma.tenantPools ?? new Map<string, pg.Pool>();
+// ============================================
+// 시스템 DB (campone_system)
+// ============================================
+
+const systemClient =
+  globalForPrisma.systemClient ?? createSystemClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.systemClient = systemClient;
+}
+
+/**
+ * 시스템 DB Prisma 클라이언트 (users, user_tenants, tenants, audit_logs, llm_usage)
+ */
+export function getSystemPrisma(): SystemPrismaClient {
+  return systemClient;
+}
+
+// 하위 호환용 export
+export const prisma = systemClient;
+
+// ============================================
+// 테넌트 DB (camp_{tenant}_db)
+// ============================================
+
+const tenantClients =
+  globalForPrisma.tenantClients ?? new Map<string, TenantPrismaClient>();
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.tenantClients = tenantClients;
-  globalForPrisma.tenantPools = tenantPools;
 }
 
 /**
  * 테넌트별 Prisma 클라이언트 가져오기
  *
- * - 개발 환경: 기본 prisma 클라이언트 반환 (단일 DB)
- * - 프로덕션: 테넌트별 DB 연결
- *
- * @param tenantId 테넌트 ID
- * @returns Prisma 클라이언트
+ * - 개발 환경(USE_SINGLE_DB=true): TENANT_DATABASE_URL 또는 DATABASE_URL 사용
+ * - 프로덕션: 테넌트 설정의 database.credentials로 연결
  */
-export async function getTenantPrisma(tenantId: string): Promise<PrismaClient> {
-  // 개발 환경: 기본 클라이언트 사용
-  if (process.env.NODE_ENV === "development" || process.env.USE_SINGLE_DB === "true") {
-    return prisma;
-  }
-
+export async function getTenantPrisma(
+  tenantId: string
+): Promise<TenantPrismaClient> {
   // 캐시 확인
   const cached = tenantClients.get(tenantId);
   if (cached) {
     return cached;
   }
 
-  // 테넌트 설정 로드
-  const config = await getTenantConfig(tenantId);
-  if (!config) {
-    throw new Error(`Tenant not found: ${tenantId}`);
-  }
-
-  // DB 연결 문자열 생성
-  // 프로덕션에서는 Secret Manager에서 자격증명 로드
   let connectionString: string;
 
-  if (config.database.credentials === "local") {
-    // 로컬/개발: 기본 연결 사용
-    connectionString = process.env.DATABASE_URL!;
+  if (
+    process.env.NODE_ENV === "development" ||
+    process.env.USE_SINGLE_DB === "true"
+  ) {
+    // 개발 환경: TENANT_DATABASE_URL 또는 DATABASE_URL 사용
+    connectionString =
+      process.env.TENANT_DATABASE_URL || process.env.DATABASE_URL!;
   } else {
-    // 프로덕션: 테넌트별 DB
-    // TODO: Secret Manager에서 자격증명 로드
-    // const creds = await getSecretValue(config.database.credentials);
-    // connectionString = `postgresql://${creds.user}:${creds.password}@${config.database.host}:${config.database.port}/${config.database.name}`;
-    connectionString = process.env.DATABASE_URL!; // 임시: 기본 연결 사용
+    // 프로덕션: 테넌트 설정에서 DB 연결 정보 로드
+    const config = await getTenantConfig(tenantId);
+    if (!config) {
+      throw new Error(`Tenant not found: ${tenantId}`);
+    }
+
+    if (config.database.credentials === "local") {
+      // 공유 Cloud SQL 인스턴스: DATABASE_URL에서 DB명만 교체
+      // e.g., .../campone_system?host=... → .../camp_dev_db?host=...
+      const baseUrl = process.env.DATABASE_URL!;
+      const dbName = config.database.name; // e.g., "camp_dev_db"
+      connectionString = baseUrl.replace(/\/([^/?]+)(\?|$)/, `/${dbName}$2`);
+    } else {
+      // 별도 인스턴스: 직접 연결 문자열 사용
+      // credentials 형식: "postgresql://user:pass@/camp_xxx_db?host=/cloudsql/..."
+      connectionString = config.database.credentials;
+    }
   }
 
-  // 클라이언트 생성 및 캐시
-  const client = createPrismaClient(connectionString);
+  const client = createTenantClient(connectionString);
   tenantClients.set(tenantId, client);
 
   return client;
 }
 
 /**
- * 모든 테넌트 연결 종료 (graceful shutdown)
+ * 모든 연결 종료 (graceful shutdown)
  */
-export async function disconnectAllTenants(): Promise<void> {
+export async function disconnectAll(): Promise<void> {
+  await systemClient.$disconnect();
+
   const disconnectPromises = Array.from(tenantClients.values()).map((client) =>
     client.$disconnect()
   );
   await Promise.all(disconnectPromises);
-
-  const poolEndPromises = Array.from(tenantPools.values()).map((pool) =>
-    pool.end()
-  );
-  await Promise.all(poolEndPromises);
-
   tenantClients.clear();
-  tenantPools.clear();
 }
 
 export default prisma;
