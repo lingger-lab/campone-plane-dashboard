@@ -1,4 +1,5 @@
-// CampOne Dashboard - Prisma Schema
+// CampOne System DB (campone_system) - v1.4
+// 인증, 사용량, 감사 로그 등 중앙 관리 데이터
 
 generator client {
   provider = "prisma-client-js"
@@ -9,182 +10,95 @@ datasource db {
 }
 
 // ============================================
-// 사용자 및 인증
+// 사용자 (중앙 관리)
 // ============================================
 
-enum UserRole {
-  Admin
-  Manager
-  Staff
-  Viewer
-}
-
 model User {
-  id        String    @id @default(cuid())
-  email     String    @unique
-  name      String
-  password  String
-  role      UserRole  @default(Staff)
-  avatar    String?
-  isActive  Boolean   @default(true)
-  lastLogin DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id            String   @id @default(uuid()) @db.Uuid
+  email         String   @unique
+  passwordHash  String   @map("password_hash")
+  name          String
+  isActive      Boolean  @default(true) @map("is_active")
+  isSystemAdmin Boolean  @default(false) @map("is_system_admin")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  auditLogs  AuditLog[]
-  userAlerts UserAlert[]
+  tenants   UserTenant[]
+  auditLogs AuditLog[]
 
   @@map("users")
 }
 
 // ============================================
-// 알림
+// 사용자-테넌트 매핑 (N:N)
+// 한 사용자가 여러 캠프 소속 가능
 // ============================================
 
-enum AlertType {
-  system
-  workflow
-}
+model UserTenant {
+  userId    String   @map("user_id") @db.Uuid
+  tenantId  String   @map("tenant_id") @db.VarChar(50)
+  role      String   @default("member") @db.VarChar(50)
+  isDefault Boolean  @default(false) @map("is_default")
+  joinedAt  DateTime @default(now()) @map("joined_at") @db.Timestamptz
 
-enum AlertSeverity {
-  info
-  warning
-  error
-  success
-}
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-model Alert {
-  id        String        @id @default(cuid())
-  type      AlertType
-  severity  AlertSeverity
-  title     String
-  message   String
-  source    String?       // 발생 서비스 (pulse, studio 등)
-  sourceId  String?       // 원본 ID
-  pinned    Boolean       @default(false)
-  expiresAt DateTime?
-  createdAt DateTime      @default(now())
-
-  userAlerts UserAlert[]
-
-  @@index([createdAt])
-  @@index([type])
-  @@map("alerts")
-}
-
-model UserAlert {
-  userId  String
-  alertId String
-  read    Boolean   @default(false)
-  readAt  DateTime?
-
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  alert Alert @relation(fields: [alertId], references: [id], onDelete: Cascade)
-
-  @@id([userId, alertId])
-  @@map("user_alerts")
+  @@id([userId, tenantId])
+  @@index([tenantId])
+  @@map("user_tenants")
 }
 
 // ============================================
-// 감사 로그
+// 테넌트 메타 정보
+// ============================================
+
+model Tenant {
+  tenantId   String   @id @map("tenant_id") @db.VarChar(50)
+  name       String   @db.VarChar(200)
+  isActive   Boolean  @default(true) @map("is_active")
+  configPath String?  @map("config_path") @db.VarChar(500)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("tenants")
+}
+
+// ============================================
+// 감사 로그 (중앙 관리)
 // ============================================
 
 model AuditLog {
-  id        String   @id @default(cuid())
-  userId    String
-  userName  String
-  action    String   // create, update, delete, login, logout 등
-  module    String   // Dashboard, Pulse, Studio, Policy, Ops, Hub, System
-  target    String
-  details   Json?
-  ipAddress String?
-  userAgent String?
-  createdAt DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  actorId   String?  @map("actor_id") @db.Uuid
+  tenantId  String?  @map("tenant_id") @db.VarChar(50)
+  action    String   @db.VarChar(100)
+  resource  String?  @db.VarChar(200)
+  detail    Json?
+  ipAddress String?  @map("ip_address")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  user User @relation(fields: [userId], references: [id])
+  actor User? @relation(fields: [actorId], references: [id])
 
-  @@index([userId])
-  @@index([module])
-  @@index([action])
-  @@index([createdAt])
+  @@index([tenantId, createdAt(sort: Desc)])
+  @@index([actorId, createdAt(sort: Desc)])
   @@map("audit_logs")
 }
 
 // ============================================
-// 채널 링크
+// LLM 사용량 추적 (중앙 관리)
 // ============================================
 
-model ChannelLink {
-  key       String   @id
-  url       String
-  label     String
-  icon      String?
-  visible   Boolean  @default(true)
-  order     Int      @default(0)
-  updatedAt DateTime @updatedAt
+model LlmUsage {
+  id           Int      @id @default(autoincrement())
+  tenantId     String   @map("tenant_id") @db.VarChar(50)
+  service      String   @db.VarChar(50)
+  provider     String   @db.VarChar(20)
+  model        String   @db.VarChar(100)
+  inputTokens  Int      @map("input_tokens")
+  outputTokens Int      @map("output_tokens")
+  latencyMs    Int?     @map("latency_ms")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  @@map("channel_links")
-}
-
-// ============================================
-// KPI 캐시
-// ============================================
-
-model KpiCache {
-  key       String   @id
-  value     Json
-  expiresAt DateTime
-  updatedAt DateTime @updatedAt
-
-  @@map("kpi_cache")
-}
-
-// ============================================
-// 캠페인 프로필 (메인 대시보드 헤더)
-// ============================================
-
-model CampaignProfile {
-  id             String   @id @default("main")  // 단일 레코드
-  candidateName  String   @default("후보자명")   // 후보자 이름
-  candidateTitle String   @default("OO시장 후보") // 직함
-  orgName        String   @default("선거대책본부") // 조직명
-  photoUrl       String?                         // 후보자 사진 URL
-  careers        Json     @default("[]")         // 경력 항목 [{icon: string, text: string}]
-  slogans        Json     @default("[]")         // 슬로건 목록 [string]
-  // 연락처 정보 (푸터용)
-  address        String?                         // 주소
-  phone          String?                         // 전화번호
-  email          String?                         // 이메일
-  hours          String?                         // 운영시간
-  description    String?                         // 소개글
-  updatedAt      DateTime @updatedAt
-
-  @@map("campaign_profile")
-}
-
-// ============================================
-// 퀵버튼 (메인 대시보드)
-// ============================================
-
-enum QuickButtonCategory {
-  video    // 영상 콘텐츠 (빨간색)
-  blog     // 블로그/네이버 콘텐츠 (초록색)
-  primary  // 주요 CTA (파란색)
-  default  // 기본 (회색)
-}
-
-model QuickButton {
-  id        String              @id @default(cuid())
-  label     String              // 버튼 텍스트
-  url       String              // 링크 URL (비디오 경로 또는 외부 URL)
-  icon      String?             // lucide 아이콘 이름 (예: "PlayCircle", "Video")
-  category  QuickButtonCategory @default(default)
-  order     Int                 @default(0)
-  isActive  Boolean             @default(true)
-  createdAt DateTime            @default(now())
-  updatedAt DateTime            @updatedAt
-
-  @@index([order])
-  @@index([category])
-  @@map("quick_buttons")
+  @@index([tenantId, createdAt(sort: Desc)])
+  @@index([provider, createdAt(sort: Desc)])
+  @@map("llm_usage")
 }

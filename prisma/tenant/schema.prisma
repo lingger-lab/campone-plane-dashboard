@@ -1,0 +1,141 @@
+// CampOne Tenant DB (camp_{tenant}_db) - v1.4
+// 캠프별 업무 데이터 (물리적 분리)
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../node_modules/@prisma/client-tenant"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// 알림
+// ============================================
+
+enum AlertType {
+  system
+  workflow
+}
+
+enum AlertSeverity {
+  info
+  warning
+  error
+  success
+}
+
+model Alert {
+  id        String        @id @default(cuid())
+  type      AlertType
+  severity  AlertSeverity
+  title     String
+  message   String
+  source    String?
+  sourceId  String?       @map("source_id")
+  pinned    Boolean       @default(false)
+  expiresAt DateTime?     @map("expires_at")
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  userAlerts UserAlert[]
+
+  @@index([createdAt])
+  @@index([type])
+  @@map("alerts")
+}
+
+// ============================================
+// 사용자-알림 매핑
+// userId는 시스템 DB의 users.id 참조 (FK 없음, 별도 DB)
+// ============================================
+
+model UserAlert {
+  userId  String    @map("user_id")
+  alertId String    @map("alert_id")
+  read    Boolean   @default(false)
+  readAt  DateTime? @map("read_at")
+
+  alert Alert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+
+  @@id([userId, alertId])
+  @@map("user_alerts")
+}
+
+// ============================================
+// 채널 링크
+// ============================================
+
+model ChannelLink {
+  key       String   @id
+  url       String
+  label     String
+  icon      String?
+  visible   Boolean  @default(true)
+  order     Int      @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("channel_links")
+}
+
+// ============================================
+// KPI 캐시
+// ============================================
+
+model KpiCache {
+  key       String   @id
+  value     Json
+  expiresAt DateTime @map("expires_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("kpi_cache")
+}
+
+// ============================================
+// 캠페인 프로필
+// ============================================
+
+model CampaignProfile {
+  id             String  @id @default("main")
+  candidateName  String  @default("후보자명") @map("candidate_name")
+  candidateTitle String  @default("OO시장 후보") @map("candidate_title")
+  orgName        String  @default("선거대책본부") @map("org_name")
+  photoUrl       String? @map("photo_url")
+  careers        Json    @default("[]")
+  slogans        Json    @default("[]")
+  address        String?
+  phone          String?
+  email          String?
+  hours          String?
+  description    String?
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("campaign_profile")
+}
+
+// ============================================
+// 퀵 버튼
+// ============================================
+
+enum QuickButtonCategory {
+  video
+  blog
+  primary
+  default
+}
+
+model QuickButton {
+  id        String              @id @default(cuid())
+  label     String
+  url       String
+  icon      String?
+  category  QuickButtonCategory @default(default)
+  order     Int                 @default(0)
+  isActive  Boolean             @default(true) @map("is_active")
+  createdAt DateTime            @default(now()) @map("created_at")
+  updatedAt DateTime            @updatedAt @map("updated_at")
+
+  @@index([order])
+  @@index([category])
+  @@map("quick_buttons")
+}
