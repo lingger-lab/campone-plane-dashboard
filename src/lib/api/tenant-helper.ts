@@ -1,22 +1,26 @@
 import { headers } from 'next/headers';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getTenantPrisma } from '@/lib/prisma';
+import { getSystemPrisma, getTenantPrisma } from '@/lib/prisma';
 import { getTenantConfig, createDefaultTenantConfig } from '@/lib/tenant/config-loader';
 import type { TenantConfig } from '@/lib/tenant/types';
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient as SystemPrismaClient } from '@prisma/client';
+import type { PrismaClient as TenantPrismaClient } from '@prisma/client-tenant';
 
 export interface TenantContext {
   tenantId: string;
   config: TenantConfig;
-  prisma: PrismaClient;
+  /** 테넌트 DB (업무 데이터: alerts, channels, kpi, etc.) */
+  prisma: TenantPrismaClient;
+  /** 시스템 DB (인증, 감사: users, user_tenants, audit_logs, etc.) */
+  systemDb: SystemPrismaClient;
 }
 
 /**
  * API 라우트에서 테넌트 정보를 추출하고 검증합니다.
  *
  * @throws {Error} 테넌트가 없거나 권한이 없는 경우
- * @returns {Promise<TenantContext>} 테넌트 컨텍스트 (tenantId, config, prisma)
+ * @returns {Promise<TenantContext>} 테넌트 컨텍스트
  */
 export async function getTenantFromRequest(): Promise<TenantContext> {
   // 1. 헤더에서 X-Tenant-ID 추출 (미들웨어가 주입)
@@ -51,13 +55,15 @@ export async function getTenantFromRequest(): Promise<TenantContext> {
     throw new Error(`Tenant config not found: ${tenantId}`);
   }
 
-  // 6. 테넌트별 Prisma 클라이언트 가져오기
+  // 6. DB 클라이언트
+  const systemDb = getSystemPrisma();
   const prisma = await getTenantPrisma(tenantId);
 
   return {
     tenantId,
     config,
     prisma,
+    systemDb,
   };
 }
 

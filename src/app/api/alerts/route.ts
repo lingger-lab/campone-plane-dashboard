@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { getTenantFromRequest } from '@/lib/api/tenant-helper';
 import { authOptions } from '@/lib/auth';
 
-// 알림 목록 조회
+// 알림 목록 조회 (테넌트 DB)
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       include: {
         alert: true,
       },
-      take: limit * 2, // 만료된 것 필터링 후에도 충분히 남도록
+      take: limit * 2,
     });
 
     // 만료되지 않은 알림만 필터링, 정렬, limit 적용
@@ -58,7 +58,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ alerts, unreadCount });
   } catch (error) {
     console.error('Failed to fetch alerts:', error);
-    // 개발 환경에서 더 자세한 에러 정보 제공
     const errorMessage =
       process.env.NODE_ENV === 'development' && error instanceof Error
         ? error.message
@@ -67,22 +66,19 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// 알림 생성 (시스템 또는 모듈에서 호출)
+// 알림 생성 (테넌트 DB + 시스템 DB에서 사용자 조회)
 export async function POST(request: NextRequest) {
   try {
-    // 서비스 간 통신용 API 키 확인
     const apiKey = request.headers.get('X-Service-Key');
     const isServiceCall = apiKey === process.env.INTERNAL_API_KEY;
 
-    // 세션 확인
     const session = await getServerSession(authOptions);
 
-    // Admin 또는 서비스 호출만 알림 생성 가능
-    if (!isServiceCall && session?.user?.role !== 'Admin') {
+    if (!isServiceCall && session?.user?.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { prisma } = await getTenantFromRequest();
+    const { prisma, systemDb, tenantId } = await getTenantFromRequest();
     const body = await request.json();
     const {
       type = 'system',
@@ -93,7 +89,7 @@ export async function POST(request: NextRequest) {
       sourceId,
       pinned = false,
       expiresAt,
-      targetUserIds, // 특정 사용자들에게만 알림 (없으면 전체)
+      targetUserIds,
     } = body;
 
     if (!title || !message) {
@@ -103,7 +99,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 알림 생성
+    // 알림 생성 (테넌트 DB)
     const alert = await prisma.alert.create({
       data: {
         type,
@@ -123,15 +119,19 @@ export async function POST(request: NextRequest) {
     if (targetUserIds && targetUserIds.length > 0) {
       userIds = targetUserIds;
     } else {
-      // 전체 활성 사용자에게 알림
-      const users = await prisma.user.findMany({
-        where: { isActive: true },
-        select: { id: true },
+      // 현재 테넌트의 모든 활성 사용자 (시스템 DB 조회)
+      const memberships = await systemDb.userTenant.findMany({
+        where: { tenantId },
+        include: {
+          user: { select: { id: true, isActive: true } },
+        },
       });
-      userIds = users.map((u) => u.id);
+      userIds = memberships
+        .filter((m) => m.user.isActive)
+        .map((m) => m.userId);
     }
 
-    // UserAlert 생성 (각 사용자별)
+    // UserAlert 생성 (테넌트 DB)
     if (userIds.length > 0) {
       await prisma.userAlert.createMany({
         data: userIds.map((userId) => ({

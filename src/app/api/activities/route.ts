@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { getTenantFromRequest } from '@/lib/api/tenant-helper';
 import { authOptions } from '@/lib/auth';
 
-// 활동 목록 조회
+// 활동 목록 조회 (시스템 DB - audit_logs)
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -11,27 +11,30 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { prisma } = await getTenantFromRequest();
+    const { systemDb, tenantId } = await getTenantFromRequest();
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '20');
-    const moduleFilter = searchParams.get('module'); // 특정 모듈만 필터링
 
-    const where = moduleFilter ? { module: moduleFilter } : {};
-
-    const activities = await prisma.auditLog.findMany({
-      where,
+    const auditLogs = await systemDb.auditLog.findMany({
+      where: { tenantId },
       orderBy: { createdAt: 'desc' },
       take: limit,
-      select: {
-        id: true,
-        userName: true,
-        action: true,
-        module: true,
-        target: true,
-        details: true,
-        createdAt: true,
+      include: {
+        actor: {
+          select: { name: true, email: true },
+        },
       },
     });
+
+    const activities = auditLogs.map((log) => ({
+      id: log.id,
+      userName: log.actor?.name || 'System',
+      action: log.action,
+      module: (log.detail as Record<string, unknown>)?.module || null,
+      target: log.resource,
+      details: log.detail,
+      createdAt: log.createdAt,
+    }));
 
     return NextResponse.json({ activities });
   } catch (error) {
@@ -43,10 +46,9 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// 활동 기록 생성
+// 활동 기록 생성 (시스템 DB - audit_logs)
 export async function POST(request: NextRequest) {
   try {
-    // 인증 확인 (세션 또는 embed 토큰)
     const session = await getServerSession(authOptions);
 
     // 서비스 간 통신용 API 키 확인
@@ -57,38 +59,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { prisma } = await getTenantFromRequest();
+    const { systemDb, tenantId } = await getTenantFromRequest();
     const body = await request.json();
-    const { action, module: moduleName, target, details, userId, userName } = body;
+    const { action, module: moduleName, target, details, userId } = body;
 
-    if (!action || !moduleName) {
+    if (!action) {
       return NextResponse.json(
-        { error: 'action and module are required' },
+        { error: 'action is required' },
         { status: 400 }
       );
     }
 
-    // 사용자 정보 결정 (세션 우선, 없으면 body에서)
-    const finalUserId = session?.user?.id || userId;
-    const finalUserName = session?.user?.name || userName || 'System';
+    const actorId = session?.user?.id || userId || null;
 
-    if (!finalUserId) {
-      return NextResponse.json(
-        { error: 'userId is required' },
-        { status: 400 }
-      );
-    }
-
-    const activity = await prisma.auditLog.create({
+    const activity = await systemDb.auditLog.create({
       data: {
-        userId: finalUserId,
-        userName: finalUserName,
+        actorId,
+        tenantId,
         action,
-        module: moduleName,
-        target: target || action,
-        details: details || null,
+        resource: target || moduleName,
+        detail: { module: moduleName, ...details },
         ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip'),
-        userAgent: request.headers.get('user-agent'),
       },
     });
 

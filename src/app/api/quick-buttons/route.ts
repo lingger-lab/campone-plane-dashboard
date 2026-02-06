@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userRole = (session.user as { role?: UserRole }).role || 'Viewer';
+    const userRole = (session.user as { role?: UserRole }).role || 'member';
 
     if (!hasPermission(userRole, 'quickButtons', 'create')) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
@@ -80,7 +80,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userRole = (session.user as { role?: UserRole }).role || 'Viewer';
+    const userRole = (session.user as { role?: UserRole }).role || 'member';
 
     if (!hasPermission(userRole, 'quickButtons', 'update')) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
@@ -122,7 +122,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userRole = (session.user as { role?: UserRole }).role || 'Viewer';
+    const userRole = (session.user as { role?: UserRole }).role || 'member';
 
     if (!hasPermission(userRole, 'quickButtons', 'delete')) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
@@ -156,7 +156,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userRole = (session.user as { role?: UserRole }).role || 'Viewer';
+    const userRole = (session.user as { role?: UserRole }).role || 'member';
 
     if (!hasPermission(userRole, 'quickButtons', 'update')) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });

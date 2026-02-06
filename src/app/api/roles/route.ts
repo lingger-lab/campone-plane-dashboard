@@ -3,11 +3,12 @@ import { getServerSession } from 'next-auth';
 import { getTenantFromRequest } from '@/lib/api/tenant-helper';
 import { authOptions } from '@/lib/auth';
 
-const ROLE_INFO = {
-  Admin: { label: '관리자', description: '모든 기능에 대한 전체 권한' },
-  Manager: { label: '매니저', description: '역할/권한 관리 제외 대부분 권한' },
-  Staff: { label: '스태프', description: '일부 기능에 대한 제한된 권한' },
-  Viewer: { label: '뷰어', description: '읽기 전용 권한' },
+const ROLE_INFO: Record<string, { label: string; description: string }> = {
+  admin: { label: '관리자', description: '모든 기능에 대한 전체 권한' },
+  analyst: { label: '분석가', description: 'Insight, Policy 앱 접근' },
+  operator: { label: '운영 담당', description: 'Ops 앱 접근' },
+  content_manager: { label: '콘텐츠 담당', description: 'Studio 앱 접근' },
+  member: { label: '멤버', description: '기본 읽기 권한' },
 };
 
 export async function GET() {
@@ -17,17 +18,17 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (session.user.role !== 'Admin') {
+    if (session.user.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { prisma } = await getTenantFromRequest();
+    const { systemDb, tenantId } = await getTenantFromRequest();
 
-    // 역할별 사용자 수 집계
-    const roleCounts = await prisma.user.groupBy({
+    // 현재 테넌트의 역할별 사용자 수 집계
+    const roleCounts = await systemDb.userTenant.groupBy({
       by: ['role'],
       _count: { role: true },
-      where: { isActive: true },
+      where: { tenantId },
     });
 
     const countMap = new Map(
@@ -38,7 +39,7 @@ export async function GET() {
       key,
       label: info.label,
       description: info.description,
-      count: countMap.get(key as keyof typeof ROLE_INFO) || 0,
+      count: countMap.get(key) || 0,
     }));
 
     return NextResponse.json({ roles });

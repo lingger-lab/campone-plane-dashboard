@@ -58,7 +58,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userRole = (session.user as { role?: UserRole }).role || 'Viewer';
+    const userRole = (session.user as { role?: UserRole }).role || 'member';
 
     // settings 권한 확인 (Admin, Manager만 가능)
     if (!hasPermission(userRole, 'settings', 'update')) {
