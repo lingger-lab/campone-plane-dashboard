@@ -9,12 +9,9 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // URL에서 tenant 파라미터 읽기
-  const tenantFromUrl = searchParams.get('tenant') || '';
   const callbackUrl = searchParams.get('callbackUrl') || '';
   const errorParam = searchParams.get('error');
 
-  const [tenantId, setTenantId] = useState(tenantFromUrl);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -29,21 +26,9 @@ function LoginForm() {
     }
   }, [errorParam]);
 
-  // URL에서 tenant가 변경되면 상태 업데이트
-  useEffect(() => {
-    if (tenantFromUrl) {
-      setTenantId(tenantFromUrl);
-    }
-  }, [tenantFromUrl]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
-    if (!tenantId.trim()) {
-      setError('캠프 ID를 입력하세요.');
-      return;
-    }
 
     setIsLoading(true);
 
@@ -51,15 +36,19 @@ function LoginForm() {
       const result = await signIn('credentials', {
         email,
         password,
-        tenantId: tenantId.trim(),
         redirect: false,
       });
 
       if (result?.error) {
         setError('이메일 또는 비밀번호가 올바르지 않습니다.');
       } else {
-        // 로그인 성공 시 테넌트 대시보드로 이동
-        const redirectUrl = callbackUrl || `/${tenantId.trim()}`;
+        // 로그인 성공 → 세션에서 tenantId 가져와서 리다이렉트
+        // NextAuth가 JWT에 tenantId를 넣어주므로 세션 fetch
+        const sessionRes = await fetch('/api/auth/session');
+        const session = await sessionRes.json();
+        const tenantId = session?.user?.tenantId;
+
+        const redirectUrl = callbackUrl || (tenantId ? `/${tenantId}` : '/');
         router.push(redirectUrl);
         router.refresh();
       }
@@ -94,29 +83,6 @@ function LoginForm() {
       {/* Login Form */}
       <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
         <div className="rounded-md shadow-sm space-y-4">
-          {/* 테넌트 ID 입력 */}
-          <div>
-            <label
-              htmlFor="tenantId"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              캠프 ID
-            </label>
-            <input
-              id="tenantId"
-              name="tenantId"
-              type="text"
-              required
-              value={tenantId}
-              onChange={(e) => setTenantId(e.target.value)}
-              className="appearance-none relative block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm"
-              placeholder="camp-test"
-            />
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              예: camp-changwon, camp-seoul
-            </p>
-          </div>
-
           <div>
             <label
               htmlFor="email"
@@ -202,20 +168,17 @@ function LoginForm() {
         {/* Demo Credentials Info */}
         <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
           <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-2">
-            테스트 계정 정보
+            테스트 계정 (비밀번호: campone123!)
           </p>
           <div className="space-y-1">
             <p className="text-xs text-blue-500 dark:text-blue-300">
-              <span className="font-medium">캠프 ID:</span> camp-test
+              <span className="font-medium">관리자:</span> admin@campone.kr
             </p>
             <p className="text-xs text-blue-500 dark:text-blue-300">
-              <span className="font-medium">Admin:</span> admin@campone.kr / campone123!
+              <span className="font-medium">분석가:</span> analyst@campone.kr
             </p>
             <p className="text-xs text-blue-500 dark:text-blue-300">
-              <span className="font-medium">Manager:</span> manager@campone.kr / campone123!
-            </p>
-            <p className="text-xs text-blue-500 dark:text-blue-300">
-              <span className="font-medium">Staff:</span> staff@campone.kr / campone123!
+              <span className="font-medium">멤버:</span> member@campone.kr
             </p>
           </div>
         </div>

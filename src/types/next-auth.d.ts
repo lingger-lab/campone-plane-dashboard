@@ -1,14 +1,13 @@
 import 'next-auth';
-import { UserRole } from '@prisma/client';
 
 declare module 'next-auth' {
   interface User {
     id: string;
     email: string;
     name: string;
-    role: UserRole;
+    role: string; // user_tenants.role (admin, analyst, operator, etc.)
     tenantId: string;
-    avatar: string | null;
+    isSystemAdmin?: boolean;
   }
 
   interface Session {
@@ -18,7 +17,7 @@ declare module 'next-auth' {
       name: string;
       role: string;
       tenantId: string;
-      avatar: string | null;
+      isSystemAdmin?: boolean;
     };
   }
 }
@@ -28,6 +27,6 @@ declare module 'next-auth/jwt' {
     id: string;
     role: string;
     tenantId: string;
-    avatar: string | null;
+    isSystemAdmin?: boolean;
   }
 }

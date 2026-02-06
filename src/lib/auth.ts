@@ -1,6 +1,6 @@
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
-import prisma from '@/lib/prisma';
+import { getSystemPrisma } from '@/lib/prisma';
 import type { NextAuthOptions } from 'next-auth';
 
 export const authOptions: NextAuthOptions = {
@@ -10,22 +10,19 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: '이메일', type: 'email', placeholder: 'admin@campone.kr' },
         password: { label: '비밀번호', type: 'password' },
-        tenantId: { label: '테넌트 ID', type: 'text' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password || !credentials?.tenantId) {
+        if (!credentials?.email || !credentials?.password) {
           return null;
         }
 
-        const { email, password, tenantId } = credentials;
+        const { email, password } = credentials;
 
         try {
-          // TODO: 프로덕션에서는 테넌트별 DB에서 조회
-          // const tenantPrisma = await getTenantPrisma(tenantId);
-          // const user = await tenantPrisma.user.findUnique({ ... });
+          const systemDb = getSystemPrisma();
 
-          // 개발 환경: 기존 단일 DB 사용
-          const user = await prisma.user.findUnique({
+          // 1. 시스템 DB에서 사용자 조회
+          const user = await systemDb.user.findUnique({
             where: { email },
           });
 
@@ -33,26 +30,39 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
-          // 비밀번호 검증
-          const isValidPassword = await bcrypt.compare(password, user.password);
+          // 2. 비밀번호 검증
+          const isValidPassword = await bcrypt.compare(password, user.passwordHash);
 
           if (!isValidPassword) {
             return null;
           }
 
-          // lastLogin 업데이트
-          await prisma.user.update({
+          // 3. 소속 캠프 자동 매칭 (is_default 우선 → 첫 번째)
+          const memberships = await systemDb.userTenant.findMany({
+            where: { userId: user.id },
+            orderBy: [{ isDefault: 'desc' }, { joinedAt: 'asc' }],
+          });
+
+          if (memberships.length === 0) {
+            // 소속 캠프 없음
+            return null;
+          }
+
+          const defaultMembership = memberships[0];
+
+          // 4. updatedAt 갱신
+          await systemDb.user.update({
             where: { id: user.id },
-            data: { lastLogin: new Date() },
+            data: { updatedAt: new Date() },
           });
 
           return {
             id: user.id,
             email: user.email,
             name: user.name,
-            role: user.role,
-            tenantId, // 테넌트 ID 포함
-            avatar: user.avatar,
+            role: defaultMembership.role,
+            tenantId: defaultMembership.tenantId,
+            isSystemAdmin: user.isSystemAdmin,
           };
         } catch (error) {
           console.error('Auth error:', error);
@@ -71,7 +81,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = user.role;
         token.tenantId = user.tenantId;
-        token.avatar = user.avatar;
+        token.isSystemAdmin = user.isSystemAdmin;
       }
       return token;
     },
@@ -80,7 +90,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
         session.user.tenantId = token.tenantId as string;
-        session.user.avatar = token.avatar as string | null;
+        session.user.isSystemAdmin = token.isSystemAdmin as boolean;
       }
       return session;
     },
