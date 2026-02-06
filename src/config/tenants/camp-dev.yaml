@@ -1,9 +1,9 @@
-# CampOne 테스트 테넌트 설정
-# 개발 환경용
+# CampOne 개발 테넌트 설정
+# 메인 개발/데모 환경
 
-id: "camp-test"
-name: "캠프 테스트"
-displayName: "테스트 캠프 대시보드"
+id: "camp-dev"
+name: "개발용 캠프"
+displayName: "CampOne 개발 대시보드"
 createdAt: "2025-01-01T00:00:00Z"
 
 # 서비스 제공 방식
@@ -26,7 +26,7 @@ auth:
 database:
   host: "localhost"
   port: 5432
-  name: "camp_test_db"
+  name: "camp_dev_db"
   credentials: "local"
 
 # 기능 플래그
@@ -53,20 +53,14 @@ services:
   ops: "https://campone-ops-755458598444.asia-northeast3.run.app"
   hub: "https://campone-hub-755458598444.asia-northeast3.run.app"
 
-# LLM 설정 (테넌트별 API 키)
-# llm:
-#   provider: "anthropic"
-#   apiKey: "sk-ant-..."
-#   model: "claude-3-5-sonnet-20241022"
-
 # 사용량 제한
 limits:
-  llmTokensMonthly: 500000
-  llmTokensDaily: 50000
-  apiRequestsPerMinute: 60
+  llmTokensMonthly: 1000000
+  llmTokensDaily: 100000
+  apiRequestsPerMinute: 120
 
 # 생명주기 설정
 lifecycle:
   electionDate: "2026-06-01"
-  dataRetentionDays: 90
+  dataRetentionDays: 180
   exportBeforeDeletion: true
