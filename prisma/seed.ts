@@ -64,10 +64,11 @@ async function seedSystemDb() {
   // 테넌트 등록
   await systemDb.tenant.upsert({
     where: { tenantId: "camp-dev" },
-    update: {},
+    update: { dbName: "camp_dev_db" },
     create: {
       tenantId: "camp-dev",
       name: "개발용 캠프",
+      dbName: "camp_dev_db",
       isActive: true,
       configPath: "tenants/camp-dev.yaml",
     },
@@ -75,10 +76,11 @@ async function seedSystemDb() {
 
   await systemDb.tenant.upsert({
     where: { tenantId: "camp-test" },
-    update: {},
+    update: { dbName: "camp_test_db" },
     create: {
       tenantId: "camp-test",
       name: "테스트 캠프",
+      dbName: "camp_test_db",
       isActive: true,
       configPath: "tenants/camp-test.yaml",
     },

@@ -2,7 +2,6 @@ import { PrismaClient as SystemPrismaClient } from "@prisma/client";
 import { PrismaClient as TenantPrismaClient } from "@prisma/client-tenant";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
-import { getTenantConfig } from "./tenant/config-loader";
 
 // ============================================
 // v1.4 2계층 DB 구조
@@ -104,7 +103,7 @@ if (process.env.NODE_ENV !== "production") {
  * 테넌트별 Prisma 클라이언트 가져오기
  *
  * - 개발 환경(USE_SINGLE_DB=true): TENANT_DATABASE_URL 또는 DATABASE_URL 사용
- * - 프로덕션: 테넌트 설정의 database.credentials로 연결
+ * - 프로덕션: 시스템 DB의 tenants.db_name으로 URL 조합
  */
 export async function getTenantPrisma(
   tenantId: string
@@ -125,23 +124,24 @@ export async function getTenantPrisma(
     connectionString =
       process.env.TENANT_DATABASE_URL || process.env.DATABASE_URL!;
   } else {
-    // 프로덕션: 테넌트 설정에서 DB 연결 정보 로드
-    const config = await getTenantConfig(tenantId);
-    if (!config) {
+    // 프로덕션: 시스템 DB에서 테넌트 정보 조회
+    const tenant = await systemClient.tenant.findUnique({
+      where: { tenantId },
+      select: { dbName: true, isActive: true },
+    });
+
+    if (!tenant) {
       throw new Error(`Tenant not found: ${tenantId}`);
     }
 
-    if (config.database.credentials === "local") {
-      // 공유 Cloud SQL 인스턴스: DATABASE_URL에서 DB명만 교체
-      // e.g., .../campone_system?host=... → .../camp_dev_db?host=...
-      const baseUrl = process.env.DATABASE_URL!;
-      const dbName = config.database.name; // e.g., "camp_dev_db"
-      connectionString = baseUrl.replace(/\/([^/?]+)(\?|$)/, `/${dbName}$2`);
-    } else {
-      // 별도 인스턴스: 직접 연결 문자열 사용
-      // credentials 형식: "postgresql://user:pass@/camp_xxx_db?host=/cloudsql/..."
-      connectionString = config.database.credentials;
+    if (!tenant.isActive) {
+      throw new Error(`Tenant is inactive: ${tenantId}`);
     }
+
+    // DATABASE_URL에서 DB명만 교체
+    // e.g., .../campone_system?host=... → .../camp_dev_db?host=...
+    const baseUrl = process.env.DATABASE_URL!;
+    connectionString = baseUrl.replace(/\/([^/?]+)(\?|$)/, `/${tenant.dbName}$2`);
   }
 
   const client = createTenantClient(connectionString);

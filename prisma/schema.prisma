@@ -55,6 +55,7 @@ model UserTenant {
 model Tenant {
   tenantId   String   @id @map("tenant_id") @db.VarChar(50)
   name       String   @db.VarChar(200)
+  dbName     String   @map("db_name") @db.VarChar(100)
   isActive   Boolean  @default(true) @map("is_active")
   configPath String?  @map("config_path") @db.VarChar(500)
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
