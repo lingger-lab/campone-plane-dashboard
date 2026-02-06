@@ -19,7 +19,7 @@ export default function SettingsPage() {
   const user = session?.user;
   const userName = user?.name || '사용자';
   const userEmail = user?.email || '';
-  const userRole = (user as { role?: string })?.role || 'Viewer';
+  const userRole = (user as { role?: string })?.role || 'member';
 
   return (
     <div className="container max-w-4xl mx-auto p-6 space-y-6">

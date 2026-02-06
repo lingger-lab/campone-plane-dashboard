@@ -24,7 +24,7 @@ import { Label } from '@/components/ui/label';
 import { useSession } from 'next-auth/react';
 
 type Permission = 'full' | 'limited' | 'view' | 'none';
-type UserRole = 'Admin' | 'Manager' | 'Staff' | 'Viewer';
+type UserRole = 'admin' | 'analyst' | 'operator' | 'content_manager' | 'civichub_admin' | 'member';
 
 interface RoleData {
   key: string;
@@ -79,13 +79,17 @@ const getPermissionIcon = (permission: Permission) => {
 
 const getRoleBadgeVariant = (role: UserRole) => {
   switch (role) {
-    case 'Admin':
+    case 'admin':
       return 'default';
-    case 'Manager':
+    case 'analyst':
       return 'secondary';
-    case 'Staff':
+    case 'operator':
+      return 'secondary';
+    case 'content_manager':
       return 'outline';
-    case 'Viewer':
+    case 'civichub_admin':
+      return 'outline';
+    case 'member':
       return 'outline';
   }
 };
@@ -105,10 +109,10 @@ export default function RolesPage() {
     email: '',
     name: '',
     password: '',
-    role: 'Staff' as UserRole,
+    role: 'member' as UserRole,
   });
 
-  const isAdmin = session?.user?.role === 'Admin';
+  const isAdmin = session?.user?.role === 'admin';
 
   // 데이터 로드
   const fetchData = async () => {
@@ -179,7 +183,7 @@ export default function RolesPage() {
       if (res.ok) {
         await fetchData();
         setCreateDialogOpen(false);
-        setNewUser({ email: '', name: '', password: '', role: 'Staff' });
+        setNewUser({ email: '', name: '', password: '', role: 'member' });
       }
     } catch (error) {
       console.error('Failed to create user:', error);
@@ -409,10 +413,12 @@ export default function RolesPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Admin">Admin - 모든 권한</SelectItem>
-                    <SelectItem value="Manager">Manager - 역할/권한 제외 대부분</SelectItem>
-                    <SelectItem value="Staff">Staff - 제한된 권한</SelectItem>
-                    <SelectItem value="Viewer">Viewer - 읽기 전용</SelectItem>
+                    <SelectItem value="admin">admin - 모든 권한</SelectItem>
+                    <SelectItem value="analyst">analyst - 여론 분석</SelectItem>
+                    <SelectItem value="operator">operator - 운영 관리</SelectItem>
+                    <SelectItem value="content_manager">content_manager - 콘텐츠 관리</SelectItem>
+                    <SelectItem value="civichub_admin">civichub_admin - 시민 소통 관리</SelectItem>
+                    <SelectItem value="member">member - 일반 멤버</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -483,10 +489,12 @@ export default function RolesPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Admin">Admin</SelectItem>
-                  <SelectItem value="Manager">Manager</SelectItem>
-                  <SelectItem value="Staff">Staff</SelectItem>
-                  <SelectItem value="Viewer">Viewer</SelectItem>
+                  <SelectItem value="admin">admin</SelectItem>
+                  <SelectItem value="analyst">analyst</SelectItem>
+                  <SelectItem value="operator">operator</SelectItem>
+                  <SelectItem value="content_manager">content_manager</SelectItem>
+                  <SelectItem value="civichub_admin">civichub_admin</SelectItem>
+                  <SelectItem value="member">member</SelectItem>
                 </SelectContent>
               </Select>
             </div>

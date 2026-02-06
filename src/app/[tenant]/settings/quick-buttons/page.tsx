@@ -98,7 +98,7 @@ export default function QuickButtonsPage() {
   const [formIcon, setFormIcon] = useState('');
   const [formCategory, setFormCategory] = useState<keyof typeof CATEGORY_CONFIG>('default');
 
-  const userRole = (session?.user as { role?: UserRole })?.role || 'Viewer';
+  const userRole = (session?.user as { role?: UserRole })?.role || 'member';
   const canEdit = hasPermission(userRole, 'quickButtons', 'update');
   const canDelete = hasPermission(userRole, 'quickButtons', 'delete');
   const canCreate = hasPermission(userRole, 'quickButtons', 'create');

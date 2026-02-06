@@ -63,7 +63,7 @@ export default function CampaignProfilePage() {
   const params = useParams();
   const tenant = params.tenant as string;
   const { data: session } = useSession();
-  const userRole = (session?.user as { role?: UserRole })?.role || 'Viewer';
+  const userRole = (session?.user as { role?: UserRole })?.role || 'member';
   const canEdit = hasPermission(userRole, 'settings', 'update');
 
   const { data: profileData, isLoading, isError, refetch } = useCampaignProfile();

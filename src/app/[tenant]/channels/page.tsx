@@ -34,7 +34,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 export default function ChannelsPage() {
   const { data: session } = useSession();
-  const userRole = (session?.user as { role?: UserRole })?.role || 'Viewer';
+  const userRole = (session?.user as { role?: UserRole })?.role || 'member';
   const canEdit = hasPermission(userRole, 'channels', 'update');
 
   const { data: channelsData, isLoading, isError, refetch } = useChannels();
