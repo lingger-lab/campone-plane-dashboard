@@ -1,101 +1,109 @@
 /**
  * CampOne 관리자 대시보드 - RBAC (Role-Based Access Control)
+ * v1.4: user_tenants.role 기반
  */
 
 import type { UserRole, Permission } from './types';
 
+// 모든 역할
+const ALL: UserRole[] = ['admin', 'analyst', 'operator', 'content_manager', 'civichub_admin', 'member'];
+// 관리 + 전문 역할
+const MANAGERS: UserRole[] = ['admin', 'analyst', 'operator', 'content_manager'];
+
 /**
  * 권한 매트릭스 정의
  *
- * Admin: 모든 권한
- * Manager: 대부분 권한 (역할/권한 관리 제외)
- * Staff: 제한된 권한 (승인 필요)
- * Viewer: 읽기 전용
+ * admin: 모든 권한
+ * analyst: Insight, Policy 관련
+ * operator: Ops 관련
+ * content_manager: Studio 관련
+ * civichub_admin: CivicHub 관련
+ * member: 읽기 전용
  */
 export const permissions: Permission[] = [
   // Contacts/Segments
-  { entity: 'contacts', action: 'read', roles: ['Admin', 'Manager', 'Staff', 'Viewer'] },
-  { entity: 'contacts', action: 'create', roles: ['Admin', 'Manager', 'Staff'] },
-  { entity: 'contacts', action: 'update', roles: ['Admin', 'Manager', 'Staff'] },
-  { entity: 'contacts', action: 'delete', roles: ['Admin', 'Manager'] },
+  { entity: 'contacts', action: 'read', roles: ALL },
+  { entity: 'contacts', action: 'create', roles: MANAGERS },
+  { entity: 'contacts', action: 'update', roles: MANAGERS },
+  { entity: 'contacts', action: 'delete', roles: ['admin'] },
 
-  { entity: 'segments', action: 'read', roles: ['Admin', 'Manager', 'Staff', 'Viewer'] },
-  { entity: 'segments', action: 'create', roles: ['Admin', 'Manager', 'Staff'] },
-  { entity: 'segments', action: 'update', roles: ['Admin', 'Manager'] },
-  { entity: 'segments', action: 'delete', roles: ['Admin', 'Manager'] },
+  { entity: 'segments', action: 'read', roles: ALL },
+  { entity: 'segments', action: 'create', roles: MANAGERS },
+  { entity: 'segments', action: 'update', roles: ['admin', 'analyst'] },
+  { entity: 'segments', action: 'delete', roles: ['admin'] },
 
   // Messages/Campaigns
-  { entity: 'messages', action: 'read', roles: ['Admin', 'Manager', 'Staff', 'Viewer'] },
-  { entity: 'messages', action: 'create', roles: ['Admin', 'Manager', 'Staff'] },
-  { entity: 'messages', action: 'update', roles: ['Admin', 'Manager', 'Staff'] },
-  { entity: 'messages', action: 'delete', roles: ['Admin', 'Manager'] },
-  { entity: 'messages', action: 'send', roles: ['Admin', 'Manager'] }, // Staff는 승인 필요
+  { entity: 'messages', action: 'read', roles: ALL },
+  { entity: 'messages', action: 'create', roles: MANAGERS },
+  { entity: 'messages', action: 'update', roles: MANAGERS },
+  { entity: 'messages', action: 'delete', roles: ['admin'] },
+  { entity: 'messages', action: 'send', roles: ['admin', 'operator'] },
 
-  { entity: 'campaigns', action: 'read', roles: ['Admin', 'Manager', 'Staff', 'Viewer'] },
-  { entity: 'campaigns', action: 'create', roles: ['Admin', 'Manager', 'Staff'] },
-  { entity: 'campaigns', action: 'update', roles: ['Admin', 'Manager'] },
-  { entity: 'campaigns', action: 'delete', roles: ['Admin', 'Manager'] },
+  { entity: 'campaigns', action: 'read', roles: ALL },
+  { entity: 'campaigns', action: 'create', roles: MANAGERS },
+  { entity: 'campaigns', action: 'update', roles: ['admin', 'operator'] },
+  { entity: 'campaigns', action: 'delete', roles: ['admin'] },
 
   // Events
-  { entity: 'events', action: 'read', roles: ['Admin', 'Manager', 'Staff', 'Viewer'] },
-  { entity: 'events', action: 'create', roles: ['Admin', 'Manager', 'Staff'] },
-  { entity: 'events', action: 'update', roles: ['Admin', 'Manager', 'Staff'] },
-  { entity: 'events', action: 'delete', roles: ['Admin', 'Manager'] },
+  { entity: 'events', action: 'read', roles: ALL },
+  { entity: 'events', action: 'create', roles: ['admin', 'operator'] },
+  { entity: 'events', action: 'update', roles: ['admin', 'operator'] },
+  { entity: 'events', action: 'delete', roles: ['admin'] },
 
   // Donations
-  { entity: 'donations', action: 'read', roles: ['Admin', 'Manager', 'Staff', 'Viewer'] },
-  { entity: 'donations', action: 'create', roles: ['Admin', 'Manager'] },
-  { entity: 'donations', action: 'update', roles: ['Admin', 'Manager'] },
-  { entity: 'donations', action: 'delete', roles: ['Admin'] },
+  { entity: 'donations', action: 'read', roles: ALL },
+  { entity: 'donations', action: 'create', roles: ['admin', 'operator'] },
+  { entity: 'donations', action: 'update', roles: ['admin'] },
+  { entity: 'donations', action: 'delete', roles: ['admin'] },
 
   // Tasks
-  { entity: 'tasks', action: 'read', roles: ['Admin', 'Manager', 'Staff', 'Viewer'] },
-  { entity: 'tasks', action: 'create', roles: ['Admin', 'Manager', 'Staff'] },
-  { entity: 'tasks', action: 'update', roles: ['Admin', 'Manager', 'Staff'] },
-  { entity: 'tasks', action: 'delete', roles: ['Admin', 'Manager'] },
+  { entity: 'tasks', action: 'read', roles: ALL },
+  { entity: 'tasks', action: 'create', roles: MANAGERS },
+  { entity: 'tasks', action: 'update', roles: MANAGERS },
+  { entity: 'tasks', action: 'delete', roles: ['admin'] },
 
   // Policy Docs
-  { entity: 'policy', action: 'read', roles: ['Admin', 'Manager', 'Staff', 'Viewer'] },
-  { entity: 'policy', action: 'create', roles: ['Admin', 'Manager', 'Staff'] },
-  { entity: 'policy', action: 'update', roles: ['Admin', 'Manager', 'Staff'] },
-  { entity: 'policy', action: 'approve', roles: ['Admin', 'Manager'] },
-  { entity: 'policy', action: 'delete', roles: ['Admin', 'Manager'] },
+  { entity: 'policy', action: 'read', roles: ALL },
+  { entity: 'policy', action: 'create', roles: ['admin', 'analyst'] },
+  { entity: 'policy', action: 'update', roles: ['admin', 'analyst'] },
+  { entity: 'policy', action: 'approve', roles: ['admin'] },
+  { entity: 'policy', action: 'delete', roles: ['admin'] },
 
   // Studio
-  { entity: 'studio', action: 'read', roles: ['Admin', 'Manager', 'Staff', 'Viewer'] },
-  { entity: 'studio', action: 'create', roles: ['Admin', 'Manager', 'Staff'] },
-  { entity: 'studio', action: 'update', roles: ['Admin', 'Manager', 'Staff'] },
-  { entity: 'studio', action: 'approve', roles: ['Admin', 'Manager'] }, // 퍼블리시 승인
-  { entity: 'studio', action: 'delete', roles: ['Admin', 'Manager'] },
+  { entity: 'studio', action: 'read', roles: ALL },
+  { entity: 'studio', action: 'create', roles: ['admin', 'content_manager'] },
+  { entity: 'studio', action: 'update', roles: ['admin', 'content_manager'] },
+  { entity: 'studio', action: 'approve', roles: ['admin'] },
+  { entity: 'studio', action: 'delete', roles: ['admin'] },
 
   // Ops Runbook
-  { entity: 'ops', action: 'read', roles: ['Admin', 'Manager', 'Staff', 'Viewer'] },
-  { entity: 'ops', action: 'create', roles: ['Admin', 'Manager', 'Staff'] },
-  { entity: 'ops', action: 'update', roles: ['Admin', 'Manager'] }, // Staff는 제안만
-  { entity: 'ops', action: 'delete', roles: ['Admin', 'Manager'] },
+  { entity: 'ops', action: 'read', roles: ALL },
+  { entity: 'ops', action: 'create', roles: ['admin', 'operator'] },
+  { entity: 'ops', action: 'update', roles: ['admin', 'operator'] },
+  { entity: 'ops', action: 'delete', roles: ['admin'] },
 
   // Roles & Permissions
-  { entity: 'roles', action: 'read', roles: ['Admin'] },
-  { entity: 'roles', action: 'create', roles: ['Admin'] },
-  { entity: 'roles', action: 'update', roles: ['Admin'] },
-  { entity: 'roles', action: 'delete', roles: ['Admin'] },
+  { entity: 'roles', action: 'read', roles: ['admin'] },
+  { entity: 'roles', action: 'create', roles: ['admin'] },
+  { entity: 'roles', action: 'update', roles: ['admin'] },
+  { entity: 'roles', action: 'delete', roles: ['admin'] },
 
   // Audit Log
-  { entity: 'audit', action: 'read', roles: ['Admin', 'Manager', 'Staff', 'Viewer'] },
+  { entity: 'audit', action: 'read', roles: ALL },
 
   // Settings
-  { entity: 'settings', action: 'read', roles: ['Admin', 'Manager', 'Staff', 'Viewer'] },
-  { entity: 'settings', action: 'update', roles: ['Admin', 'Manager'] },
+  { entity: 'settings', action: 'read', roles: ALL },
+  { entity: 'settings', action: 'update', roles: ['admin'] },
 
   // Channels
-  { entity: 'channels', action: 'read', roles: ['Admin', 'Manager', 'Staff', 'Viewer'] },
-  { entity: 'channels', action: 'update', roles: ['Admin', 'Manager'] },
+  { entity: 'channels', action: 'read', roles: ALL },
+  { entity: 'channels', action: 'update', roles: ['admin'] },
 
-  // Quick Buttons (대시보드 퀵버튼)
-  { entity: 'quickButtons', action: 'read', roles: ['Admin', 'Manager', 'Staff', 'Viewer'] },
-  { entity: 'quickButtons', action: 'create', roles: ['Admin', 'Manager'] },
-  { entity: 'quickButtons', action: 'update', roles: ['Admin', 'Manager'] },
-  { entity: 'quickButtons', action: 'delete', roles: ['Admin', 'Manager'] },
+  // Quick Buttons
+  { entity: 'quickButtons', action: 'read', roles: ALL },
+  { entity: 'quickButtons', action: 'create', roles: ['admin'] },
+  { entity: 'quickButtons', action: 'update', roles: ['admin'] },
+  { entity: 'quickButtons', action: 'delete', roles: ['admin'] },
 ];
 
 /**
@@ -116,48 +124,19 @@ export function hasPermission(
 }
 
 /**
- * 사용자가 승인이 필요한지 확인
- */
-export function needsApproval(role: UserRole, entity: string, action: Permission['action']): boolean {
-  // Staff가 메시지 발송 시 승인 필요
-  if (role === 'Staff' && entity === 'messages' && action === 'send') {
-    return true;
-  }
-
-  // Staff가 Studio 퍼블리시 시 검토 필요
-  if (role === 'Staff' && entity === 'studio' && action === 'approve') {
-    return true;
-  }
-
-  return false;
-}
-
-/**
  * 역할별 레이블
  */
 export function getRoleLabel(role: UserRole): string {
   const labels: Record<UserRole, string> = {
-    Admin: '관리자',
-    Manager: '매니저',
-    Staff: '스태프',
-    Viewer: '뷰어',
+    admin: '관리자',
+    analyst: '분석가',
+    operator: '운영 담당',
+    content_manager: '콘텐츠 담당',
+    civichub_admin: 'CivicHub 관리',
+    member: '멤버',
   };
 
-  return labels[role];
-}
-
-/**
- * 역할별 설명
- */
-export function getRoleDescription(role: UserRole): string {
-  const descriptions: Record<UserRole, string> = {
-    Admin: '모든 기능에 대한 전체 권한',
-    Manager: '역할/권한 관리를 제외한 대부분의 권한',
-    Staff: '제한된 생성/수정 권한 (일부 작업은 승인 필요)',
-    Viewer: '읽기 전용 권한',
-  };
-
-  return descriptions[role];
+  return labels[role] || role;
 }
 
 /**
@@ -186,7 +165,6 @@ export function hasFullCRUD(role: UserRole, entity: string): boolean {
 export type PermissionCheck = {
   can: (action: Permission['action'], entity: string) => boolean;
   canApprove: (entity: string) => boolean;
-  needsApproval: (action: Permission['action'], entity: string) => boolean;
 };
 
 /**
@@ -196,6 +174,5 @@ export function createPermissionChecker(role: UserRole): PermissionCheck {
   return {
     can: (action, entity) => hasPermission(role, entity, action),
     canApprove: (entity) => hasPermission(role, entity, 'approve'),
-    needsApproval: (action, entity) => needsApproval(role, entity, action),
   };
 }

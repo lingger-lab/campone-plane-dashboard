@@ -17,8 +17,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma client
-RUN npx prisma generate
+# Generate Prisma clients (system + tenant)
+RUN npx prisma generate && npx prisma generate --schema=prisma/tenant/schema.prisma
 
 # Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -67,5 +67,10 @@ USER nextjs
 # Expose port
 EXPOSE 8080
 
-# Start the application with db push
-CMD sh -c "npx prisma db push --skip-generate --accept-data-loss 2>/dev/null || true; exec node server.js"
+# Start the application with db push (system + tenant schemas)
+CMD sh -c "\
+  npx prisma db push --skip-generate --accept-data-loss 2>/dev/null || true; \
+  if [ -n \"$TENANT_DATABASE_URL\" ]; then \
+    DATABASE_URL=$TENANT_DATABASE_URL npx prisma db push --schema=prisma/tenant/schema.prisma --skip-generate --accept-data-loss 2>/dev/null || true; \
+  fi; \
+  exec node server.js"

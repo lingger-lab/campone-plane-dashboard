@@ -51,13 +51,13 @@ steps:
       - '--min-instances'
       - '0'
       - '--max-instances'
-      - '10'
+      - '2'
       - '--add-cloudsql-instances'
-      - 'campone-v1-0:asia-northeast3:campone'
+      - 'campone-plane:asia-northeast3:free-trial-first-project'
       - '--set-env-vars'
-      - 'NEXTAUTH_URL=https://campone-dashboard-755458598444.asia-northeast3.run.app'
+      - 'NEXTAUTH_URL=https://TBD.asia-northeast3.run.app'
       - '--set-secrets'
-      - 'NEXTAUTH_SECRET=campone-admin-secret:latest,DATABASE_URL=DATABASE_URL_DASHBOARD:latest,EMBED_JWT_SECRET=embed-jwt-secret:latest,INTERNAL_API_KEY=dashboard-api-key:latest'
+      - 'NEXTAUTH_SECRET=dashboard-nextauth-secret:latest,DATABASE_URL=dashboard-system-db-url:latest,TENANT_DATABASE_URL=dashboard-tenant-db-url:latest,EMBED_JWT_SECRET=dashboard-embed-jwt-secret:latest,INTERNAL_API_KEY=dashboard-internal-api-key:latest'
 
 images:
   - 'gcr.io/$PROJECT_ID/campone-dashboard:$COMMIT_SHA'

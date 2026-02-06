@@ -4,9 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && prisma generate --schema=prisma/tenant/schema.prisma && next build",
     "start": "next start",
-    "db:push": "prisma db push",
+    "db:push": "prisma db push && prisma db push --schema=prisma/tenant/schema.prisma",
+    "db:seed": "npx tsx prisma/seed.ts",
+    "db:seed:system": "npx tsx prisma/seed.ts system",
+    "db:seed:dev": "npx tsx prisma/seed.ts camp-dev",
+    "db:seed:test": "npx tsx prisma/seed.ts camp-test",
+    "seed:remote": "bash scripts/seed-remote.sh",
+    "schema:push:remote": "bash scripts/push-schema-remote.sh",
+    "deploy": "bash scripts/deploy-gcp.sh",
     "lint": "next lint",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\""
   },
