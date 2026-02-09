@@ -1079,12 +1079,14 @@ export function useTenantConfig() {
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  camp_c_db:                                                     │
-│    candidates, collected_items, analyses, policies, ...         │
+│    public.*    ← 대시보드 공통 (alerts, channel_links, kpi 등)  │
+│    insight.*   ← Insight 서비스 (trends, analyses, ...)         │
+│    studio.*    ← Studio 서비스 (contents, banners, ...)         │
+│    policy.*    ← Policy 서비스 (policies, comparisons, ...)     │
+│    ops.*       ← Ops 서비스 (tasks, schedules, ...)             │
+│    hub.*       ← CivicHub 서비스 (contacts, segments, ...)      │
 │                                                                 │
-│  camp_d_db:                                                     │
-│    candidates, collected_items, analyses, policies, ...         │
-│                                                                 │
-│  → 업무 데이터만 (분석, 수집, 후보, 정책 등)                     │
+│  → 서비스별 PostgreSQL 스키마로 네임스페이스 격리                 │
 │  → 물리적 분리로 cross-tenant 접근 원천 차단                     │
 │  → users 없음!                                                  │
 │                                                                 │
@@ -1129,12 +1131,13 @@ CREATE TABLE user_tenants (
 
 CREATE INDEX idx_user_tenants_tenant ON user_tenants(tenant_id);
 
--- 테넌트 메타 (선택, GCS config와 병행)
+-- 테넌트 메타
 CREATE TABLE tenants (
     tenant_id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(200) NOT NULL,
+    db_name VARCHAR(100) NOT NULL,  -- 테넌트 DB명 (각 서비스가 이걸로 DB URL 조합)
     is_active BOOLEAN DEFAULT true,
-    config_path VARCHAR(500),  -- GCS YAML 경로
+    config_path VARCHAR(500),  -- 테넌트 설정 YAML 경로
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -1214,7 +1217,135 @@ CREATE INDEX idx_audit_logs_actor ON audit_logs (actor_id, created_at DESC);
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 6.4 DB 커넥션 관리
+### 6.4 서비스별 PostgreSQL 스키마 격리
+
+하나의 테넌트 DB 안에서 서비스별로 **PostgreSQL 스키마**를 사용하여 네임스페이스를 격리한다.
+
+```
+camp_dev_db/
+├── public          ← 대시보드 공통 테이블 (alerts, channel_links, kpi_cache, ...)
+├── insight         ← Insight 서비스 테이블 (trends, sentiment_analyses, ...)
+├── studio          ← Studio 서비스 테이블 (contents, banners, templates, ...)
+├── policy          ← Policy 서비스 테이블 (policies, comparisons, ...)
+├── ops             ← Ops 서비스 테이블 (tasks, schedules, events, ...)
+└── hub             ← CivicHub 서비스 테이블 (contacts, segments, messages, ...)
+```
+
+**규칙:**
+
+| 규칙 | 설명 |
+|------|------|
+| 스키마 이름 = 서비스 이름 | insight, studio, policy, ops, hub |
+| 대시보드 = public | 공유 참조 데이터 (campaign_profiles, channel_links 등) |
+| 자기 스키마만 쓰기 | 각 서비스는 자기 스키마에만 INSERT/UPDATE/DELETE |
+| public은 읽기만 | 다른 서비스는 `public.*` 직접 읽기 OK, 쓰기는 대시보드 API 호출 |
+| 서비스 간 DB 참조 금지 | `insight.trends`에서 `studio.contents` 직접 JOIN 금지 |
+| 다른 서비스 데이터 = API | 다른 서비스의 데이터가 필요하면 해당 서비스 API 호출 |
+
+**서비스 간 데이터 접근 원칙:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  camp_dev_db 내 데이터 접근 규칙                                  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ✅ 허용                                                        │
+│  ─────────                                                      │
+│  Insight → insight.*          (자기 스키마 읽기/쓰기)            │
+│  Insight → public.*           (공유 데이터 읽기만)               │
+│  Insight → Dashboard API      (alerts 생성, KPI 갱신 등)        │
+│  Insight → Studio API         (Studio 데이터 필요 시)            │
+│                                                                 │
+│  ❌ 금지                                                        │
+│  ─────────                                                      │
+│  Insight → public.*           (직접 INSERT/UPDATE 금지)          │
+│  Insight → studio.*           (다른 서비스 스키마 직접 접근 금지) │
+│  Insight → ops.*              (다른 서비스 스키마 직접 접근 금지) │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**서비스가 스키마를 사용하는 방법:**
+
+```sql
+-- 스키마 생성 (서비스 최초 배포 시)
+CREATE SCHEMA IF NOT EXISTS insight;
+
+-- 테이블 생성
+CREATE TABLE insight.trends (
+    id BIGSERIAL PRIMARY KEY,
+    keyword VARCHAR(200) NOT NULL,
+    score NUMERIC(5,2),
+    collected_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 서비스 접속 시 search_path 설정
+SET search_path TO insight, public;
+-- → insight.trends도, public.alerts도 스키마 없이 접근 가능
+```
+
+**Prisma에서 멀티 스키마 사용:**
+
+```prisma
+// insight 서비스의 schema.prisma
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["insight", "public"]
+}
+
+model TrendData {
+  id         Int      @id @default(autoincrement())
+  keyword    String
+  score      Decimal
+  collectedAt DateTime @default(now()) @map("collected_at")
+
+  @@schema("insight")
+  @@map("trends")
+}
+
+// public 스키마의 공통 테이블 읽기 가능 (쓰기는 대시보드 API 호출)
+model CampaignProfile {
+  id            String @id
+  candidateName String @map("candidate_name")
+  candidateTitle String @map("candidate_title")
+
+  @@schema("public")
+  @@map("campaign_profiles")
+}
+```
+
+**FastAPI에서 멀티 스키마 사용:**
+
+```python
+# SQLAlchemy: 테이블 정의 시 schema 지정
+class TrendData(Base):
+    __tablename__ = "trends"
+    __table_args__ = {"schema": "insight"}
+
+    id = Column(BigInteger, primary_key=True)
+    keyword = Column(String(200), nullable=False)
+    score = Column(Numeric(5, 2))
+
+# 또는 연결 시 search_path 설정
+engine = create_async_engine(
+    tenant_db_url,
+    connect_args={"options": "-c search_path=insight,public"}
+)
+```
+
+**장점:**
+- 서비스 간 테이블명 충돌 방지 (각 서비스가 `items` 테이블을 가져도 OK)
+- 하나의 DB 연결로 자기 스키마 + public 모두 접근
+- 서비스별 백업/마이그레이션 가능
+- 권한 분리 가능 (필요시 서비스별 DB 유저에 스키마 단위 GRANT)
+
+### 6.5 DB 커넥션 관리
 
 ```javascript
 // lib/db.js
@@ -1233,19 +1364,29 @@ export function getSystemDb() {
   return systemDb;
 }
 
-export function getTenantDb(tenantId) {
+export async function getTenantDb(tenantId) {
   if (!tenantClients.has(tenantId)) {
-    const config = getTenantDbConfig(tenantId);
-    
-    const client = new PrismaClient({
-      datasources: {
-        db: { url: config.connectionString }
-      }
+    // 시스템 DB에서 테넌트 DB명 조회
+    const tenant = await systemDb.tenants.findUnique({
+      where: { tenant_id: tenantId },
+      select: { db_name: true, is_active: true }
     });
-    
+
+    if (!tenant || !tenant.is_active) {
+      throw new Error(`Tenant not found or inactive: ${tenantId}`);
+    }
+
+    // DATABASE_URL에서 DB명만 교체
+    const baseUrl = process.env.DATABASE_URL;
+    const tenantUrl = baseUrl.replace(/\/([^/?]+)(\?|$)/, `/${tenant.db_name}$2`);
+
+    const client = new PrismaClient({
+      datasources: { db: { url: tenantUrl } }
+    });
+
     tenantClients.set(tenantId, client);
   }
-  
+
   return tenantClients.get(tenantId);
 }
 
@@ -1292,20 +1433,29 @@ class DatabaseManager:
     
     @classmethod
     async def get_tenant_pool(cls, tenant_id: str) -> asyncpg.Pool:
-        """테넌트 DB (업무 데이터)"""
+        """테넌트 DB (업무 데이터) - 시스템 DB에서 db_name 조회"""
         if tenant_id not in cls._tenant_pools:
-            config = await load_tenant_config(tenant_id)
-            db_config = config["database"]
-            
-            cls._tenant_pools[tenant_id] = await asyncpg.create_pool(
-                host=db_config.get("host", "localhost"),
-                database=db_config["name"],
-                user=db_config.get("user", "campone"),
-                password=await get_db_password(tenant_id),
-                min_size=2,
-                max_size=8
+            # 시스템 DB에서 테넌트 DB명 조회
+            system_pool = await cls.get_system_pool()
+            row = await system_pool.fetchrow(
+                "SELECT db_name, is_active FROM tenants WHERE tenant_id = $1",
+                tenant_id
             )
-        
+            if not row or not row["is_active"]:
+                raise ValueError(f"Tenant not found or inactive: {tenant_id}")
+
+            # DATABASE_URL에서 DB명만 교체
+            base_url = os.getenv("DATABASE_URL")
+            tenant_url = re.sub(r'/([^/?]+)(\?|$)', f'/{row["db_name"]}\\2', base_url)
+
+            cls._tenant_pools[tenant_id] = await asyncpg.create_pool(
+                dsn=tenant_url,
+                min_size=2,
+                max_size=8,
+                # 서비스별 스키마 사용 시 search_path 설정
+                # server_settings={"search_path": "insight,public"}
+            )
+
         return cls._tenant_pools[tenant_id]
 ```
 
