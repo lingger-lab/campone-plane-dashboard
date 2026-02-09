@@ -7,8 +7,6 @@ import { useEmbedToken, getEmbedUrl, ThemeType } from '@/hooks/useEmbedToken';
 import { useTheme } from '@/components/theme-provider';
 import { useTenant } from '@/lib/tenant/TenantContext';
 
-const INSIGHTS_URL = 'https://campone-v2-backend-755458598444.asia-northeast3.run.app';
-
 export default function InsightsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -16,7 +14,9 @@ export default function InsightsPage() {
 
   const { token, tenantId: tokenTenantId, isLoading: tokenLoading, error: tokenError } = useEmbedToken();
   const { resolvedTheme } = useTheme();
-  const { tenantId } = useTenant();
+  const { tenantId, config } = useTenant();
+
+  const INSIGHTS_URL = config.services.insights;
 
   const handleRefresh = () => {
     setIframeKey((prev) => prev + 1);
@@ -24,7 +24,6 @@ export default function InsightsPage() {
     setHasError(false);
   };
 
-  // 토큰이 준비되면 /embed?token=xxx&tenant=xxx&theme=xxx 형태로, 아니면 기본 URL
   const iframeSrc = token ? getEmbedUrl(INSIGHTS_URL, token, {
     tenantId: tenantId || tokenTenantId,
     theme: resolvedTheme as ThemeType,

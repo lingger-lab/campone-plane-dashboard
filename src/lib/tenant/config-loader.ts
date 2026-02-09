@@ -142,11 +142,11 @@ export function createDefaultTenantConfig(tenantId: string): TenantConfig {
       logo: '/camponelogo.svg',
     },
     services: {
-      insights: 'https://campone-v2-backend-755458598444.asia-northeast3.run.app',
-      studio: 'https://campone-studio-web-755458598444.asia-northeast3.run.app',
-      policy: 'https://campone-policy-755458598444.asia-northeast3.run.app',
-      ops: 'https://campone-ops-755458598444.asia-northeast3.run.app',
-      hub: 'https://campone-hub-755458598444.asia-northeast3.run.app',
+      insights: 'https://insight-frontend-i2syevvyaq-du.a.run.app',
+      studio: 'https://campone-studio-i2syevvyaq-du.a.run.app',
+      policy: 'https://campone-policy-i2syevvyaq-du.a.run.app',
+      ops: 'https://campone-ops-i2syevvyaq-du.a.run.app',
+      hub: 'https://campone-civichub-i2syevvyaq-du.a.run.app',
     },
   };
 }

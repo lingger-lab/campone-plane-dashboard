@@ -7,8 +7,6 @@ import { useEmbedToken, getEmbedUrl, ThemeType } from '@/hooks/useEmbedToken';
 import { useTheme } from '@/components/theme-provider';
 import { useTenant } from '@/lib/tenant/TenantContext';
 
-const CIVIC_HUB_URL = 'https://campone-civic-hub-755458598444.asia-northeast3.run.app';
-
 export default function CivicHubPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -16,7 +14,9 @@ export default function CivicHubPage() {
 
   const { token, tenantId: tokenTenantId, isLoading: tokenLoading, error: tokenError } = useEmbedToken();
   const { resolvedTheme } = useTheme();
-  const { tenantId } = useTenant();
+  const { tenantId, config } = useTenant();
+
+  const CIVIC_HUB_URL = config.services.hub;
 
   const handleRefresh = () => {
     setIframeKey((prev) => prev + 1);

@@ -7,8 +7,6 @@ import { useEmbedToken, getEmbedUrl, ThemeType } from '@/hooks/useEmbedToken';
 import { useTheme } from '@/components/theme-provider';
 import { useTenant } from '@/lib/tenant/TenantContext';
 
-const POLICY_LAB_URL = 'https://campone-policy-755458598444.asia-northeast3.run.app';
-
 export default function PolicyLabPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -16,7 +14,9 @@ export default function PolicyLabPage() {
 
   const { token, tenantId: tokenTenantId, isLoading: tokenLoading, error: tokenError } = useEmbedToken();
   const { resolvedTheme } = useTheme();
-  const { tenantId } = useTenant();
+  const { tenantId, config } = useTenant();
+
+  const POLICY_LAB_URL = config.services.policy;
 
   const handleRefresh = () => {
     setIframeKey((prev) => prev + 1);

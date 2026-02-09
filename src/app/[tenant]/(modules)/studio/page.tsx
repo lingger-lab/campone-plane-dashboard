@@ -5,8 +5,7 @@ import { RefreshCw, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEmbedToken } from '@/hooks/useEmbedToken';
 import { useTheme } from '@/components/theme-provider';
-
-const STUDIO_URL = 'https://campone-studio-web-755458598444.asia-northeast3.run.app';
+import { useTenant } from '@/lib/tenant/TenantContext';
 
 export default function StudioPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -15,6 +14,9 @@ export default function StudioPage() {
 
   const { token, isLoading: tokenLoading, error: tokenError } = useEmbedToken();
   const { resolvedTheme } = useTheme();
+  const { config } = useTenant();
+
+  const STUDIO_URL = config.services.studio;
 
   const handleRefresh = () => {
     setIframeKey((prev) => prev + 1);

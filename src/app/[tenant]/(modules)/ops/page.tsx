@@ -7,8 +7,6 @@ import { useEmbedToken, getEmbedUrl, ThemeType } from '@/hooks/useEmbedToken';
 import { useTheme } from '@/components/theme-provider';
 import { useTenant } from '@/lib/tenant/TenantContext';
 
-const OPS_URL = 'https://campone-ops-755458598444.asia-northeast3.run.app';
-
 export default function OpsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -16,7 +14,9 @@ export default function OpsPage() {
 
   const { token, tenantId: tokenTenantId, isLoading: tokenLoading, error: tokenError } = useEmbedToken();
   const { resolvedTheme } = useTheme();
-  const { tenantId } = useTenant();
+  const { tenantId, config } = useTenant();
+
+  const OPS_URL = config.services.ops;
 
   const handleRefresh = () => {
     setIframeKey((prev) => prev + 1);

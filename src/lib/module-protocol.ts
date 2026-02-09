@@ -104,16 +104,14 @@ export interface DashboardMessage {
 // ============================================
 
 export const ALLOWED_ORIGINS = [
-  // 프로덕션
-  'https://campone-v2-backend-755458598444.asia-northeast3.run.app',
-  'https://campone-v2-frontend-755458598444.asia-northeast3.run.app',
-  'https://campone-civic-hub-755458598444.asia-northeast3.run.app',
-  'https://campone-policy-755458598444.asia-northeast3.run.app',
-  // Studio
-  'https://campone-studio-web-755458598444.asia-northeast3.run.app',
-  'https://campone-studio-api-755458598444.asia-northeast3.run.app',
-  // Ops
-  'https://campone-ops-755458598444.asia-northeast3.run.app',
+  // 프로덕션 (campone-plane 프로젝트)
+  'https://insight-frontend-i2syevvyaq-du.a.run.app',
+  'https://insight-backend-i2syevvyaq-du.a.run.app',
+  'https://campone-civichub-i2syevvyaq-du.a.run.app',
+  'https://campone-policy-i2syevvyaq-du.a.run.app',
+  'https://campone-studio-i2syevvyaq-du.a.run.app',
+  'https://campone-ops-i2syevvyaq-du.a.run.app',
+  'https://campone-dashboard-i2syevvyaq-du.a.run.app',
   // 로컬 개발
   'http://localhost:3001',
   'http://localhost:3002',
