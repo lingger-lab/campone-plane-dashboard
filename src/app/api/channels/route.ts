@@ -29,6 +29,11 @@ const hiddenChannelKeys = ['bannerDesigner'];
 // GET: 채널 목록 조회
 export async function GET() {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { prisma } = await getTenantFromRequest();
     const channels = await prisma.channelLink.findMany({
       orderBy: { order: 'asc' },

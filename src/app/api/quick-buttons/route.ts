@@ -5,9 +5,14 @@ import { getTenantFromRequest } from '@/lib/api/tenant-helper';
 import { hasPermission } from '@/lib/rbac';
 import type { UserRole } from '@/lib/types';
 
-// GET: 퀵버튼 목록 조회 (인증 불필요 - 공개)
+// GET: 퀵버튼 목록 조회
 export async function GET() {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { prisma } = await getTenantFromRequest();
     const buttons = await prisma.quickButton.findMany({
       where: { isActive: true },
