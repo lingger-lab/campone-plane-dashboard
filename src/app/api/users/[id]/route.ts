@@ -70,6 +70,15 @@ export async function PATCH(
     }
 
     const { systemDb, tenantId } = await getTenantFromRequest();
+
+    // 대상 유저가 현재 테넌트 소속인지 확인
+    const existingMembership = await systemDb.userTenant.findUnique({
+      where: { userId_tenantId: { userId: params.id, tenantId } },
+    });
+    if (!existingMembership) {
+      return NextResponse.json({ error: 'User not found in this tenant' }, { status: 404 });
+    }
+
     const body = await request.json();
     const { name, role, password, isActive } = body;
 
@@ -142,13 +151,21 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { systemDb } = await getTenantFromRequest();
+    const { systemDb, tenantId } = await getTenantFromRequest();
 
     if (params.id === session.user.id) {
       return NextResponse.json(
         { error: 'Cannot deactivate yourself' },
         { status: 400 }
       );
+    }
+
+    // 대상 유저가 현재 테넌트 소속인지 확인
+    const membership = await systemDb.userTenant.findUnique({
+      where: { userId_tenantId: { userId: params.id, tenantId } },
+    });
+    if (!membership) {
+      return NextResponse.json({ error: 'User not found in this tenant' }, { status: 404 });
     }
 
     await systemDb.user.update({

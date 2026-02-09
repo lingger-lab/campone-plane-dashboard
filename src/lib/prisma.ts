@@ -12,6 +12,7 @@ import pg from "pg";
 const globalForPrisma = globalThis as unknown as {
   systemClient: SystemPrismaClient | undefined;
   tenantClients: Map<string, TenantPrismaClient> | undefined;
+  tenantClientPending: Map<string, Promise<TenantPrismaClient>> | undefined;
 };
 
 /**
@@ -94,9 +95,12 @@ export const prisma = systemClient;
 
 const tenantClients =
   globalForPrisma.tenantClients ?? new Map<string, TenantPrismaClient>();
+const tenantClientPending =
+  globalForPrisma.tenantClientPending ?? new Map<string, Promise<TenantPrismaClient>>();
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.tenantClients = tenantClients;
+  globalForPrisma.tenantClientPending = tenantClientPending;
 }
 
 /**
@@ -108,46 +112,59 @@ if (process.env.NODE_ENV !== "production") {
 export async function getTenantPrisma(
   tenantId: string
 ): Promise<TenantPrismaClient> {
-  // 캐시 확인
+  // 1. 완성된 클라이언트 캐시 확인
   const cached = tenantClients.get(tenantId);
   if (cached) {
     return cached;
   }
 
-  let connectionString: string;
-
-  if (
-    process.env.NODE_ENV === "development" ||
-    process.env.USE_SINGLE_DB === "true"
-  ) {
-    // 개발 환경: TENANT_DATABASE_URL 또는 DATABASE_URL 사용
-    connectionString =
-      process.env.TENANT_DATABASE_URL || process.env.DATABASE_URL!;
-  } else {
-    // 프로덕션: 시스템 DB에서 테넌트 정보 조회
-    const tenant = await systemClient.tenant.findUnique({
-      where: { tenantId },
-      select: { dbName: true, isActive: true },
-    });
-
-    if (!tenant) {
-      throw new Error(`Tenant not found: ${tenantId}`);
-    }
-
-    if (!tenant.isActive) {
-      throw new Error(`Tenant is inactive: ${tenantId}`);
-    }
-
-    // DATABASE_URL에서 DB명만 교체
-    // e.g., .../campone_system?host=... → .../camp_dev_db?host=...
-    const baseUrl = process.env.DATABASE_URL!;
-    connectionString = baseUrl.replace(/\/([^/?]+)(\?|$)/, `/${tenant.dbName}$2`);
+  // 2. 진행 중인 생성 요청이 있으면 그 Promise 재사용 (레이스 컨디션 방지)
+  const pending = tenantClientPending.get(tenantId);
+  if (pending) {
+    return pending;
   }
 
-  const client = createTenantClient(connectionString);
-  tenantClients.set(tenantId, client);
+  // 3. 새로 생성 (Promise를 먼저 등록해서 중복 방지)
+  const promise = (async () => {
+    let connectionString: string;
 
-  return client;
+    if (
+      process.env.NODE_ENV === "development" ||
+      process.env.USE_SINGLE_DB === "true"
+    ) {
+      connectionString =
+        process.env.TENANT_DATABASE_URL || process.env.DATABASE_URL!;
+    } else {
+      const tenant = await systemClient.tenant.findUnique({
+        where: { tenantId },
+        select: { dbName: true, isActive: true },
+      });
+
+      if (!tenant) {
+        throw new Error(`Tenant not found: ${tenantId}`);
+      }
+
+      if (!tenant.isActive) {
+        throw new Error(`Tenant is inactive: ${tenantId}`);
+      }
+
+      const baseUrl = process.env.DATABASE_URL!;
+      connectionString = baseUrl.replace(/\/([^/?]+)(\?|$)/, `/${tenant.dbName}$2`);
+    }
+
+    const client = createTenantClient(connectionString);
+    tenantClients.set(tenantId, client);
+    return client;
+  })();
+
+  tenantClientPending.set(tenantId, promise);
+
+  try {
+    const client = await promise;
+    return client;
+  } finally {
+    tenantClientPending.delete(tenantId);
+  }
 }
 
 /**
