@@ -101,3 +101,7 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
+
+if (!process.env.NEXTAUTH_SECRET) {
+  console.error('FATAL: NEXTAUTH_SECRET is not set. Sessions will not be secure.');
+}

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getTenantFromRequest } from '@/lib/api/tenant-helper';
+import { isValidServiceKey } from '@/lib/api/service-auth';
 import { authOptions } from '@/lib/auth';
+import { getTenantPrisma } from '@/lib/prisma';
 
 // KPI 데이터 조회
 export async function GET(request: NextRequest) {
@@ -59,23 +61,42 @@ export async function GET(request: NextRequest) {
 }
 
 // KPI 데이터 저장/업데이트
+// 인증: 세션 또는 X-Service-Key (다른 서비스에서 호출 시)
 export async function POST(request: NextRequest) {
   try {
-    // 인증 확인
     const session = await getServerSession(authOptions);
 
     // 서비스 간 통신용 API 키 확인
-    const apiKey = request.headers.get('X-Service-Key');
-    const isServiceCall = apiKey === process.env.INTERNAL_API_KEY;
+    const isServiceCall = isValidServiceKey(request.headers.get('x-service-key'));
 
-    // postMessage에서 온 요청은 세션 없이도 허용 (내부 API 호출)
-    const isInternalCall = request.headers.get('X-Internal-Call') === 'true';
-
-    if (!session?.user && !isServiceCall && !isInternalCall) {
+    if (!session?.user && !isServiceCall) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { prisma } = await getTenantFromRequest();
+    // 서비스 호출 시 X-Tenant-Id에서 tenantId 추출
+    const serviceTenantId = request.headers.get('x-tenant-id');
+    let tenantId: string | null = serviceTenantId;
+    let prisma;
+
+    try {
+      const ctx = await getTenantFromRequest();
+      tenantId = tenantId || ctx.tenantId;
+      prisma = ctx.prisma;
+    } catch {
+      // 서비스 호출 (세션 없음) - tenantId로 직접 접근
+      tenantId = tenantId || (session?.user as { tenantId?: string })?.tenantId || null;
+    }
+
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: 'Tenant ID required (session or X-Tenant-Id header)' },
+        { status: 400 }
+      );
+    }
+
+    if (!prisma) {
+      prisma = await getTenantPrisma(tenantId);
+    }
     const body = await request.json();
     const { module: moduleName, key, value, unit, change, expiresInMinutes } = body;
 

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getTenantFromRequest } from '@/lib/api/tenant-helper';
+import { isValidServiceKey } from '@/lib/api/service-auth';
 import { authOptions } from '@/lib/auth';
+import { getSystemPrisma, getTenantPrisma } from '@/lib/prisma';
 
 // 알림 목록 조회 (테넌트 DB)
 export async function GET(request: NextRequest) {
@@ -67,18 +69,43 @@ export async function GET(request: NextRequest) {
 }
 
 // 알림 생성 (테넌트 DB + 시스템 DB에서 사용자 조회)
+// 인증: 세션(admin) 또는 X-Service-Key (다른 서비스에서 호출 시)
 export async function POST(request: NextRequest) {
   try {
-    const apiKey = request.headers.get('X-Service-Key');
-    const isServiceCall = apiKey === process.env.INTERNAL_API_KEY;
-
     const session = await getServerSession(authOptions);
+
+    // 서비스 간 통신용 API 키 확인
+    const isServiceCall = isValidServiceKey(request.headers.get('x-service-key'));
 
     if (!isServiceCall && session?.user?.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { prisma, systemDb, tenantId } = await getTenantFromRequest();
+    // 서비스 호출 시 X-Tenant-Id에서 tenantId 추출
+    const serviceTenantId = request.headers.get('x-tenant-id');
+    let tenantId: string | null = serviceTenantId;
+    let systemDb = getSystemPrisma();
+    let prisma;
+
+    try {
+      const ctx = await getTenantFromRequest();
+      tenantId = tenantId || ctx.tenantId;
+      systemDb = ctx.systemDb;
+      prisma = ctx.prisma;
+    } catch {
+      // 서비스 호출 (세션 없음) - tenantId로 직접 접근
+    }
+
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: 'Tenant ID required (session or X-Tenant-Id header)' },
+        { status: 400 }
+      );
+    }
+
+    if (!prisma) {
+      prisma = await getTenantPrisma(tenantId);
+    }
     const body = await request.json();
     const {
       type = 'system',

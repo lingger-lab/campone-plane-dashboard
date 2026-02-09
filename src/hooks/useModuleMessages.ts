@@ -89,7 +89,6 @@ export function useModuleMessages(options: UseModuleMessagesOptions = {}) {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-Internal-Call': 'true',
           },
           body: JSON.stringify({
             module: source,

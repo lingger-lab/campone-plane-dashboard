@@ -5,7 +5,11 @@ import { authOptions } from '@/lib/auth';
 import { getTenantIdFromRequest } from '@/lib/api/tenant-helper';
 
 // 임베드 토큰 시크릿 (모든 서비스에서 동일하게 사용)
-const EMBED_JWT_SECRET = process.env.EMBED_JWT_SECRET || 'campone-embed-secret-change-in-production';
+const EMBED_JWT_SECRET = process.env.EMBED_JWT_SECRET;
+
+if (!EMBED_JWT_SECRET) {
+  console.error('FATAL: EMBED_JWT_SECRET is not set');
+}
 
 export async function GET() {
   try {
@@ -25,6 +29,13 @@ export async function GET() {
     } catch {
       // 테넌트 ID 없이도 토큰 생성 가능 (fallback)
       tenantId = session.user.tenantId;
+    }
+
+    if (!EMBED_JWT_SECRET) {
+      return NextResponse.json(
+        { error: 'Server configuration error', message: 'EMBED_JWT_SECRET not configured' },
+        { status: 500 }
+      );
     }
 
     // JWT 토큰 생성 (1시간 유효)
