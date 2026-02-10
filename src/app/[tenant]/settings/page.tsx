@@ -11,10 +11,12 @@ import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/components/theme-provider';
 import { hasPermission } from '@/lib/rbac';
 import type { UserRole } from '@/lib/types';
+import { useTenant } from '@/lib/tenant/TenantContext';
 
 export default function SettingsPage() {
   const { data: session } = useSession();
   const { theme, setTheme } = useTheme();
+  const { tenantId } = useTenant();
 
   const user = session?.user;
   const userName = user?.name || '사용자';
@@ -110,7 +112,7 @@ export default function SettingsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <Link href="/settings/campaign-profile">
+            <Link href={`/${tenantId}/settings/campaign-profile`}>
               <Button variant="outline" className="gap-2">
                 프로필 설정
                 <ChevronRight className="h-4 w-4" />
@@ -133,7 +135,7 @@ export default function SettingsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <Link href="/settings/quick-buttons">
+            <Link href={`/${tenantId}/settings/quick-buttons`}>
               <Button variant="outline" className="gap-2">
                 퀵버튼 설정
                 <ChevronRight className="h-4 w-4" />
@@ -156,7 +158,7 @@ export default function SettingsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <Link href="/settings/channel-links">
+            <Link href={`/${tenantId}/settings/channel-links`}>
               <Button variant="outline" className="gap-2">
                 채널 링크 설정
                 <ChevronRight className="h-4 w-4" />

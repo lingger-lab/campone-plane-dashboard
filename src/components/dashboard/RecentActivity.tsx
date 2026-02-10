@@ -7,9 +7,11 @@ import { RefreshCw, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useActivities, formatRelativeTime, normalizeActionText } from '@/hooks/useActivities';
+import { useTenant } from '@/lib/tenant/TenantContext';
 
 export function RecentActivity() {
   const { data, isLoading, isError, refetch, isFetching } = useActivities(10);
+  const { tenantId } = useTenant();
 
   const activities = data?.activities || [];
 
@@ -83,7 +85,7 @@ export function RecentActivity() {
             ))}
           </div>
           <Link
-            href="/audit?tab=activities"
+            href={`/${tenantId}/audit?tab=activities`}
             className="flex items-center justify-center gap-1 mt-4 pt-3 border-t text-sm text-primary hover:underline"
           >
             모두 보기

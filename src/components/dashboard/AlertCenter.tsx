@@ -8,10 +8,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAlerts, useMarkAlertAsRead, getAlertStyles } from '@/hooks/useAlerts';
 import { cn } from '@/lib/utils';
+import { useTenant } from '@/lib/tenant/TenantContext';
 
 export function AlertCenter() {
   const { data, isLoading, isError, refetch, isFetching } = useAlerts(10);
   const markAsRead = useMarkAlertAsRead();
+  const { tenantId } = useTenant();
 
   const alerts = data?.alerts || [];
   const unreadCount = data?.unreadCount || 0;
@@ -118,7 +120,7 @@ export function AlertCenter() {
             })}
           </div>
           <Link
-            href="/audit?tab=alerts"
+            href={`/${tenantId}/audit?tab=alerts`}
             className="flex items-center justify-center gap-1 mt-4 pt-3 border-t text-sm text-primary hover:underline"
           >
             모두 보기
