@@ -101,6 +101,7 @@ model CampaignProfile {
   candidateTitle String  @default("OO시장 후보") @map("candidate_title")
   orgName        String  @default("선거대책본부") @map("org_name")
   photoUrl       String? @map("photo_url")
+  moduleImages   Json    @default("{}") @map("module_images")
   careers        Json    @default("[]")
   slogans        Json    @default("[]")
   address        String?

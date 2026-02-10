@@ -270,13 +270,15 @@ export default function DashboardPage() {
   const { data: profileData } = useCampaignProfile();
   const profile = profileData?.profile;
 
-  // 모듈 데이터 (테넌트 경로 포함)
+  // 모듈 데이터 (테넌트 경로 + 커스텀 이미지 포함)
   const modules = useMemo(() => {
+    const customImages = profile?.moduleImages as Record<string, string> | undefined;
     return MODULE_DATA.map((m) => ({
       ...m,
       path: `/${tenantId}/${m.pathSuffix}`,
+      thumbnail: customImages?.[m.pathSuffix] || m.thumbnail,
     }));
-  }, [tenantId]);
+  }, [tenantId, profile?.moduleImages]);
 
   // KPI 설정과 DB 데이터를 매핑하여 표시용 데이터 생성
   const kpiData = useMemo(() => {

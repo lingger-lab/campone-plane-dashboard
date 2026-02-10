@@ -13,6 +13,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'campone.cloud',
       },
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+      },
     ],
   },
   // 한국어 지원

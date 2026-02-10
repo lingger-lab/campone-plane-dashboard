@@ -72,7 +72,7 @@ export async function PUT(request: NextRequest) {
 
     const { prisma } = await getTenantFromRequest();
     const body = await request.json();
-    const { candidateName, candidateTitle, orgName, photoUrl, careers, slogans, address, phone, email, hours, description } = body;
+    const { candidateName, candidateTitle, orgName, photoUrl, moduleImages, careers, slogans, address, phone, email, hours, description } = body;
 
     const profile = await prisma.campaignProfile.upsert({
       where: { id: 'main' },
@@ -81,6 +81,7 @@ export async function PUT(request: NextRequest) {
         ...(candidateTitle !== undefined && { candidateTitle }),
         ...(orgName !== undefined && { orgName }),
         ...(photoUrl !== undefined && { photoUrl }),
+        ...(moduleImages !== undefined && { moduleImages }),
         ...(careers !== undefined && { careers }),
         ...(slogans !== undefined && { slogans }),
         ...(address !== undefined && { address }),
@@ -95,6 +96,7 @@ export async function PUT(request: NextRequest) {
         candidateTitle: candidateTitle || defaultProfile.candidateTitle,
         orgName: orgName || defaultProfile.orgName,
         photoUrl: photoUrl || defaultProfile.photoUrl,
+        moduleImages: moduleImages || {},
         careers: careers || defaultProfile.careers,
         slogans: slogans || defaultProfile.slogans,
         address: address || null,

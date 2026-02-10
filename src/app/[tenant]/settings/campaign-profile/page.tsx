@@ -11,6 +11,9 @@ import {
   X,
   Plus,
   Trash2,
+  Upload,
+  ImageIcon,
+  Loader2,
   Briefcase,
   GraduationCap,
   Users,
@@ -38,9 +41,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { useCampaignProfile, useUpdateCampaignProfile, CareerItem } from '@/hooks/useCampaignProfile';
+import { useCampaignProfile, useUpdateCampaignProfile, CareerItem, ModuleImages } from '@/hooks/useCampaignProfile';
 import { hasPermission } from '@/lib/rbac';
 import type { UserRole } from '@/lib/types';
+
+// 모듈 메타 (이미지 업로드 UI용)
+const MODULE_META = [
+  { key: 'pulse', name: 'Insights', defaultImage: '/module-i.png' },
+  { key: 'studio', name: 'Studio', defaultImage: '/module-s.png' },
+  { key: 'policy', name: 'Policy Lab', defaultImage: '/module-p.png' },
+  { key: 'ops', name: 'Ops', defaultImage: '/module-o.png' },
+  { key: 'hub', name: 'Civic Hub', defaultImage: '/module-c.png' },
+];
 
 // 아이콘 옵션
 const ICON_OPTIONS = [
@@ -74,6 +86,7 @@ export default function CampaignProfilePage() {
   const [candidateTitle, setCandidateTitle] = useState('');
   const [orgName, setOrgName] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
+  const [moduleImages, setModuleImages] = useState<ModuleImages>({});
   const [careers, setCareers] = useState<CareerItem[]>([]);
   const [slogans, setSlogans] = useState<string[]>([]);
   // 연락처 정보 (푸터용)
@@ -83,6 +96,9 @@ export default function CampaignProfilePage() {
   const [hours, setHours] = useState('');
   const [description, setDescription] = useState('');
   const [hasChanges, setHasChanges] = useState(false);
+  // 업로드 상태
+  const [uploadingProfile, setUploadingProfile] = useState(false);
+  const [uploadingModule, setUploadingModule] = useState<string | null>(null);
 
   // 서버 데이터로 초기화
   useEffect(() => {
@@ -92,6 +108,7 @@ export default function CampaignProfilePage() {
       setCandidateTitle(p.candidateTitle);
       setOrgName(p.orgName);
       setPhotoUrl(p.photoUrl || '');
+      setModuleImages(p.moduleImages || {});
       setCareers(p.careers || []);
       setSlogans(p.slogans || []);
       // 연락처 정보
@@ -144,6 +161,57 @@ export default function CampaignProfilePage() {
     setHasChanges(true);
   };
 
+  // 파일 업로드 헬퍼
+  const uploadFile = async (file: File, category: 'profile' | 'module', moduleKey?: string): Promise<string | null> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('category', category);
+    if (moduleKey) formData.append('moduleKey', moduleKey);
+
+    const res = await fetch('/api/upload', { method: 'POST', body: formData });
+    if (!res.ok) {
+      const err = await res.json();
+      alert(err.error || '업로드 실패');
+      return null;
+    }
+    const data = await res.json();
+    return data.url;
+  };
+
+  // 후보사진 업로드
+  const handleProfilePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingProfile(true);
+    try {
+      const url = await uploadFile(file, 'profile');
+      if (url) {
+        setPhotoUrl(url);
+        setHasChanges(true);
+      }
+    } finally {
+      setUploadingProfile(false);
+      e.target.value = '';
+    }
+  };
+
+  // 모듈 이미지 업로드
+  const handleModuleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, moduleKey: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingModule(moduleKey);
+    try {
+      const url = await uploadFile(file, 'module', moduleKey);
+      if (url) {
+        setModuleImages(prev => ({ ...prev, [moduleKey]: url }));
+        setHasChanges(true);
+      }
+    } finally {
+      setUploadingModule(null);
+      e.target.value = '';
+    }
+  };
+
   // 저장
   const handleSave = async () => {
     try {
@@ -152,6 +220,7 @@ export default function CampaignProfilePage() {
         candidateTitle,
         orgName,
         photoUrl: photoUrl || null,
+        moduleImages,
         careers,
         slogans,
         address: address || null,
@@ -174,6 +243,7 @@ export default function CampaignProfilePage() {
       setCandidateTitle(p.candidateTitle);
       setOrgName(p.orgName);
       setPhotoUrl(p.photoUrl || '');
+      setModuleImages(p.moduleImages || {});
       setCareers(p.careers || []);
       setSlogans(p.slogans || []);
       setAddress(p.address || '');
@@ -294,36 +364,63 @@ export default function CampaignProfilePage() {
             />
           </div>
           <div>
-            <label className="text-sm font-medium mb-1 block">사진 URL</label>
-            <Input
-              value={photoUrl}
-              onChange={(e) => {
-                setPhotoUrl(e.target.value);
-                handleFieldChange();
-              }}
-              placeholder="예: /candidate.png 또는 https://..."
-              disabled={!canEdit}
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              public 폴더의 이미지 경로 또는 외부 URL을 입력하세요.
-            </p>
-          </div>
-          {photoUrl && (
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">미리보기:</span>
-              <div className="relative w-20 h-20 rounded-xl overflow-hidden border">
-                <Image
-                  src={photoUrl}
-                  alt="후보자 사진"
-                  fill
-                  className="object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
+            <label className="text-sm font-medium mb-2 block">후보자 사진</label>
+            <div className="flex items-start gap-4">
+              <div className="relative w-24 h-24 rounded-xl overflow-hidden border bg-muted flex items-center justify-center shrink-0">
+                {photoUrl ? (
+                  <Image
+                    src={photoUrl}
+                    alt="후보자 사진"
+                    fill
+                    className="object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                )}
+              </div>
+              <div className="flex-1 space-y-2">
+                {canEdit && (
+                  <div>
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={handleProfilePhotoUpload}
+                        disabled={uploadingProfile}
+                      />
+                      <Button type="button" variant="outline" size="sm" className="gap-2" asChild>
+                        <span>
+                          {uploadingProfile ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Upload className="h-4 w-4" />
+                          )}
+                          {uploadingProfile ? '업로드 중...' : '사진 업로드'}
+                        </span>
+                      </Button>
+                    </label>
+                  </div>
+                )}
+                <Input
+                  value={photoUrl}
+                  onChange={(e) => {
+                    setPhotoUrl(e.target.value);
+                    handleFieldChange();
                   }}
+                  placeholder="또는 이미지 URL 직접 입력"
+                  disabled={!canEdit}
+                  className="text-sm"
                 />
+                <p className="text-xs text-muted-foreground">
+                  JPG, PNG, WebP (최대 10MB)
+                </p>
               </div>
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
 
@@ -537,6 +634,87 @@ export default function CampaignProfilePage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* 모듈 바로가기 이미지 */}
+      {canEdit && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <ImageIcon className="h-5 w-5 text-primary" />
+              <div>
+                <CardTitle className="text-base">모듈 바로가기 이미지</CardTitle>
+                <CardDescription>메인 대시보드의 모듈 카드 이미지를 변경합니다.</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {MODULE_META.map((mod) => {
+                const currentImage = moduleImages[mod.key] || mod.defaultImage;
+                const isUploading = uploadingModule === mod.key;
+                return (
+                  <div key={mod.key} className="border rounded-lg p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">{mod.name}</span>
+                      {moduleImages[mod.key] && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs text-muted-foreground"
+                          onClick={() => {
+                            setModuleImages(prev => {
+                              const next = { ...prev };
+                              delete next[mod.key];
+                              return next;
+                            });
+                            setHasChanges(true);
+                          }}
+                        >
+                          기본값 복원
+                        </Button>
+                      )}
+                    </div>
+                    <div className="relative w-full aspect-[16/10] rounded-md overflow-hidden border bg-muted">
+                      <Image
+                        src={currentImage}
+                        alt={mod.name}
+                        fill
+                        className="object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = mod.defaultImage;
+                        }}
+                      />
+                      {isUploading && (
+                        <div className="absolute inset-0 bg-background/70 flex items-center justify-center">
+                          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                        </div>
+                      )}
+                    </div>
+                    <label className="cursor-pointer block">
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={(e) => handleModuleImageUpload(e, mod.key)}
+                        disabled={isUploading}
+                      />
+                      <Button type="button" variant="outline" size="sm" className="w-full gap-2" asChild>
+                        <span>
+                          <Upload className="h-3 w-3" />
+                          이미지 변경
+                        </span>
+                      </Button>
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-xs text-muted-foreground mt-3">
+              권장 비율 16:10, JPG/PNG/WebP (최대 10MB). 변경 후 저장 버튼을 눌러야 반영됩니다.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

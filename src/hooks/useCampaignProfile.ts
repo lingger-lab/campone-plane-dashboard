@@ -5,12 +5,15 @@ export interface CareerItem {
   text: string;
 }
 
+export type ModuleImages = Record<string, string>;
+
 export interface CampaignProfile {
   id: string;
   candidateName: string;
   candidateTitle: string;
   orgName: string;
   photoUrl: string | null;
+  moduleImages: ModuleImages;
   careers: CareerItem[];
   slogans: string[];
   // 연락처 정보 (푸터용)
