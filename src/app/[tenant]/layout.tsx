@@ -2,16 +2,8 @@ import { notFound } from 'next/navigation';
 import { getTenantConfig, createDefaultTenantConfig } from '@/lib/tenant/config-loader';
 import { TenantProvider } from '@/lib/tenant/TenantContext';
 import { getSystemPrisma } from '@/lib/prisma';
+import { SERVICE_TO_FEATURE } from '@/lib/kpi-catalog';
 import type { TenantFeatures } from '@/lib/tenant/types';
-
-// DB enabled_services 값 → TenantFeatures 키 매핑
-const SERVICE_TO_FEATURE: Record<string, keyof TenantFeatures> = {
-  insight: 'pulse',
-  studio: 'studio',
-  policy: 'policy',
-  ops: 'ops',
-  hub: 'hub',
-};
 
 interface TenantLayoutProps {
   children: React.ReactNode;

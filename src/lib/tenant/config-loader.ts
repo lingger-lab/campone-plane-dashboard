@@ -10,6 +10,7 @@ import yaml from 'js-yaml';
 import fs from 'fs';
 import path from 'path';
 import type { TenantConfig } from './types';
+import { getDefaultServiceUrls } from '@/lib/service-urls';
 
 // 메모리 캐시
 const memoryCache = new Map<string, { config: TenantConfig; expiresAt: number }>();
@@ -120,7 +121,7 @@ export function createDefaultTenantConfig(tenantId: string): TenantConfig {
     name: tenantId,
     displayName: `${tenantId} 캠프`,
     serviceMode: 'dashboard',
-    enabledApps: ['insight', 'policy', 'ops', 'studio', 'civichub', 'dashboard'],
+    enabledApps: ['insight', 'policy', 'ops', 'studio', 'hub', 'dashboard'],
     auth: {
       sessionDurationHours: 24,
     },
@@ -141,12 +142,6 @@ export function createDefaultTenantConfig(tenantId: string): TenantConfig {
       primaryColor: '#2563EB',
       logo: '/camponelogo.svg',
     },
-    services: {
-      insights: 'https://insight-frontend-i2syevvyaq-du.a.run.app',
-      studio: 'https://campone-studio-i2syevvyaq-du.a.run.app',
-      policy: 'https://campone-policy-i2syevvyaq-du.a.run.app',
-      ops: 'https://campone-ops-i2syevvyaq-du.a.run.app',
-      hub: 'https://campone-civichub-i2syevvyaq-du.a.run.app',
-    },
+    services: getDefaultServiceUrls(),
   };
 }

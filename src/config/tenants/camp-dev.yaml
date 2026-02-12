@@ -15,7 +15,7 @@ enabledApps:
   - "policy"
   - "ops"
   - "studio"
-  - "civichub"
+  - "hub"
   - "dashboard"
 
 # 인증 설정

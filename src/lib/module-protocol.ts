@@ -7,6 +7,8 @@
  * 모듈 개발팀에게 이 프로토콜을 공유하세요.
  */
 
+import { PRODUCTION_ORIGINS, DEV_ORIGINS } from '@/lib/service-urls';
+
 // ============================================
 // 메시지 타입 정의
 // ============================================
@@ -100,25 +102,12 @@ export interface DashboardMessage {
 }
 
 // ============================================
-// 허용된 Origin 목록
+// 허용된 Origin 목록 (service-urls.ts에서 단일 관리)
 // ============================================
 
 export const ALLOWED_ORIGINS = [
-  // 프로덕션 (campone-plane 프로젝트)
-  'https://insight-frontend-i2syevvyaq-du.a.run.app',
-  'https://insight-backend-i2syevvyaq-du.a.run.app',
-  'https://campone-civichub-i2syevvyaq-du.a.run.app',
-  'https://campone-policy-i2syevvyaq-du.a.run.app',
-  'https://campone-studio-i2syevvyaq-du.a.run.app',
-  'https://campone-ops-i2syevvyaq-du.a.run.app',
-  'https://campone-dashboard-i2syevvyaq-du.a.run.app',
-  // 로컬 개발
-  'http://localhost:3001',
-  'http://localhost:3002',
-  'http://localhost:3003',
-  'http://localhost:3004',
-  'http://localhost:5173',
-  'http://localhost:8000',
+  ...PRODUCTION_ORIGINS,
+  ...DEV_ORIGINS,
 ];
 
 // ============================================

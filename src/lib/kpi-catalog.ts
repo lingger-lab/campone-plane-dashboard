@@ -5,6 +5,8 @@
  * 관리자가 설정 페이지에서 선택하면 대시보드에 표시됨.
  */
 
+import type { TenantFeatures } from '@/lib/tenant/types';
+
 export interface KpiDefinition {
   /** KpiCache key 형식: "Module:key" */
   dbKey: string;
@@ -55,8 +57,8 @@ export const SERVICE_LABELS: Record<string, string> = {
   studio: 'Studio (콘텐츠)',
 };
 
-/** enabled_services 값 → TenantFeatures 키 매핑 */
-export const SERVICE_TO_FEATURE: Record<string, string> = {
+/** enabled_services 값 → TenantFeatures 키 매핑 (단일 소스) */
+export const SERVICE_TO_FEATURE: Record<string, keyof TenantFeatures> = {
   insight: 'pulse',
   studio: 'studio',
   policy: 'policy',
