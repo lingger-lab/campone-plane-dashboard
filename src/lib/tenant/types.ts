@@ -62,8 +62,8 @@ export interface TenantConfig {
   /** 생성일 */
   createdAt?: string;
 
-  /** 서비스 제공 방식 (v1.4: 동일 서비스, 개별 DB) */
-  serviceMode: 'dashboard';
+  /** 서비스 제공 방식: dashboard(통합 대시보드) | individual(개별 서비스 직접 접속) */
+  serviceMode: 'dashboard' | 'individual';
 
   /** 활성화된 앱 목록 */
   enabledApps: string[];
