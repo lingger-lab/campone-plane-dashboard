@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { User, Palette, MousePointer2, Link2, UserCircle, ChevronRight } from 'lucide-react';
+import { User, Palette, MousePointer2, Link2, UserCircle, ChevronRight, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -98,6 +98,29 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* 대시보드 KPI 설정 (Manager 이상만 표시) */}
+      {hasPermission(userRole as UserRole, 'settings', 'update') && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              <div>
+                <CardTitle className="text-base">대시보드 KPI</CardTitle>
+                <CardDescription>메인 대시보드에 표시할 핵심 지표 선택</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Link href={`/${tenantId}/settings/dashboard-kpi`}>
+              <Button variant="outline" className="gap-2">
+                KPI 설정
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
 
       {/* 캠페인 프로필 관리 (Manager 이상만 표시) */}
       {hasPermission(userRole as UserRole, 'settings', 'update') && (

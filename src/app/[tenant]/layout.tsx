@@ -1,6 +1,17 @@
 import { notFound } from 'next/navigation';
 import { getTenantConfig, createDefaultTenantConfig } from '@/lib/tenant/config-loader';
 import { TenantProvider } from '@/lib/tenant/TenantContext';
+import { getSystemPrisma } from '@/lib/prisma';
+import type { TenantFeatures } from '@/lib/tenant/types';
+
+// DB enabled_services 값 → TenantFeatures 키 매핑
+const SERVICE_TO_FEATURE: Record<string, keyof TenantFeatures> = {
+  insight: 'pulse',
+  studio: 'studio',
+  policy: 'policy',
+  ops: 'ops',
+  hub: 'hub',
+};
 
 interface TenantLayoutProps {
   children: React.ReactNode;
@@ -24,6 +35,38 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   // 설정이 없으면 404
   if (!config) {
     notFound();
+  }
+
+  // 시스템 DB의 enabled_services로 features 덮어쓰기
+  try {
+    const systemDb = getSystemPrisma();
+    const tenant = await systemDb.tenant.findUnique({
+      where: { tenantId },
+      select: { enabledServices: true },
+    });
+
+    if (tenant?.enabledServices && Array.isArray(tenant.enabledServices)) {
+      const enabledServices = tenant.enabledServices as string[];
+      const features: TenantFeatures = {
+        pulse: false,
+        studio: false,
+        policy: false,
+        ops: false,
+        hub: false,
+      };
+
+      for (const service of enabledServices) {
+        const featureKey = SERVICE_TO_FEATURE[service];
+        if (featureKey) {
+          features[featureKey] = true;
+        }
+      }
+
+      config = { ...config, features };
+    }
+  } catch (error) {
+    // DB 조회 실패 시 YAML 설정 그대로 사용 (fallback)
+    console.warn(`Failed to load enabledServices for ${tenantId}:`, error);
   }
 
   return <TenantProvider tenantId={tenantId} config={config}>{children}</TenantProvider>;

@@ -140,3 +140,15 @@ model QuickButton {
   @@index([category])
   @@map("quick_buttons")
 }
+
+// ============================================
+// 테넌트 환경설정 (KPI 선택, UI 커스텀 등)
+// ============================================
+
+model TenantPreference {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("tenant_preferences")
+}

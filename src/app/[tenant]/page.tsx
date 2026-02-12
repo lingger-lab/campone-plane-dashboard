@@ -30,6 +30,9 @@ import { AppHeader, Sidebar, AppFooter } from '@/components/layout';
 import { KPICard, ModuleCard, RecentActivity, AlertCenter } from '@/components/dashboard';
 import { useModuleMessages } from '@/hooks/useModuleMessages';
 import { useKpiAll, KpiData } from '@/hooks/useKpi';
+import { useTenantPreference } from '@/hooks/useTenantPreference';
+import { KPI_CATALOG, DEFAULT_SELECTED_KPIS } from '@/lib/kpi-catalog';
+import type { KpiDefinition } from '@/lib/kpi-catalog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTenant } from '@/lib/tenant/TenantContext';
@@ -97,56 +100,7 @@ const MODULE_DATA = [
   },
 ];
 
-// KPI 설정: DB 키와 표시 라벨 매핑 + 기본값
-interface KpiConfig {
-  dbKey: string; // format: "module:key"
-  label: string;
-  unit?: string;
-  changeLabel: string;
-  source?: string;
-  defaultValue: number | string;
-  defaultChange?: number;
-  defaultSparkline?: number[];
-}
-
-const KPI_CONFIG: KpiConfig[] = [
-  {
-    dbKey: 'Insights:trend_index',
-    label: '여론 트렌드',
-    unit: 'pt',
-    changeLabel: '전주 대비',
-    source: 'GT/Naver/SNS',
-    defaultValue: 0,
-    defaultChange: 0,
-  },
-  {
-    dbKey: 'Insights:positive_ratio',
-    label: '긍정 여론',
-    unit: '%',
-    changeLabel: '전주 대비',
-    source: 'SNS 분석',
-    defaultValue: 0,
-    defaultChange: 0,
-  },
-  {
-    dbKey: 'Hub:total_questions',
-    label: '시민 질문',
-    unit: '건',
-    changeLabel: '누적',
-    source: 'Civic Hub',
-    defaultValue: 0,
-    defaultChange: 0,
-  },
-  {
-    dbKey: 'Policy:pledges_published',
-    label: '공약 발표',
-    unit: '건',
-    changeLabel: '진행률',
-    source: 'Policy Lab',
-    defaultValue: 0,
-    defaultChange: 0,
-  },
-];
+// KPI 설정은 KPI_CATALOG + 관리자 선택 (useTenantPreference)으로 동적 로딩
 
 // 퀵버튼 아이콘 매핑
 const QUICK_BUTTON_ICONS: Record<string, LucideIcon> = {
@@ -192,7 +146,7 @@ const isExternalUrl = (url: string) => url.startsWith('http://') || url.startsWi
 
 // DB의 KPI 데이터를 화면에 표시할 형식으로 변환
 function mapKpiToDisplay(
-  config: KpiConfig,
+  def: KpiDefinition,
   kpiList: KpiData[]
 ): {
   label: string;
@@ -202,42 +156,31 @@ function mapKpiToDisplay(
   changeLabel: string;
   status: 'success' | 'warning' | 'danger';
   source?: string;
-  sparkline?: number[];
 } {
-  // DB에서 해당 KPI 찾기
-  const [moduleName, key] = config.dbKey.split(':');
+  const [moduleName, key] = def.dbKey.split(':');
   const kpiData = kpiList.find(
     (k) => k.module === moduleName && k.key === key
   );
 
-  // 값 결정 (DB에 있으면 사용, 없으면 기본값)
-  const value = kpiData?.value?.value ?? config.defaultValue;
-  const change = kpiData?.value?.change ?? config.defaultChange ?? 0;
-  const unit = kpiData?.value?.unit ?? config.unit;
+  const value = kpiData?.value?.value ?? def.defaultValue;
+  const change = kpiData?.value?.change ?? def.defaultChange ?? 0;
+  const unit = kpiData?.value?.unit ?? def.unit;
 
-  // 상태 결정: change 값에 따라
   let status: 'success' | 'warning' | 'danger' = 'success';
-  if (change < 0) {
-    status = 'warning';
-  } else if (change < -20) {
+  if (change < -20) {
     status = 'danger';
-  }
-
-  // changeLabel 업데이트 (실제 데이터가 있을 때)
-  let changeLabel = config.changeLabel;
-  if (kpiData?.value?.unit === '%' && config.dbKey === 'Hub:messages_sent') {
-    changeLabel = `오픈율 ${value}%`;
+  } else if (change < 0) {
+    status = 'warning';
   }
 
   return {
-    label: config.label,
+    label: def.label,
     value,
     unit,
     change,
-    changeLabel,
+    changeLabel: def.changeLabel,
     status,
-    source: config.source,
-    sparkline: config.defaultSparkline,
+    source: def.source,
   };
 }
 
@@ -245,7 +188,7 @@ export default function DashboardPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // 테넌트 정보
-  const { tenantId } = useTenant();
+  const { tenantId, config } = useTenant();
 
   // 동적 비디오 모달 상태
   const [videoModal, setVideoModal] = useState<{ open: boolean; url: string; label: string }>({
@@ -259,6 +202,9 @@ export default function DashboardPage() {
     onReady: (source) => console.log(`[Dashboard] ${source} module ready`),
   });
 
+  // 선택된 KPI 설정 조회
+  const { data: selectedKpiKeys } = useTenantPreference<string[]>('selected_kpis');
+
   // KPI 데이터 조회 (1분마다 자동 갱신)
   const { data: kpiResponse, isLoading: kpiLoading } = useKpiAll();
 
@@ -270,21 +216,31 @@ export default function DashboardPage() {
   const { data: profileData } = useCampaignProfile();
   const profile = profileData?.profile;
 
-  // 모듈 데이터 (테넌트 경로 + 커스텀 이미지 포함)
+  // 모듈 데이터 (테넌트 경로 + 커스텀 이미지 + enabledServices 필터링)
   const modules = useMemo(() => {
     const customImages = profile?.moduleImages as Record<string, string> | undefined;
-    return MODULE_DATA.map((m) => ({
-      ...m,
-      path: `/${tenantId}/${m.pathSuffix}`,
-      thumbnail: customImages?.[m.pathSuffix] || m.thumbnail,
-    }));
-  }, [tenantId, profile?.moduleImages]);
+    return MODULE_DATA
+      .filter((m) => config.features?.[m.pathSuffix as keyof typeof config.features] !== false)
+      .map((m) => ({
+        ...m,
+        path: `/${tenantId}/${m.pathSuffix}`,
+        thumbnail: customImages?.[m.pathSuffix] || m.thumbnail,
+      }));
+  }, [tenantId, profile?.moduleImages, config.features]);
+
+  // 선택된 KPI 정의 (관리자 설정 또는 기본값)
+  const activeKpiDefs = useMemo(() => {
+    const keys = selectedKpiKeys || DEFAULT_SELECTED_KPIS;
+    return keys
+      .map((key) => KPI_CATALOG.find((k) => k.dbKey === key))
+      .filter((k): k is KpiDefinition => k !== undefined);
+  }, [selectedKpiKeys]);
 
   // KPI 설정과 DB 데이터를 매핑하여 표시용 데이터 생성
   const kpiData = useMemo(() => {
     const kpiList = kpiResponse?.kpi || [];
-    return KPI_CONFIG.map((config) => mapKpiToDisplay(config, kpiList));
-  }, [kpiResponse]);
+    return activeKpiDefs.map((def) => mapKpiToDisplay(def, kpiList));
+  }, [kpiResponse, activeKpiDefs]);
 
   // 퀵버튼 클릭 핸들러
   const handleQuickButtonClick = useCallback((button: QuickButton) => {
@@ -670,7 +626,6 @@ export default function DashboardPage() {
                     change={kpi.change}
                     changeLabel={kpi.changeLabel}
                     status={kpi.status}
-                    sparkline={kpi.sparkline}
                     source={kpi.source}
                   />
                 </motion.div>
