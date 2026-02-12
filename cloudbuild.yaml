@@ -57,7 +57,7 @@ steps:
       - '--set-env-vars'
       - 'NEXTAUTH_URL=https://TBD.asia-northeast3.run.app'
       - '--set-secrets'
-      - 'NEXTAUTH_SECRET=dashboard-nextauth-secret:latest,DATABASE_URL=dashboard-system-db-url:latest,TENANT_DATABASE_URL=dashboard-tenant-db-url:latest,EMBED_JWT_SECRET=dashboard-embed-jwt-secret:latest,INTERNAL_API_KEY=dashboard-internal-api-key:latest'
+      - 'NEXTAUTH_SECRET=dashboard-nextauth-secret:latest,SYSTEM_DATABASE_URL=campone-system-db-url:latest,DATABASE_URL=campone-system-db-url:latest,EMBED_JWT_SECRET=campone-embed-jwt-secret:latest,INTERNAL_API_KEY=dashboard-internal-api-key:latest'
 
 images:
   - 'gcr.io/$PROJECT_ID/campone-dashboard:$COMMIT_SHA'
