@@ -67,10 +67,7 @@ USER nextjs
 # Expose port
 EXPOSE 8080
 
-# Start the application with db push (system + tenant schemas)
+# Start the application with db push (system schema only)
 CMD sh -c "\
-  npx prisma db push --skip-generate --accept-data-loss 2>/dev/null || true; \
-  if [ -n \"$TENANT_DATABASE_URL\" ]; then \
-    DATABASE_URL=$TENANT_DATABASE_URL npx prisma db push --schema=prisma/tenant/schema.prisma --skip-generate --accept-data-loss 2>/dev/null || true; \
-  fi; \
+  npx prisma db push --accept-data-loss 2>/dev/null || true; \
   exec node server.js"
