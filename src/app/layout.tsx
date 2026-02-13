@@ -6,38 +6,35 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://campone-dashboard-i
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: '유해남 후보 선거대책본부 | CampOne',
-  description: '사천시장 후보 유해남 - 국민과 함께하는 정치, 청년에게 희망을, 경제 성장의 새 길',
+  title: 'CampOne Dashboard',
+  description: 'CampOne - 선거 캠프 통합 관리 플랫폼',
   icons: {
     icon: '/favicon.svg',
   },
-  // Open Graph - 카카오톡, 페이스북 등 SNS 공유 시 표시
   openGraph: {
     type: 'website',
     locale: 'ko_KR',
     url: siteUrl,
-    siteName: '유해남 후보 선거대책본부',
-    title: '유해남 후보 선거대책본부 | 사천시장 후보',
-    description: '국민과 함께하는 정치, 청년에게 희망을, 경제 성장의 새 길 - 사천시민을 위한 10대 공약',
+    siteName: 'CampOne',
+    title: 'CampOne Dashboard',
+    description: '선거 캠프 통합 관리 플랫폼 - 여론 분석, 콘텐츠, 정책, 운영, 시민 소통',
     images: [
       {
         url: '/og-image-d.png',
         width: 1200,
         height: 630,
-        alt: '유해남 후보 선거대책본부',
+        alt: 'CampOne Dashboard',
       },
     ],
   },
-  // Twitter Card
   twitter: {
     card: 'summary_large_image',
-    title: '유해남 후보 선거대책본부 | 사천시장 후보',
-    description: '국민과 함께하는 정치, 청년에게 희망을, 경제 성장의 새 길',
+    title: 'CampOne Dashboard',
+    description: '선거 캠프 통합 관리 플랫폼',
     images: ['/og-image-d.png'],
   },
-  // 기타 메타태그
-  keywords: ['유해남', '사천시', '시장', '선거', '공약', '캠프원'],
-  authors: [{ name: '유해남 선거대책본부' }],
+  keywords: ['캠프원', 'CampOne', '선거', '캠프', '대시보드'],
+  authors: [{ name: 'CampOne' }],
   robots: {
     index: true,
     follow: true,

@@ -44,7 +44,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold mb-4">제1조 (목적)</h2>
             <p className="text-muted-foreground leading-relaxed">
-              이 약관은 유해남 후보 선거대책본부(이하 &quot;본부&quot;)가 제공하는 캠프원 대시보드 서비스(이하 &quot;서비스&quot;)의
+              이 약관은 캠프원 서비스 운영자(이하 &quot;본부&quot;)가 제공하는 캠프원 대시보드 서비스(이하 &quot;서비스&quot;)의
               이용조건 및 절차, 본부와 이용자의 권리·의무 및 책임사항을 규정함을 목적으로 합니다.
             </p>
           </section>
