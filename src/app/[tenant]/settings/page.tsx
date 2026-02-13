@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { User, Palette, MousePointer2, Link2, UserCircle, ChevronRight, BarChart3 } from 'lucide-react';
+import { User, Palette, MousePointer2, Link2, UserCircle, ChevronRight, BarChart3, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -161,6 +161,29 @@ export default function SettingsPage() {
             <Link href={`/${tenantId}/settings/quick-buttons`}>
               <Button variant="outline" className="gap-2">
                 퀵버튼 설정
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 약관/개인정보 관리 (Manager 이상만 표시) */}
+      {hasPermission(userRole as UserRole, 'settings', 'update') && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <FileText className="h-5 w-5 text-primary" />
+              <div>
+                <CardTitle className="text-base">약관 및 개인정보처리방침</CardTitle>
+                <CardDescription>이용약관과 개인정보처리방침 문서 관리</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Link href={`/${tenantId}/settings/legal`}>
+              <Button variant="outline" className="gap-2">
+                법적 고지 관리
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </Link>

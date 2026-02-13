@@ -222,10 +222,10 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
               </p>
             </div>
             <div className="flex items-center gap-4">
-              <Link href="/privacy" className="hover:text-primary transition-colors">
+              <Link href={`${basePath}/privacy`} className="hover:text-primary transition-colors">
                 개인정보처리방침
               </Link>
-              <Link href="/terms" className="hover:text-primary transition-colors">
+              <Link href={`${basePath}/terms`} className="hover:text-primary transition-colors">
                 이용약관
               </Link>
               <span className="text-border">|</span>
