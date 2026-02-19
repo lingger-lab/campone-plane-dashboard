@@ -2,6 +2,7 @@ import { PrismaClient as SystemPrismaClient } from "@prisma/client";
 import { PrismaClient as TenantPrismaClient } from "@prisma/client-tenant";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
+import { ensureTenantTables } from "@/lib/tenant-auto-migrate";
 
 // ============================================
 // v1.4 2계층 DB 구조
@@ -152,7 +153,11 @@ export async function getTenantPrisma(
       connectionString = baseUrl.replace(/\/([^/?]+)(\?|$)/, `/${tenant.dbName}$2`);
     }
 
+    // 테이블 자동 생성 (최초 접속 시 1회만 실행)
+    await ensureTenantTables(connectionString, tenantId);
+
     const client = createTenantClient(connectionString);
+
     tenantClients.set(tenantId, client);
     return client;
   })();
