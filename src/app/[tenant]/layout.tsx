@@ -42,11 +42,27 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   // 테넌트 설정 로드
   let config = await getTenantConfig(tenantId);
 
-  // 개발 환경: 설정이 없으면 기본 설정 사용
-  if (!config && process.env.NODE_ENV === 'development') {
-    // camp-* 또는 demo 형식이면 기본 설정 생성
-    if (tenantId.startsWith('camp-') || tenantId === 'demo') {
-      config = createDefaultTenantConfig(tenantId);
+  // YAML 없으면 시스템 DB에서 테넌트 확인 후 기본 설정 생성
+  if (!config) {
+    try {
+      const systemDb = getSystemPrisma();
+      const tenant = await systemDb.tenant.findUnique({
+        where: { tenantId },
+        select: { tenantId: true, name: true },
+      });
+
+      if (tenant) {
+        config = createDefaultTenantConfig(tenantId);
+        if (tenant.name) {
+          config.name = tenant.name;
+          config.displayName = tenant.name;
+        }
+      }
+    } catch {
+      // DB 조회 실패 시 개발 환경에서만 기본 설정 생성
+      if (process.env.NODE_ENV === 'development' && tenantId.startsWith('camp-')) {
+        config = createDefaultTenantConfig(tenantId);
+      }
     }
   }
 
