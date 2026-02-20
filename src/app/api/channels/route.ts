@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getTenantFromRequest } from '@/lib/api/tenant-helper';
-import { hasPermission } from '@/lib/rbac';
-import type { UserRole } from '@/lib/types';
+import { canEdit } from '@/lib/rbac';
 
 // 기본 채널 데이터 (DB가 비어있을 때 사용)
 const defaultChannels = [
@@ -68,9 +67,9 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userRole = (session.user as { role?: UserRole }).role || 'member';
+    const userRole = (session.user as { role?: string }).role || 'viewer';
 
-    if (!hasPermission(userRole, 'channels', 'update')) {
+    if (!canEdit(userRole)) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
 
@@ -115,9 +114,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userRole = (session.user as { role?: UserRole }).role || 'member';
+    const userRole = (session.user as { role?: string }).role || 'viewer';
 
-    if (!hasPermission(userRole, 'channels', 'update')) {
+    if (!canEdit(userRole)) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
 

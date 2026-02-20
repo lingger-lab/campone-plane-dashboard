@@ -44,8 +44,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { hasPermission } from '@/lib/rbac';
-import type { UserRole } from '@/lib/types';
+import { canEdit as canEditRole } from '@/lib/rbac';
 
 // 아이콘 매핑
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -98,10 +97,10 @@ export default function QuickButtonsPage() {
   const [formIcon, setFormIcon] = useState('');
   const [formCategory, setFormCategory] = useState<keyof typeof CATEGORY_CONFIG>('default');
 
-  const userRole = (session?.user as { role?: UserRole })?.role || 'member';
-  const canEdit = hasPermission(userRole, 'quickButtons', 'update');
-  const canDelete = hasPermission(userRole, 'quickButtons', 'delete');
-  const canCreate = hasPermission(userRole, 'quickButtons', 'create');
+  const userRole = (session?.user as { role?: string })?.role || 'viewer';
+  const canEdit = canEditRole(userRole);
+  const canDelete = canEdit;
+  const canCreate = canEdit;
 
   // 기본 데이터 여부 확인 (ID가 "default-"로 시작하면 기본 데이터)
   const isDefaultData = buttons.length > 0 && buttons[0].id.startsWith('default-');
@@ -254,7 +253,7 @@ export default function QuickButtonsPage() {
             <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="font-semibold text-lg">권한이 없습니다</h3>
             <p className="text-muted-foreground mt-2">
-              퀵버튼 관리는 Manager 이상의 권한이 필요합니다.
+              퀵버튼 관리는 편집자 이상의 권한이 필요합니다.
             </p>
           </CardContent>
         </Card>

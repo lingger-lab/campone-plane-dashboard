@@ -261,20 +261,14 @@ export interface AuditLog {
 // RBAC
 // ============================================
 
-// v1.4: user_tenants.role 기반 역할
-export type UserRole = 'admin' | 'analyst' | 'operator' | 'content_manager' | 'civichub_admin' | 'member';
+// v2.0: 3단계 역할 체계 (admin ⊃ editor ⊃ viewer)
+export type UserRole = 'admin' | 'editor' | 'viewer';
 
 export interface User {
   id: string;
   name: string;
   email: string;
   role: UserRole;
-}
-
-export interface Permission {
-  entity: string;
-  action: 'create' | 'read' | 'update' | 'delete' | 'send' | 'approve';
-  roles: UserRole[];
 }
 
 // ============================================

@@ -42,8 +42,7 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useCampaignProfile, useUpdateCampaignProfile, CareerItem, ModuleImages } from '@/hooks/useCampaignProfile';
-import { hasPermission } from '@/lib/rbac';
-import type { UserRole } from '@/lib/types';
+import { canEdit as canEditRole } from '@/lib/rbac';
 
 // 모듈 메타 (이미지 업로드 UI용)
 const MODULE_META = [
@@ -75,8 +74,8 @@ export default function CampaignProfilePage() {
   const params = useParams();
   const tenant = params.tenant as string;
   const { data: session } = useSession();
-  const userRole = (session?.user as { role?: UserRole })?.role || 'member';
-  const canEdit = hasPermission(userRole, 'settings', 'update');
+  const userRole = (session?.user as { role?: string })?.role || 'viewer';
+  const canEdit = canEditRole(userRole);
 
   const { data: profileData, isLoading, isError, refetch } = useCampaignProfile();
   const updateProfile = useUpdateCampaignProfile();

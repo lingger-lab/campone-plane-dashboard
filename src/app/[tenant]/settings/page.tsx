@@ -9,8 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/components/theme-provider';
-import { hasPermission } from '@/lib/rbac';
-import type { UserRole } from '@/lib/types';
+import { canEdit as canEditRole } from '@/lib/rbac';
 import { useTenant } from '@/lib/tenant/TenantContext';
 
 export default function SettingsPage() {
@@ -21,7 +20,7 @@ export default function SettingsPage() {
   const user = session?.user;
   const userName = user?.name || '사용자';
   const userEmail = user?.email || '';
-  const userRole = (user as { role?: string })?.role || 'member';
+  const userRole = (user as { role?: string })?.role || 'viewer';
 
   return (
     <div className="container max-w-4xl mx-auto p-6 space-y-6">
@@ -100,7 +99,7 @@ export default function SettingsPage() {
       </Card>
 
       {/* 대시보드 KPI 설정 (Manager 이상만 표시) */}
-      {hasPermission(userRole as UserRole, 'settings', 'update') && (
+      {canEditRole(userRole) && (
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
@@ -123,7 +122,7 @@ export default function SettingsPage() {
       )}
 
       {/* 캠페인 프로필 관리 (Manager 이상만 표시) */}
-      {hasPermission(userRole as UserRole, 'settings', 'update') && (
+      {canEditRole(userRole) && (
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
@@ -146,7 +145,7 @@ export default function SettingsPage() {
       )}
 
       {/* 퀵버튼 관리 (Manager 이상만 표시) */}
-      {hasPermission(userRole as UserRole, 'quickButtons', 'update') && (
+      {canEditRole(userRole) && (
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
@@ -169,7 +168,7 @@ export default function SettingsPage() {
       )}
 
       {/* 약관/개인정보 관리 (Manager 이상만 표시) */}
-      {hasPermission(userRole as UserRole, 'settings', 'update') && (
+      {canEditRole(userRole) && (
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
@@ -192,7 +191,7 @@ export default function SettingsPage() {
       )}
 
       {/* 채널 링크 관리 (Manager 이상만 표시) */}
-      {hasPermission(userRole as UserRole, 'channels', 'update') && (
+      {canEditRole(userRole) && (
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3">

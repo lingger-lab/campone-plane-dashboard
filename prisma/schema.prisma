@@ -37,7 +37,7 @@ model User {
 model UserTenant {
   userId    String   @map("user_id") @db.Uuid
   tenantId  String   @map("tenant_id") @db.VarChar(50)
-  role      String   @default("member") @db.VarChar(50)
+  role      String   @default("viewer") @db.VarChar(50)
   isDefault Boolean  @default(false) @map("is_default")
   joinedAt  DateTime @default(now()) @map("joined_at") @db.Timestamptz
 

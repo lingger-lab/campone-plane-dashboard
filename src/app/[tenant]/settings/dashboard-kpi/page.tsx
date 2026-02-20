@@ -10,8 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTenant } from '@/lib/tenant/TenantContext';
 import { useTenantPreference, useSaveTenantPreference } from '@/hooks/useTenantPreference';
 import { KPI_CATALOG, DEFAULT_SELECTED_KPIS, SERVICE_LABELS, SERVICE_TO_FEATURE } from '@/lib/kpi-catalog';
-import { hasPermission } from '@/lib/rbac';
-import type { UserRole } from '@/lib/types';
+import { canEdit as canEditRole } from '@/lib/rbac';
 
 export default function DashboardKpiPage() {
   const { data: session } = useSession();
@@ -19,8 +18,8 @@ export default function DashboardKpiPage() {
   const { data: savedKpis, isLoading } = useTenantPreference<string[]>('selected_kpis');
   const saveMutation = useSaveTenantPreference();
 
-  const userRole = (session?.user as { role?: string })?.role || 'member';
-  const canEdit = hasPermission(userRole as UserRole, 'settings', 'update');
+  const userRole = (session?.user as { role?: string })?.role || 'viewer';
+  const canEdit = canEditRole(userRole);
 
   // 선택된 KPI 목록 (순서 유지)
   const [selectedKpis, setSelectedKpis] = useState<string[]>([]);

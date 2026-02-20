@@ -178,25 +178,25 @@ async function seedSystemDb() {
     {
       userId: analyst.id,
       tenantId: "camp-dev",
-      role: "analyst",
+      role: "editor",
       isDefault: true,
     },
     {
       userId: operator.id,
       tenantId: "camp-dev",
-      role: "operator",
+      role: "editor",
       isDefault: true,
     },
     {
       userId: contentMgr.id,
       tenantId: "camp-dev",
-      role: "content_manager",
+      role: "editor",
       isDefault: true,
     },
     {
       userId: member.id,
       tenantId: "camp-dev",
-      role: "member",
+      role: "viewer",
       isDefault: true,
     },
 
@@ -216,13 +216,13 @@ async function seedSystemDb() {
     {
       userId: testMember.id,
       tenantId: "camp-test",
-      role: "member",
+      role: "viewer",
       isDefault: true,
     },
     {
       userId: analyst.id,
       tenantId: "camp-test",
-      role: "analyst",
+      role: "editor",
       isDefault: false,
     },
   ];

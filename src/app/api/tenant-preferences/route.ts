@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getTenantFromRequest } from '@/lib/api/tenant-helper';
 import { authOptions } from '@/lib/auth';
-import { hasPermission } from '@/lib/rbac';
-import type { UserRole } from '@/lib/types';
+import { canEdit } from '@/lib/rbac';
 
 // 테넌트 환경설정 조회
 export async function GET(request: NextRequest) {
@@ -44,8 +43,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userRole = (session.user as { role?: string }).role || 'member';
-    if (!hasPermission(userRole as UserRole, 'settings', 'update')) {
+    const userRole = (session.user as { role?: string }).role || 'viewer';
+    if (!canEdit(userRole)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

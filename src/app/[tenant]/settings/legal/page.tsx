@@ -20,8 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { hasPermission } from '@/lib/rbac';
-import type { UserRole } from '@/lib/types';
+import { canEdit as canEditRole } from '@/lib/rbac';
 import { useTenantPreference, useSaveTenantPreference } from '@/hooks/useTenantPreference';
 import { DEFAULT_TERMS, DEFAULT_PRIVACY } from '@/lib/legal-defaults';
 import type { LegalDocument, LegalSection, LegalContactInfo } from '@/lib/legal-defaults';
@@ -30,8 +29,8 @@ export default function LegalSettingsPage() {
   const params = useParams();
   const tenant = params.tenant as string;
   const { data: session } = useSession();
-  const userRole = (session?.user as { role?: UserRole })?.role || 'member';
-  const canEdit = hasPermission(userRole, 'settings', 'update');
+  const userRole = (session?.user as { role?: string })?.role || 'viewer';
+  const canEdit = canEditRole(userRole);
 
   // 데이터 로드
   const { data: termsData, isLoading: termsLoading } = useTenantPreference<LegalDocument>('terms_content');

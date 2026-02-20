@@ -5,7 +5,7 @@ declare module 'next-auth' {
     id: string;
     email: string;
     name: string;
-    role: string; // user_tenants.role (admin, analyst, operator, etc.)
+    role: string; // user_tenants.role (admin, editor, viewer)
     tenantId: string;
     isSystemAdmin?: boolean;
   }

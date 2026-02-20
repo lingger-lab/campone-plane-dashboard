@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     const { systemDb, tenantId } = await getTenantFromRequest();
     const body = await request.json();
-    const { email, name, password, role = 'member' } = body;
+    const { email, name, password, role = 'viewer' } = body;
 
     if (!email || !name || !password) {
       return NextResponse.json(

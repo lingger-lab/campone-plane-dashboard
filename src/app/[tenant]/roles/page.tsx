@@ -24,7 +24,7 @@ import { Label } from '@/components/ui/label';
 import { useSession } from 'next-auth/react';
 
 type Permission = 'full' | 'limited' | 'view' | 'none';
-type UserRole = 'admin' | 'analyst' | 'operator' | 'content_manager' | 'civichub_admin' | 'member';
+type UserRole = 'admin' | 'editor' | 'viewer';
 
 interface RoleData {
   key: string;
@@ -46,22 +46,19 @@ interface UserData {
 interface RolePermission {
   entity: string;
   admin: Permission;
-  manager: Permission;
-  staff: Permission;
+  editor: Permission;
   viewer: Permission;
 }
 
 const permissions: RolePermission[] = [
-  { entity: 'Contacts/Segments', admin: 'full', manager: 'full', staff: 'limited', viewer: 'view' },
-  { entity: 'Messages/Campaigns', admin: 'full', manager: 'full', staff: 'limited', viewer: 'none' },
-  { entity: 'Events', admin: 'full', manager: 'full', staff: 'full', viewer: 'view' },
-  { entity: 'Donations', admin: 'full', manager: 'full', staff: 'view', viewer: 'view' },
-  { entity: 'Tasks', admin: 'full', manager: 'full', staff: 'full', viewer: 'none' },
-  { entity: 'Policy Docs', admin: 'full', manager: 'full', staff: 'limited', viewer: 'none' },
-  { entity: 'Studio', admin: 'full', manager: 'full', staff: 'limited', viewer: 'none' },
-  { entity: 'Ops Runbook', admin: 'full', manager: 'full', staff: 'limited', viewer: 'none' },
-  { entity: 'Roles & Permissions', admin: 'full', manager: 'none', staff: 'none', viewer: 'none' },
-  { entity: 'Audit Log', admin: 'full', manager: 'full', staff: 'full', viewer: 'view' },
+  { entity: '대시보드 조회', admin: 'full', editor: 'full', viewer: 'view' },
+  { entity: '캠페인 프로필', admin: 'full', editor: 'full', viewer: 'view' },
+  { entity: '채널 링크 관리', admin: 'full', editor: 'full', viewer: 'view' },
+  { entity: '퀵버튼 관리', admin: 'full', editor: 'full', viewer: 'view' },
+  { entity: 'KPI 설정', admin: 'full', editor: 'full', viewer: 'view' },
+  { entity: '약관/개인정보', admin: 'full', editor: 'full', viewer: 'none' },
+  { entity: '사용자/역할 관리', admin: 'full', editor: 'none', viewer: 'none' },
+  { entity: '감사 로그', admin: 'full', editor: 'view', viewer: 'none' },
 ];
 
 const getPermissionIcon = (permission: Permission) => {
@@ -81,15 +78,9 @@ const getRoleBadgeVariant = (role: UserRole) => {
   switch (role) {
     case 'admin':
       return 'default';
-    case 'analyst':
+    case 'editor':
       return 'secondary';
-    case 'operator':
-      return 'secondary';
-    case 'content_manager':
-      return 'outline';
-    case 'civichub_admin':
-      return 'outline';
-    case 'member':
+    case 'viewer':
       return 'outline';
   }
 };
@@ -109,7 +100,7 @@ export default function RolesPage() {
     email: '',
     name: '',
     password: '',
-    role: 'member' as UserRole,
+    role: 'viewer' as UserRole,
   });
 
   const isAdmin = session?.user?.role === 'admin';
@@ -183,7 +174,7 @@ export default function RolesPage() {
       if (res.ok) {
         await fetchData();
         setCreateDialogOpen(false);
-        setNewUser({ email: '', name: '', password: '', role: 'member' });
+        setNewUser({ email: '', name: '', password: '', role: 'viewer' });
       }
     } catch (error) {
       console.error('Failed to create user:', error);
@@ -345,11 +336,10 @@ export default function RolesPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left p-4 font-medium">엔터티</th>
-                <th className="text-center p-4 font-medium">Admin</th>
-                <th className="text-center p-4 font-medium">Manager</th>
-                <th className="text-center p-4 font-medium">Staff</th>
-                <th className="text-center p-4 font-medium">Viewer</th>
+                <th className="text-left p-4 font-medium">기능</th>
+                <th className="text-center p-4 font-medium">관리자</th>
+                <th className="text-center p-4 font-medium">편집자</th>
+                <th className="text-center p-4 font-medium">뷰어</th>
               </tr>
             </thead>
             <tbody>
@@ -357,8 +347,7 @@ export default function RolesPage() {
                 <tr key={i} className="border-b last:border-0 hover:bg-muted/30">
                   <td className="p-4 font-medium">{perm.entity}</td>
                   <td className="p-4 text-center">{getPermissionIcon(perm.admin)}</td>
-                  <td className="p-4 text-center">{getPermissionIcon(perm.manager)}</td>
-                  <td className="p-4 text-center">{getPermissionIcon(perm.staff)}</td>
+                  <td className="p-4 text-center">{getPermissionIcon(perm.editor)}</td>
                   <td className="p-4 text-center">{getPermissionIcon(perm.viewer)}</td>
                 </tr>
               ))}
@@ -413,12 +402,9 @@ export default function RolesPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">admin - 모든 권한</SelectItem>
-                    <SelectItem value="analyst">analyst - 여론 분석</SelectItem>
-                    <SelectItem value="operator">operator - 운영 관리</SelectItem>
-                    <SelectItem value="content_manager">content_manager - 콘텐츠 관리</SelectItem>
-                    <SelectItem value="civichub_admin">civichub_admin - 시민 소통 관리</SelectItem>
-                    <SelectItem value="member">member - 일반 멤버</SelectItem>
+                    <SelectItem value="admin">관리자 - 모든 권한</SelectItem>
+                    <SelectItem value="editor">편집자 - 콘텐츠/설정 편집</SelectItem>
+                    <SelectItem value="viewer">뷰어 - 읽기 전용</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -489,12 +475,9 @@ export default function RolesPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">admin</SelectItem>
-                  <SelectItem value="analyst">analyst</SelectItem>
-                  <SelectItem value="operator">operator</SelectItem>
-                  <SelectItem value="content_manager">content_manager</SelectItem>
-                  <SelectItem value="civichub_admin">civichub_admin</SelectItem>
-                  <SelectItem value="member">member</SelectItem>
+                  <SelectItem value="admin">관리자</SelectItem>
+                  <SelectItem value="editor">편집자</SelectItem>
+                  <SelectItem value="viewer">뷰어</SelectItem>
                 </SelectContent>
               </Select>
             </div>

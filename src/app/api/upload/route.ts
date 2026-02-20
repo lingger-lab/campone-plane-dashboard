@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { Storage } from '@google-cloud/storage';
 import { authOptions } from '@/lib/auth';
-import { hasPermission } from '@/lib/rbac';
-import type { UserRole } from '@/lib/types';
+import { canEdit } from '@/lib/rbac';
 import { getTenantFromRequest } from '@/lib/api/tenant-helper';
 
 export const dynamic = 'force-dynamic';
@@ -27,8 +26,8 @@ export async function POST(request: NextRequest) {
     }
 
     // RBAC 확인 (settings:update 권한 필요)
-    const userRole = (session.user as { role?: UserRole }).role || 'member';
-    if (!hasPermission(userRole, 'settings', 'update')) {
+    const userRole = (session.user as { role?: string }).role || 'viewer';
+    if (!canEdit(userRole)) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
 

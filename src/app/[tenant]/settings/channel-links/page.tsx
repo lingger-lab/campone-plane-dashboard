@@ -41,8 +41,7 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useChannels, useSaveChannels, ChannelLink, getChannelIconColor } from '@/hooks/useChannels';
-import { hasPermission } from '@/lib/rbac';
-import type { UserRole } from '@/lib/types';
+import { canEdit as canEditRole } from '@/lib/rbac';
 
 // 아이콘 키 → 컴포넌트 매핑
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -65,8 +64,8 @@ export default function ChannelLinksPage() {
   const params = useParams();
   const tenant = params.tenant as string;
   const { data: session } = useSession();
-  const userRole = (session?.user as { role?: UserRole })?.role || 'member';
-  const canEdit = hasPermission(userRole, 'channels', 'update');
+  const userRole = (session?.user as { role?: string })?.role || 'viewer';
+  const canEdit = canEditRole(userRole);
 
   const { data: channelsData, isLoading, isError, refetch } = useChannels();
   const saveChannels = useSaveChannels();
@@ -389,10 +388,10 @@ export default function ChannelLinksPage() {
         <CardContent>
           <div className="text-sm text-muted-foreground space-y-2">
             <p>
-              <strong>Admin, Manager:</strong> 채널 링크 추가, 수정, 삭제 및 순서 변경 가능
+              <strong>관리자, 편집자:</strong> 채널 링크 추가, 수정, 삭제 및 순서 변경 가능
             </p>
             <p>
-              <strong>Staff, Viewer:</strong> 채널 링크 목록 조회만 가능
+              <strong>뷰어:</strong> 채널 링크 목록 조회만 가능
             </p>
           </div>
         </CardContent>

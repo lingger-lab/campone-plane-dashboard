@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getTenantFromRequest } from '@/lib/api/tenant-helper';
-import { hasPermission } from '@/lib/rbac';
-import type { UserRole } from '@/lib/types';
+import { canEdit } from '@/lib/rbac';
 
 // GET: 퀵버튼 목록 조회
 export async function GET() {
@@ -35,9 +34,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userRole = (session.user as { role?: UserRole }).role || 'member';
+    const userRole = (session.user as { role?: string }).role || 'viewer';
 
-    if (!hasPermission(userRole, 'quickButtons', 'create')) {
+    if (!canEdit(userRole)) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
 
@@ -85,9 +84,9 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userRole = (session.user as { role?: UserRole }).role || 'member';
+    const userRole = (session.user as { role?: string }).role || 'viewer';
 
-    if (!hasPermission(userRole, 'quickButtons', 'update')) {
+    if (!canEdit(userRole)) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
 
@@ -127,9 +126,9 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userRole = (session.user as { role?: UserRole }).role || 'member';
+    const userRole = (session.user as { role?: string }).role || 'viewer';
 
-    if (!hasPermission(userRole, 'quickButtons', 'delete')) {
+    if (!canEdit(userRole)) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
 
@@ -161,9 +160,9 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userRole = (session.user as { role?: UserRole }).role || 'member';
+    const userRole = (session.user as { role?: string }).role || 'viewer';
 
-    if (!hasPermission(userRole, 'quickButtons', 'update')) {
+    if (!canEdit(userRole)) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
 

@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getTenantFromRequest } from '@/lib/api/tenant-helper';
-import { hasPermission } from '@/lib/rbac';
-import type { UserRole } from '@/lib/types';
+import { canEdit } from '@/lib/rbac';
 
 // 정적 라우트로 빌드되면 PUT이 무시되므로 강제 동적 설정
 export const dynamic = 'force-dynamic';
@@ -63,10 +62,9 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userRole = (session.user as { role?: UserRole }).role || 'member';
+    const userRole = (session.user as { role?: string }).role || 'viewer';
 
-    // settings 권한 확인 (Admin, Manager만 가능)
-    if (!hasPermission(userRole, 'settings', 'update')) {
+    if (!canEdit(userRole)) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
 

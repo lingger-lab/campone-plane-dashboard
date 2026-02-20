@@ -4,11 +4,9 @@ import { getTenantFromRequest } from '@/lib/api/tenant-helper';
 import { authOptions } from '@/lib/auth';
 
 const ROLE_INFO: Record<string, { label: string; description: string }> = {
-  admin: { label: '관리자', description: '모든 기능에 대한 전체 권한' },
-  analyst: { label: '분석가', description: 'Insight, Policy 앱 접근' },
-  operator: { label: '운영 담당', description: 'Ops 앱 접근' },
-  content_manager: { label: '콘텐츠 담당', description: 'Studio 앱 접근' },
-  member: { label: '멤버', description: '기본 읽기 권한' },
+  admin: { label: '관리자', description: '모든 기능에 대한 전체 권한 (설정, 사용자 관리 포함)' },
+  editor: { label: '편집자', description: '콘텐츠 및 설정 편집 권한 (사용자 관리 제외)' },
+  viewer: { label: '뷰어', description: '읽기 전용 (대시보드 조회만 가능)' },
 };
 
 export async function GET() {
