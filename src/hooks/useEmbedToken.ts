@@ -14,7 +14,7 @@ export function useEmbedToken(): EmbedTokenResult {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchToken = async () => {
+  const fetchToken = async (retryCount = 0) => {
     setIsLoading(true);
     setError(null);
 
@@ -22,6 +22,12 @@ export function useEmbedToken(): EmbedTokenResult {
       const response = await fetch('/api/auth/embed-token');
 
       if (!response.ok) {
+        // 401이고 재시도 횟수 남아있으면 딜레이 후 재시도
+        // (로그인 직후 세션 쿠키 전파 타이밍 이슈 대응)
+        if (response.status === 401 && retryCount < 2) {
+          await new Promise(resolve => setTimeout(resolve, 800));
+          return fetchToken(retryCount + 1);
+        }
         const data = await response.json();
         throw new Error(data.message || '토큰을 가져올 수 없습니다.');
       }
@@ -42,7 +48,7 @@ export function useEmbedToken(): EmbedTokenResult {
     fetchToken();
 
     // 토큰 자동 갱신 (50분마다 - 만료 10분 전)
-    const interval = setInterval(fetchToken, 50 * 60 * 1000);
+    const interval = setInterval(() => fetchToken(), 50 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 

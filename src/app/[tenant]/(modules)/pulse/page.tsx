@@ -12,7 +12,7 @@ export default function InsightsPage() {
   const [hasError, setHasError] = useState(false);
   const [iframeKey, setIframeKey] = useState(0);
 
-  const { token, tenantId: tokenTenantId, isLoading: tokenLoading, error: tokenError } = useEmbedToken();
+  const { token, tenantId: tokenTenantId, isLoading: tokenLoading, error: tokenError, refetch } = useEmbedToken();
   const { resolvedTheme } = useTheme();
   const { tenantId, config } = useTenant();
 
@@ -22,6 +22,8 @@ export default function InsightsPage() {
     setIframeKey((prev) => prev + 1);
     setIsLoading(true);
     setHasError(false);
+    // 토큰도 다시 가져오기 (토큰 실패 시 재시도 가능)
+    refetch();
   };
 
   const iframeSrc = token ? getEmbedUrl(INSIGHTS_URL, token, {
