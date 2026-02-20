@@ -129,43 +129,6 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
             </ul>
           </div>
 
-          {/* 바로가기 */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-bold text-foreground">바로가기</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href={basePath || '/'} className="text-muted-foreground hover:text-primary transition-colors">
-                  대시보드
-                </Link>
-              </li>
-              <li>
-                <Link href={`${basePath}/pulse`} className="text-muted-foreground hover:text-primary transition-colors">
-                  인사이트
-                </Link>
-              </li>
-              <li>
-                <Link href={`${basePath}/studio`} className="text-muted-foreground hover:text-primary transition-colors">
-                  스튜디오
-                </Link>
-              </li>
-              <li>
-                <Link href={`${basePath}/policy`} className="text-muted-foreground hover:text-primary transition-colors">
-                  정책연구
-                </Link>
-              </li>
-              <li>
-                <Link href={`${basePath}/ops`} className="text-muted-foreground hover:text-primary transition-colors">
-                  운영관리
-                </Link>
-              </li>
-              <li>
-                <Link href={`${basePath}/hub`} className="text-muted-foreground hover:text-primary transition-colors">
-                  시민소통
-                </Link>
-              </li>
-            </ul>
-          </div>
-
           {/* 설정 */}
           <div className="space-y-4">
             <h3 className="text-lg font-bold text-foreground">설정</h3>

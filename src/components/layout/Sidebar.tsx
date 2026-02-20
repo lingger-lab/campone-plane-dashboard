@@ -10,7 +10,6 @@ import {
   FileCheck,
   ListChecks,
   Users,
-  Shield,
   History,
   Settings,
   HelpCircle,
@@ -46,7 +45,6 @@ const menuItemsBase = [
 ];
 
 const bottomItemsBase = [
-  { icon: Shield, label: '권한/역할', pathSuffix: '/roles' },
   { icon: History, label: '활동 & 알림', pathSuffix: '/audit' },
   { icon: Settings, label: '설정', pathSuffix: '/settings' },
   { icon: HelpCircle, label: '도움말', pathSuffix: '/help' },

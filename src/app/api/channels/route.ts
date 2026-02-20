@@ -128,9 +128,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Channels array is required' }, { status: 400 });
     }
 
-    // 트랜잭션으로 모든 채널 업서트
-    const results = await prisma.$transaction(
-      channels.map((ch: { key: string; url?: string; label?: string; icon?: string; visible?: boolean; order?: number }) =>
+    // 전송된 채널 key 목록
+    const submittedKeys = channels.map((ch: { key: string }) => ch.key);
+
+    // 트랜잭션: 삭제된 채널 제거 + 나머지 업서트
+    const results = await prisma.$transaction([
+      // DB에 있지만 전송 목록에 없는 채널 삭제
+      prisma.channelLink.deleteMany({
+        where: { key: { notIn: submittedKeys } },
+      }),
+      // 나머지 채널 업서트
+      ...channels.map((ch: { key: string; url?: string; label?: string; icon?: string; visible?: boolean; order?: number }) =>
         prisma.channelLink.upsert({
           where: { key: ch.key },
           update: {
@@ -149,10 +157,11 @@ export async function POST(request: NextRequest) {
             order: ch.order ?? 99,
           },
         })
-      )
-    );
+      ),
+    ]);
 
-    return NextResponse.json({ channels: results });
+    // results[0]은 deleteMany 결과, 나머지가 upsert 결과
+    return NextResponse.json({ channels: results.slice(1) });
   } catch (error) {
     console.error('Failed to save channels:', error);
     return NextResponse.json({ error: 'Failed to save channels' }, { status: 500 });
