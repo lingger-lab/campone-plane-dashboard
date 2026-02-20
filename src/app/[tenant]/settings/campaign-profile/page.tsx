@@ -405,16 +405,7 @@ export default function CampaignProfilePage() {
                     </label>
                   </div>
                 )}
-                <Input
-                  value={photoUrl}
-                  onChange={(e) => {
-                    setPhotoUrl(e.target.value);
-                    handleFieldChange();
-                  }}
-                  placeholder="또는 이미지 URL 직접 입력"
-                  disabled={!canEdit}
-                  className="text-sm"
-                />
+                <input type="hidden" value={photoUrl} />
                 <p className="text-xs text-muted-foreground">
                   JPG, PNG, WebP (최대 10MB)
                 </p>

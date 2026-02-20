@@ -38,11 +38,11 @@ interface SidebarProps {
 // featureKey: config.features의 키와 매핑
 const menuItemsBase = [
   { icon: LayoutDashboard, label: 'Dashboard', pathSuffix: '', featureKey: null },
-  { icon: TrendingUp, label: 'Insights', pathSuffix: '/pulse', badge: 'M1', featureKey: 'pulse' as keyof TenantFeatures },
-  { icon: Palette, label: 'Studio', pathSuffix: '/studio', badge: 'M2', featureKey: 'studio' as keyof TenantFeatures },
-  { icon: FileCheck, label: 'Policy Lab', pathSuffix: '/policy', badge: 'M3', featureKey: 'policy' as keyof TenantFeatures },
-  { icon: ListChecks, label: 'Ops', pathSuffix: '/ops', badge: 'M4', featureKey: 'ops' as keyof TenantFeatures },
-  { icon: Users, label: 'Civic Hub', pathSuffix: '/hub', badge: 'M5', featureKey: 'hub' as keyof TenantFeatures },
+  { icon: TrendingUp, label: 'Insights', pathSuffix: '/pulse', featureKey: 'pulse' as keyof TenantFeatures },
+  { icon: Palette, label: 'Studio', pathSuffix: '/studio', featureKey: 'studio' as keyof TenantFeatures },
+  { icon: FileCheck, label: 'Policy Lab', pathSuffix: '/policy', featureKey: 'policy' as keyof TenantFeatures },
+  { icon: ListChecks, label: 'Ops', pathSuffix: '/ops', featureKey: 'ops' as keyof TenantFeatures },
+  { icon: Users, label: 'Civic Hub', pathSuffix: '/hub', featureKey: 'hub' as keyof TenantFeatures },
 ];
 
 const bottomItemsBase = [
@@ -177,12 +177,7 @@ export function Sidebar({
               >
                 <item.icon className="h-5 w-5 shrink-0 icon-pulse" />
                 {!collapsed && (
-                  <>
-                    <span className="flex-1 text-left">{item.label}</span>
-                    {item.badge && (
-                      <span className={cn('text-xs', active ? 'opacity-80' : 'text-muted-foreground')}>{item.badge}</span>
-                    )}
-                  </>
+                  <span className="flex-1 text-left">{item.label}</span>
                 )}
               </Button>
             </Link>

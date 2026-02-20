@@ -50,10 +50,9 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# Copy Prisma files for db push at runtime
+# Copy Prisma runtime files
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/prisma ./prisma
 
 # Copy sharp from global install
 RUN cp -r /usr/local/lib/node_modules/sharp ./node_modules/sharp || true
@@ -67,7 +66,5 @@ USER nextjs
 # Expose port
 EXPOSE 8080
 
-# Start the application with db push (system schema only)
-CMD sh -c "\
-  npx prisma db push --accept-data-loss 2>/dev/null || true; \
-  exec node server.js"
+# Start the application
+CMD ["node", "server.js"]

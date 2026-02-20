@@ -19,6 +19,11 @@ export async function ensureTenantTables(
 ): Promise<void> {
   if (migratedTenants.has(tenantId)) return;
 
+  // 연결 대상 DB 로깅
+  const dbMatch = connectionString.match(/\/([^/?]+)(\?|$)/);
+  const dbName = dbMatch?.[1] || 'unknown';
+  console.log(`[tenant:${tenantId}] ensureTenantTables called, target DB: ${dbName}`);
+
   const client = new pg.Client({
     connectionString,
     ssl: connectionString.includes('/cloudsql/') ? false : { rejectUnauthorized: false },
@@ -27,20 +32,26 @@ export async function ensureTenantTables(
   try {
     await client.connect();
 
+    // 실제 연결된 DB 확인
+    const dbCheck = await client.query('SELECT current_database()');
+    const actualDb = dbCheck.rows[0]?.current_database;
+    console.log(`[tenant:${tenantId}] current_database() = ${actualDb}`);
+
     // 핵심 테이블 존재 여부 확인
     const { rows } = await client.query(
-      `SELECT EXISTS (
-        SELECT 1 FROM information_schema.tables
-        WHERE table_schema = 'public' AND table_name = 'campaign_profile'
-      ) as exists`
+      `SELECT COUNT(*) as cnt FROM information_schema.tables
+       WHERE table_schema = 'public' AND table_name IN
+       ('alerts','user_alerts','channel_links','kpi_cache','campaign_profile','quick_buttons','tenant_preferences')`
     );
+    const existingCount = parseInt(rows[0]?.cnt ?? '0', 10);
 
-    if (rows[0]?.exists) {
+    if (existingCount >= 7) {
+      console.log(`[tenant:${tenantId}] All ${existingCount} tables exist in ${actualDb}, skip`);
       migratedTenants.add(tenantId);
       return;
     }
 
-    console.log(`[tenant:${tenantId}] Tables missing, running auto-migration...`);
+    console.log(`[tenant:${tenantId}] ${existingCount}/7 tables in ${actualDb}, running migration...`);
     await runMigration(client);
 
     // 마이그레이션 결과 검증
@@ -51,16 +62,14 @@ export async function ensureTenantTables(
     );
     const tableCount = parseInt(verify.rows[0]?.cnt ?? '0', 10);
     if (tableCount < 7) {
-      console.error(`[tenant:${tenantId}] Auto-migration verification FAILED: only ${tableCount}/7 tables found`);
-      // 캐시하지 않아 다음 요청에서 재시도
+      console.error(`[tenant:${tenantId}] MIGRATION VERIFY FAILED in ${actualDb}: ${tableCount}/7`);
       return;
     }
 
-    console.log(`[tenant:${tenantId}] Auto-migration completed (${tableCount} tables verified)`);
+    console.log(`[tenant:${tenantId}] Migration OK in ${actualDb} (${tableCount}/7 verified)`);
     migratedTenants.add(tenantId);
   } catch (error) {
-    console.error(`[tenant:${tenantId}] Auto-migration failed:`, error);
-    // 실패 시 캐시하지 않아 다음 요청에서 재시도 가능
+    console.error(`[tenant:${tenantId}] Auto-migration FAILED for ${dbName}:`, error);
   } finally {
     await client.end().catch(() => {});
   }
