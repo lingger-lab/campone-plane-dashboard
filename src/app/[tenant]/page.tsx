@@ -68,35 +68,30 @@ const MODULE_DATA = [
     pathSuffix: 'pulse',
     slogan: '이슈는 보이고, 결정은 빨라진다.',
     benefits: ['실시간 이슈 레이더', '지역/감성 한눈에', '리스크 사전 경보'],
-    thumbnail: '/module-i.png',
   },
   {
     name: 'Studio',
     pathSuffix: 'studio',
     slogan: '콘텐츠 제작·배포, 한 번에.',
     benefits: ['카드/공지 템플릿', '변수치환/버전관리', '캘린더 연동 퍼블리시'],
-    thumbnail: '/module-s.png',
   },
   {
     name: 'Policy Lab',
     pathSuffix: 'policy',
     slogan: '비전부터 근거까지, 구조화.',
     benefits: ['비전/10대 공약', '근거/사례 링크', '영향·재원 메모'],
-    thumbnail: '/module-p.png',
   },
   {
     name: 'Ops',
     pathSuffix: 'ops',
     slogan: '캠프 운영, 체크리스트 한 장.',
     benefits: ['기간별 체크', '알림/런북 자동화', '역할/권한 연동'],
-    thumbnail: '/module-o.png',
   },
   {
     name: 'Civic Hub',
     pathSuffix: 'hub',
     slogan: '질문엔 답하고, 메시지는 도달한다.',
     benefits: ['세그먼트 메시징(A/B·예약)', '오픈/응답 추적', '인바운드 Q&A/민원함'],
-    thumbnail: '/module-c.png',
   },
 ];
 
@@ -224,7 +219,7 @@ export default function DashboardPage() {
       .map((m) => ({
         ...m,
         path: `/${tenantId}/${m.pathSuffix}`,
-        thumbnail: customImages?.[m.pathSuffix] || m.thumbnail,
+        thumbnail: customImages?.[m.pathSuffix] || undefined,
       }));
   }, [tenantId, profile?.moduleImages, config.features]);
 
@@ -334,27 +329,21 @@ export default function DashboardPage() {
                   }}
                   className="rounded-xl"
                 >
-                  <Image
-                    src={profile?.photoUrl || '/candidate.png'}
-                    alt={profile?.candidateName || '후보자'}
-                    width={120}
-                    height={120}
-                    className="w-20 h-20 sm:w-[120px] sm:h-[120px] rounded-xl object-cover shadow-md"
-                    priority
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      const fallback = target.nextElementSibling as HTMLElement;
-                      if (fallback) fallback.style.display = 'flex';
-                    }}
-                  />
+                  {profile?.photoUrl ? (
+                    <Image
+                      src={profile.photoUrl}
+                      alt={profile?.candidateName || '후보자'}
+                      width={120}
+                      height={120}
+                      className="w-20 h-20 sm:w-[120px] sm:h-[120px] rounded-xl object-cover shadow-md"
+                      priority
+                    />
+                  ) : (
+                    <div className="w-20 h-20 sm:w-[120px] sm:h-[120px] flex items-center justify-center rounded-xl bg-primary text-white font-bold text-xl sm:text-2xl shadow-md">
+                      {(profile?.candidateName || '?').charAt(0)}
+                    </div>
+                  )}
                 </motion.div>
-                <div
-                  className="hidden w-20 h-20 sm:w-[120px] sm:h-[120px] items-center justify-center rounded-xl bg-primary text-white font-bold text-xl sm:text-2xl shadow-md"
-                  style={{ display: 'none' }}
-                >
-                  {(profile?.candidateName || '후').charAt(0)}
-                </div>
               </motion.div>
 
               {/* 캠페인 정보 */}

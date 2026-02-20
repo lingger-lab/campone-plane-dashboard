@@ -47,11 +47,11 @@ import type { UserRole } from '@/lib/types';
 
 // 모듈 메타 (이미지 업로드 UI용)
 const MODULE_META = [
-  { key: 'pulse', name: 'Insights', defaultImage: '/module-i.png' },
-  { key: 'studio', name: 'Studio', defaultImage: '/module-s.png' },
-  { key: 'policy', name: 'Policy Lab', defaultImage: '/module-p.png' },
-  { key: 'ops', name: 'Ops', defaultImage: '/module-o.png' },
-  { key: 'hub', name: 'Civic Hub', defaultImage: '/module-c.png' },
+  { key: 'pulse', name: 'Insights', defaultImage: '' },
+  { key: 'studio', name: 'Studio', defaultImage: '' },
+  { key: 'policy', name: 'Policy Lab', defaultImage: '' },
+  { key: 'ops', name: 'Ops', defaultImage: '' },
+  { key: 'hub', name: 'Civic Hub', defaultImage: '' },
 ];
 
 // 아이콘 옵션

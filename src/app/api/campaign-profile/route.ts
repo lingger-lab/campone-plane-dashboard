@@ -14,7 +14,7 @@ const defaultProfile = {
   candidateName: '후보자명',
   candidateTitle: 'OO시장 후보',
   orgName: '선거대책본부',
-  photoUrl: '/candidate.png',
+  photoUrl: null,
   careers: [
     { icon: 'Briefcase', text: '경력 1' },
     { icon: 'GraduationCap', text: '경력 2' },

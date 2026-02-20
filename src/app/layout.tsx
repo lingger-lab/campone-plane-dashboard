@@ -18,20 +18,12 @@ export const metadata: Metadata = {
     siteName: 'CampOne',
     title: 'CampOne Dashboard',
     description: '선거 캠프 통합 관리 플랫폼 - 여론 분석, 콘텐츠, 정책, 운영, 시민 소통',
-    images: [
-      {
-        url: '/og-image-d.png',
-        width: 1200,
-        height: 630,
-        alt: 'CampOne Dashboard',
-      },
-    ],
+    images: [],
   },
   twitter: {
-    card: 'summary_large_image',
+    card: 'summary',
     title: 'CampOne Dashboard',
     description: '선거 캠프 통합 관리 플랫폼',
-    images: ['/og-image-d.png'],
   },
   keywords: ['캠프원', 'CampOne', '선거', '캠프', '대시보드'],
   authors: [{ name: 'CampOne' }],

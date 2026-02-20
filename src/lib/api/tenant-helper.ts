@@ -43,12 +43,29 @@ export async function getTenantFromRequest(): Promise<TenantContext> {
     throw new Error('Tenant mismatch. Access denied.');
   }
 
-  // 5. 테넌트 설정 로드
+  // 5. 테넌트 설정 로드 (YAML 우선, 없으면 시스템 DB 확인)
   let config = await getTenantConfig(tenantId);
 
-  // 개발 환경에서 설정이 없으면 기본값 사용
-  if (!config && process.env.NODE_ENV === 'development') {
-    config = createDefaultTenantConfig(tenantId);
+  if (!config) {
+    try {
+      const sysDb = getSystemPrisma();
+      const tenant = await sysDb.tenant.findUnique({
+        where: { tenantId },
+        select: { tenantId: true, name: true },
+      });
+
+      if (tenant) {
+        config = createDefaultTenantConfig(tenantId);
+        if (tenant.name) {
+          config.name = tenant.name;
+          config.displayName = tenant.name;
+        }
+      }
+    } catch {
+      if (tenantId.startsWith('camp-')) {
+        config = createDefaultTenantConfig(tenantId);
+      }
+    }
   }
 
   if (!config) {
