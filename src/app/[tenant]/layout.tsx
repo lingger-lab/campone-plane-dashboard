@@ -79,8 +79,8 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
       select: { enabledServices: true },
     });
 
-    if (tenant?.enabledServices && Array.isArray(tenant.enabledServices)) {
-      const enabledServices = tenant.enabledServices as string[];
+    if (tenant?.enabledServices) {
+      const raw = tenant.enabledServices;
       const features: TenantFeatures = {
         pulse: false,
         studio: false,
@@ -89,10 +89,22 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
         hub: false,
       };
 
-      for (const service of enabledServices) {
-        const featureKey = SERVICE_TO_FEATURE[service];
-        if (featureKey) {
-          features[featureKey] = true;
+      if (Array.isArray(raw)) {
+        // 배열 형식: ["insight", "studio", "policy", ...]
+        for (const service of raw as string[]) {
+          const featureKey = SERVICE_TO_FEATURE[service];
+          if (featureKey) {
+            features[featureKey] = true;
+          }
+        }
+      } else if (typeof raw === 'object' && raw !== null) {
+        // 객체 형식: { insight: true, studio: false, ... }
+        const obj = raw as Record<string, boolean>;
+        for (const [service, enabled] of Object.entries(obj)) {
+          const featureKey = SERVICE_TO_FEATURE[service];
+          if (featureKey && enabled) {
+            features[featureKey] = true;
+          }
         }
       }
 

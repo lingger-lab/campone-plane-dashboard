@@ -42,11 +42,25 @@ export async function ensureTenantTables(
 
     console.log(`[tenant:${tenantId}] Tables missing, running auto-migration...`);
     await runMigration(client);
-    console.log(`[tenant:${tenantId}] Auto-migration completed`);
+
+    // 마이그레이션 결과 검증
+    const verify = await client.query(
+      `SELECT COUNT(*) as cnt FROM information_schema.tables
+       WHERE table_schema = 'public' AND table_name IN
+       ('alerts','user_alerts','channel_links','kpi_cache','campaign_profile','quick_buttons','tenant_preferences')`
+    );
+    const tableCount = parseInt(verify.rows[0]?.cnt ?? '0', 10);
+    if (tableCount < 7) {
+      console.error(`[tenant:${tenantId}] Auto-migration verification FAILED: only ${tableCount}/7 tables found`);
+      // 캐시하지 않아 다음 요청에서 재시도
+      return;
+    }
+
+    console.log(`[tenant:${tenantId}] Auto-migration completed (${tableCount} tables verified)`);
     migratedTenants.add(tenantId);
   } catch (error) {
     console.error(`[tenant:${tenantId}] Auto-migration failed:`, error);
-    migratedTenants.add(tenantId); // 재시도 방지
+    // 실패 시 캐시하지 않아 다음 요청에서 재시도 가능
   } finally {
     await client.end().catch(() => {});
   }
