@@ -104,3 +104,63 @@ model LlmUsage {
   @@index([provider, createdAt(sort: Desc)])
   @@map("llm_usage")
 }
+
+// ============================================
+// 도움말 RAG (전 테넌트 공유)
+// ============================================
+
+enum HelpQuestionStatus {
+  ANSWERED
+  PENDING_REVIEW
+  REVIEWED
+}
+
+model HelpDocument {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  category  String   @default("general") @db.VarChar(100)
+  isActive  Boolean  @default(true) @map("is_active")
+  embedding Json     @default("[]")
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([category])
+  @@index([isActive])
+  @@map("help_documents")
+}
+
+model HelpQuestion {
+  id             String             @id @default(cuid())
+  tenantId       String?            @map("tenant_id") @db.VarChar(50)
+  text           String
+  summary        String?
+  status         HelpQuestionStatus @default(PENDING_REVIEW)
+  qualityTop1    Float?             @map("quality_top1")
+  qualityTop3Avg Float?             @map("quality_top3_avg")
+  userId         String?            @map("user_id")
+  responseTime   Int?               @map("response_time")
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  sources HelpQuestionSource[]
+
+  @@index([tenantId, createdAt(sort: Desc)])
+  @@index([status])
+  @@map("help_questions")
+}
+
+model HelpQuestionSource {
+  id             String       @id @default(cuid())
+  questionId     String       @map("question_id")
+  documentName   String       @map("document_name")
+  documentDate   String       @map("document_date")
+  excerpt        String?
+  relevanceScore Float        @map("relevance_score")
+
+  question HelpQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@map("help_question_sources")
+}
