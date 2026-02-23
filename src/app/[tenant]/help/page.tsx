@@ -21,6 +21,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { HelpChatPanel } from '@/components/help/HelpChatPanel';
 
 // 모듈 가이드 데이터
 const moduleGuides = [
@@ -379,6 +380,11 @@ export default function HelpPage() {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
+
+      {/* AI 챗봇 */}
+      <section>
+        <HelpChatPanel />
+      </section>
 
       {/* 모듈 가이드 */}
       <section>

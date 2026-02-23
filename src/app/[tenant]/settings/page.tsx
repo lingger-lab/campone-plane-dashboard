@@ -3,11 +3,11 @@
 import React from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { MousePointer2, Link2, UserCircle, ChevronRight, BarChart3, FileText } from 'lucide-react';
+import { MousePointer2, Link2, UserCircle, ChevronRight, BarChart3, FileText, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
-import { canEdit as canEditRole } from '@/lib/rbac';
+import { canEdit as canEditRole, hasPermission } from '@/lib/rbac';
 import { useTenant } from '@/lib/tenant/TenantContext';
 
 export default function SettingsPage() {
@@ -132,6 +132,29 @@ export default function SettingsPage() {
             <Link href={`/${tenantId}/settings/channel-links`}>
               <Button variant="outline" className="gap-2">
                 채널 링크 설정
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 도움말 문서 관리 (Admin만 표시) */}
+      {hasPermission(userRole, 'admin') && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <MessageCircle className="h-5 w-5 text-primary" />
+              <div>
+                <CardTitle className="text-base">도움말 문서 관리</CardTitle>
+                <CardDescription>AI 챗봇이 참고할 도움말 문서 업로드 및 관리</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Link href={`/${tenantId}/settings/help-documents`}>
+              <Button variant="outline" className="gap-2">
+                문서 관리
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </Link>

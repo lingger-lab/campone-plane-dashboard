@@ -452,6 +452,121 @@ export const handlers = [
   }),
 
   // ============================================
+  // Help RAG (도움말 챗봇)
+  // ============================================
+  http.get('/api/help/documents', async () => {
+    await delay(DELAY_MS);
+    return HttpResponse.json({
+      items: [
+        {
+          id: 'doc001',
+          title: '대시보드 시작 가이드',
+          category: 'general',
+          isActive: true,
+          createdAt: '2026-02-20T10:00:00Z',
+          updatedAt: '2026-02-20T10:00:00Z',
+        },
+        {
+          id: 'doc002',
+          title: '여론 분석 모듈 사용법',
+          category: 'module',
+          isActive: true,
+          createdAt: '2026-02-21T10:00:00Z',
+          updatedAt: '2026-02-21T10:00:00Z',
+        },
+        {
+          id: 'doc003',
+          title: 'RBAC 권한 관리 안내',
+          category: 'admin',
+          isActive: true,
+          createdAt: '2026-02-22T10:00:00Z',
+          updatedAt: '2026-02-22T10:00:00Z',
+        },
+      ],
+      total: 3,
+    });
+  }),
+
+  http.post('/api/help/documents', async () => {
+    await delay(DELAY_MS * 2);
+    return HttpResponse.json(
+      {
+        success: true,
+        document: {
+          id: `doc${Date.now()}`,
+          title: '새 문서',
+        },
+      },
+      { status: 201 }
+    );
+  }),
+
+  http.delete('/api/help/documents', async () => {
+    await delay(DELAY_MS);
+    return HttpResponse.json({ success: true });
+  }),
+
+  http.post('/api/help/chat', async () => {
+    const mockAnswer =
+      'CampOne 대시보드는 5개 핵심 모듈로 구성되어 있습니다. ' +
+      '여론 분석(Pulse), 콘텐츠 스튜디오(Studio), 정책 연구소(Policy Lab), ' +
+      '운영 관리(Ops), 시민 소통(Civic Hub)으로 나뉘며, ' +
+      '각 모듈은 캠페인 운영에 필요한 기능을 제공합니다. ' +
+      '더 자세한 내용이 궁금하시면 아래 \'자세히 보기\' 버튼을 눌러주세요.';
+
+    const words = mockAnswer.split(' ');
+    const encoder = new TextEncoder();
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        // meta 이벤트
+        const meta = {
+          type: 'meta',
+          sources: [
+            {
+              documentName: '대시보드 시작 가이드',
+              documentDate: '2026-02-20',
+              excerpt: 'CampOne 대시보드는 5개 핵심 모듈로 구성되어 있습니다...',
+              relevanceScore: 87,
+            },
+            {
+              documentName: '여론 분석 모듈 사용법',
+              documentDate: '2026-02-21',
+              excerpt: '여론 분석(Pulse) 모듈은 Google Trends, 네이버 검색량...',
+              relevanceScore: 72,
+            },
+          ],
+          phase: 'quick',
+        };
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(meta)}\n\n`));
+
+        // chunk 이벤트 (워드 단위 스트리밍)
+        for (let i = 0; i < words.length; i++) {
+          await delay(50);
+          const content = (i === 0 ? '' : ' ') + words[i];
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: 'chunk', content })}\n\n`)
+          );
+        }
+
+        // done 이벤트
+        await delay(100);
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`)
+        );
+        controller.close();
+      },
+    });
+
+    return new HttpResponse(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache, no-transform',
+      },
+    });
+  }),
+
+  // ============================================
   // Dashboard KPIs
   // ============================================
   http.get(`${API_BASE}/dashboard/kpis`, async () => {
