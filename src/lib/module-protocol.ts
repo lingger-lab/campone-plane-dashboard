@@ -23,7 +23,10 @@ export type ModuleMessageType =
   | 'READY';        // 모듈 로드 완료
 
 // 대시보드 → 모듈 메시지 타입
-export type DashboardMessageType = 'THEME_CHANGE';
+export type DashboardMessageType = 'THEME_CHANGE' | 'AUTH_TOKEN';
+
+// 모듈 → 대시보드 (인증 요청)
+export type AuthRequestType = 'AUTH_REQUIRED';
 
 export type ThemeValue = 'light' | 'dark';
 
@@ -76,6 +79,12 @@ export interface ThemeChangePayload {
   theme: ThemeValue;
 }
 
+export interface AuthTokenPayload {
+  token: string;
+  tenantId?: string;
+  theme?: string;
+}
+
 // ============================================
 // 통합 메시지 타입
 // ============================================
@@ -98,7 +107,7 @@ export interface DashboardMessage {
   type: DashboardMessageType;
   source: 'Dashboard';
   timestamp: number;
-  payload: ThemeChangePayload;
+  payload: ThemeChangePayload | AuthTokenPayload;
 }
 
 // ============================================

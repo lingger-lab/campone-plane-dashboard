@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface EmbedTokenResult {
   token: string | null;
@@ -14,7 +14,7 @@ export function useEmbedToken(): EmbedTokenResult {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchToken = async (retryCount = 0) => {
+  const fetchToken = useCallback(async (retryCount = 0) => {
     setIsLoading(true);
     setError(null);
 
@@ -42,7 +42,7 @@ export function useEmbedToken(): EmbedTokenResult {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchToken();
@@ -50,7 +50,7 @@ export function useEmbedToken(): EmbedTokenResult {
     // 토큰 자동 갱신 (50분마다 - 만료 10분 전)
     const interval = setInterval(() => fetchToken(), 50 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchToken]);
 
   return { token, tenantId, isLoading, error, refetch: fetchToken };
 }
@@ -85,5 +85,24 @@ export function getEmbedUrl(
     url.searchParams.set('theme', options.theme);
   }
 
+  return url.toString();
+}
+
+/**
+ * Studio 전용 URL 생성 (?embed=true&token=xxx 형식)
+ */
+export function getStudioEmbedUrl(
+  baseUrl: string,
+  token: string | null,
+  options?: { theme?: ThemeType }
+): string {
+  if (!token) return baseUrl;
+
+  const url = new URL(baseUrl);
+  url.searchParams.set('embed', 'true');
+  url.searchParams.set('token', token);
+  if (options?.theme) {
+    url.searchParams.set('theme', options.theme);
+  }
   return url.toString();
 }
