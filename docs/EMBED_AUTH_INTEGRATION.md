@@ -8,15 +8,36 @@
 
 ## 1. 문제 배경
 
-대시보드가 iframe으로 서비스를 로드할 때, 서비스가 설정하는 쿠키는 **서드파티 쿠키**로 분류됩니다.
-Chrome/Safari/Firefox 모두 서드파티 쿠키를 기본 차단하므로, 첫 로드 시 인증이 실패합니다.
+대시보드가 iframe으로 서비스를 로드할 때, 첫 로드에서 인증이 실패하는 현상이 있습니다.
+원인은 복합적이며, 아래 3가지가 동시에 작용합니다.
+
+### 원인 1: SameSite 쿠키 제한 (주 원인)
+
+쿠키의 `SameSite` 기본값은 `Lax`입니다. `Lax`는 **cross-site iframe에서 쿠키를 전달하지 않습니다.**
+서비스가 `/embed` 엔드포인트에서 쿠키를 설정하더라도, 이후 iframe 내의 API 호출에서 해당 쿠키가 전달되지 않습니다.
 
 ```
 대시보드 (campone-dashboard.run.app)
   └── iframe (insight-frontend.run.app)
-        └── Set-Cookie → 브라우저가 차단 (서드파티)
-        └── GET /api/auth/me → 쿠키 없음 → 401
+        └── /embed → Set-Cookie (SameSite=Lax, 기본값)
+        └── GET /api/auth/me → 쿠키 미전달 (cross-site Lax 정책) → 401
 ```
+
+**해결:** 임베드 쿠키는 반드시 `SameSite=None; Secure=true`로 설정해야 합니다.
+
+### 원인 2: Cloud Run 콜드스타트
+
+서비스의 min-instances가 0이면 첫 요청 시 콜드스타트로 수 초가 걸립니다.
+이 동안 iframe의 클라이언트 JS가 먼저 실행되어 인증되지 않은 상태에서 API를 호출합니다.
+
+### 원인 3: 서비스측 인증 구현 미비
+
+AUTH_CONVENTION.md의 서비스별 TODO를 보면, 대부분의 서비스가 임베드 인증 규약을
+완전히 따르지 않고 있습니다 (쿠키명, SameSite, 엔드포인트 형식 등).
+
+> 참고: Chrome은 서드파티 쿠키를 아직 기본 차단하지 않습니다 (2026년 2월 기준).
+> 하지만 Safari(ITP)는 차단하며, 향후 Chrome도 변경 가능하므로 쿠키에 의존하지 않는
+> fallback은 필수입니다.
 
 ---
 
@@ -66,7 +87,7 @@ GET /embed?token={JWT}&tenant={tenantId}&theme={theme}
 2. EMBED_JWT_SECRET으로 서명 검증
 3. source === "dashboard" 확인
 4. 만료 시간 확인
-5. 쿠키 설정 시도 (sameSite=none, secure=true)
+5. 쿠키 설정 (반드시 sameSite=none, secure=true — Lax면 iframe에서 동작 안 함)
 6. 리다이렉트
 ```
 
@@ -296,7 +317,7 @@ function getAuthToken(request: Request): string | null {
 - [ ] 인증 완료 후 `READY` postMessage를 대시보드로 전송
 - [ ] API 호출 시 쿠키 + Authorization 헤더 fallback 지원
 - [ ] 서버 미들웨어에서 쿠키 + Bearer 토큰 둘 다 확인
-- [ ] `sameSite: 'none'`, `secure: true`로 임베드 쿠키 설정
+- [ ] `sameSite: 'none'`, `secure: true`로 임베드 쿠키 설정 (**Lax면 iframe에서 동작 안 함!**)
 
 ---
 
