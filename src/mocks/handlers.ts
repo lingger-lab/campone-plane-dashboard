@@ -454,58 +454,6 @@ export const handlers = [
   // ============================================
   // Help RAG (도움말 챗봇)
   // ============================================
-  http.get('/api/help/documents', async () => {
-    await delay(DELAY_MS);
-    return HttpResponse.json({
-      items: [
-        {
-          id: 'doc001',
-          title: '대시보드 시작 가이드',
-          category: 'general',
-          isActive: true,
-          createdAt: '2026-02-20T10:00:00Z',
-          updatedAt: '2026-02-20T10:00:00Z',
-        },
-        {
-          id: 'doc002',
-          title: '여론 분석 모듈 사용법',
-          category: 'module',
-          isActive: true,
-          createdAt: '2026-02-21T10:00:00Z',
-          updatedAt: '2026-02-21T10:00:00Z',
-        },
-        {
-          id: 'doc003',
-          title: 'RBAC 권한 관리 안내',
-          category: 'admin',
-          isActive: true,
-          createdAt: '2026-02-22T10:00:00Z',
-          updatedAt: '2026-02-22T10:00:00Z',
-        },
-      ],
-      total: 3,
-    });
-  }),
-
-  http.post('/api/help/documents', async () => {
-    await delay(DELAY_MS * 2);
-    return HttpResponse.json(
-      {
-        success: true,
-        document: {
-          id: `doc${Date.now()}`,
-          title: '새 문서',
-        },
-      },
-      { status: 201 }
-    );
-  }),
-
-  http.delete('/api/help/documents', async () => {
-    await delay(DELAY_MS);
-    return HttpResponse.json({ success: true });
-  }),
-
   http.post('/api/help/chat', async () => {
     const mockAnswer =
       'CampOne 대시보드는 5개 핵심 모듈로 구성되어 있습니다. ' +
