@@ -1,17 +1,29 @@
 /**
  * 테넌트 DB 자동 마이그레이션
  *
- * 테넌트 최초 접속 시 public 스키마에 테이블이 없으면 자동 생성.
- * DDL은 pg Pool로 직접 실행 (PrismaPg 어댑터의 implicit transaction 회피).
- * prisma/tenant/schema.prisma 와 동기화 유지할 것.
+ * prisma/tenant/migrations/ 폴더의 SQL 파일을 읽어서 pg.Client로 실행.
+ * Prisma 호환 _prisma_migrations 테이블로 적용 이력 관리.
+ * advisory lock으로 동시 실행 방지.
  */
 
 import pg from 'pg';
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
 
 const migratedTenants = new Set<string>();
 
+const MIGRATIONS_DIR = path.join(process.cwd(), 'prisma/tenant/migrations');
+const LOCK_ID = 8675309; // advisory lock 고정 ID
+
+interface Migration {
+  name: string;
+  sql: string;
+  checksum: string;
+}
+
 /**
- * 테넌트 DB에 테이블이 존재하는지 확인하고, 없으면 생성
+ * 테넌트 DB에 미적용 마이그레이션을 순차 실행
  */
 export async function ensureTenantTables(
   connectionString: string,
@@ -19,10 +31,8 @@ export async function ensureTenantTables(
 ): Promise<void> {
   if (migratedTenants.has(tenantId)) return;
 
-  // 연결 대상 DB 로깅
   const dbMatch = connectionString.match(/\/([^/?]+)(\?|$)/);
   const dbName = dbMatch?.[1] || 'unknown';
-  console.log(`[tenant:${tenantId}] ensureTenantTables called, target DB: ${dbName}`);
 
   const client = new pg.Client({
     connectionString,
@@ -32,160 +42,131 @@ export async function ensureTenantTables(
   try {
     await client.connect();
 
-    // 실제 연결된 DB 확인
-    const dbCheck = await client.query('SELECT current_database()');
-    const actualDb = dbCheck.rows[0]?.current_database;
-    console.log(`[tenant:${tenantId}] current_database() = ${actualDb}`);
+    // advisory lock 획득 (동시 인스턴스 보호)
+    await client.query('SELECT pg_advisory_lock($1)', [LOCK_ID]);
 
-    // 핵심 테이블 존재 여부 확인
-    const { rows } = await client.query(
-      `SELECT COUNT(*) as cnt FROM information_schema.tables
-       WHERE table_schema = 'public' AND table_name IN
-       ('alerts','user_alerts','channel_links','kpi_cache','campaign_profile','quick_buttons','tenant_preferences')`
-    );
-    const existingCount = parseInt(rows[0]?.cnt ?? '0', 10);
+    // _prisma_migrations 테이블 보장
+    await ensureMigrationsTable(client);
 
-    if (existingCount >= 7) {
-      console.log(`[tenant:${tenantId}] All ${existingCount} tables exist in ${actualDb}, skip`);
+    // 이미 적용된 마이그레이션 조회
+    const applied = await getAppliedMigrations(client);
+
+    // 디스크의 마이그레이션 스캔 → 미적용 필터
+    const pending = getPendingMigrations(applied);
+
+    if (pending.length === 0) {
+      console.log(`[tenant:${tenantId}] All migrations applied in ${dbName}, skip`);
       migratedTenants.add(tenantId);
       return;
     }
 
-    console.log(`[tenant:${tenantId}] ${existingCount}/7 tables in ${actualDb}, running migration...`);
-    await runMigration(client);
+    console.log(`[tenant:${tenantId}] ${pending.length} pending migration(s) in ${dbName}`);
 
-    // 마이그레이션 결과 검증
-    const verify = await client.query(
-      `SELECT COUNT(*) as cnt FROM information_schema.tables
-       WHERE table_schema = 'public' AND table_name IN
-       ('alerts','user_alerts','channel_links','kpi_cache','campaign_profile','quick_buttons','tenant_preferences')`
-    );
-    const tableCount = parseInt(verify.rows[0]?.cnt ?? '0', 10);
-    if (tableCount < 7) {
-      console.error(`[tenant:${tenantId}] MIGRATION VERIFY FAILED in ${actualDb}: ${tableCount}/7`);
-      return;
+    for (const migration of pending) {
+      await applyMigration(client, migration, tenantId);
     }
 
-    console.log(`[tenant:${tenantId}] Migration OK in ${actualDb} (${tableCount}/7 verified)`);
+    console.log(`[tenant:${tenantId}] Migration complete in ${dbName}`);
     migratedTenants.add(tenantId);
   } catch (error) {
     console.error(`[tenant:${tenantId}] Auto-migration FAILED for ${dbName}:`, error);
   } finally {
+    await client.query('SELECT pg_advisory_unlock($1)', [LOCK_ID]).catch(() => {});
     await client.end().catch(() => {});
   }
 }
 
-async function runMigration(client: pg.Client): Promise<void> {
-  // Enums
-  await client.query(`DO $$ BEGIN CREATE TYPE "AlertType" AS ENUM ('system', 'workflow'); EXCEPTION WHEN duplicate_object THEN NULL; END $$`);
-  await client.query(`DO $$ BEGIN CREATE TYPE "AlertSeverity" AS ENUM ('info', 'warning', 'error', 'success'); EXCEPTION WHEN duplicate_object THEN NULL; END $$`);
-  await client.query(`DO $$ BEGIN CREATE TYPE "QuickButtonCategory" AS ENUM ('video', 'blog', 'primary', 'default'); EXCEPTION WHEN duplicate_object THEN NULL; END $$`);
-
-  // alerts
+/** Prisma 호환 _prisma_migrations 테이블 생성 */
+async function ensureMigrationsTable(client: pg.Client): Promise<void> {
   await client.query(`
-    CREATE TABLE IF NOT EXISTS "alerts" (
-      "id" TEXT NOT NULL,
-      "type" "AlertType" NOT NULL,
-      "severity" "AlertSeverity" NOT NULL,
-      "title" TEXT NOT NULL,
-      "message" TEXT NOT NULL,
-      "source" TEXT,
-      "source_id" TEXT,
-      "pinned" BOOLEAN NOT NULL DEFAULT false,
-      "expires_at" TIMESTAMP(3),
-      "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT "alerts_pkey" PRIMARY KEY ("id")
+    CREATE TABLE IF NOT EXISTS "_prisma_migrations" (
+      "id" VARCHAR(36) NOT NULL DEFAULT gen_random_uuid()::text,
+      "checksum" VARCHAR(64) NOT NULL,
+      "finished_at" TIMESTAMPTZ,
+      "migration_name" VARCHAR(255) NOT NULL,
+      "logs" TEXT,
+      "rolled_back_at" TIMESTAMPTZ,
+      "started_at" TIMESTAMPTZ NOT NULL DEFAULT now(),
+      "applied_steps_count" INTEGER NOT NULL DEFAULT 0,
+      CONSTRAINT "_prisma_migrations_pkey" PRIMARY KEY ("id")
     )
   `);
+}
 
-  // user_alerts
-  await client.query(`
-    CREATE TABLE IF NOT EXISTS "user_alerts" (
-      "user_id" TEXT NOT NULL,
-      "alert_id" TEXT NOT NULL,
-      "read" BOOLEAN NOT NULL DEFAULT false,
-      "read_at" TIMESTAMP(3),
-      CONSTRAINT "user_alerts_pkey" PRIMARY KEY ("user_id", "alert_id"),
-      CONSTRAINT "user_alerts_alert_id_fkey" FOREIGN KEY ("alert_id")
-        REFERENCES "alerts"("id") ON DELETE CASCADE ON UPDATE CASCADE
-    )
-  `);
+/** 이미 적용된 마이그레이션 이름 Set */
+async function getAppliedMigrations(client: pg.Client): Promise<Set<string>> {
+  const { rows } = await client.query(
+    `SELECT "migration_name" FROM "_prisma_migrations" WHERE "rolled_back_at" IS NULL`
+  );
+  return new Set(rows.map((r: { migration_name: string }) => r.migration_name));
+}
 
-  // channel_links
-  await client.query(`
-    CREATE TABLE IF NOT EXISTS "channel_links" (
-      "key" TEXT NOT NULL,
-      "url" TEXT NOT NULL,
-      "label" TEXT NOT NULL,
-      "icon" TEXT,
-      "visible" BOOLEAN NOT NULL DEFAULT true,
-      "order" INTEGER NOT NULL DEFAULT 0,
-      "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT "channel_links_pkey" PRIMARY KEY ("key")
-    )
-  `);
+/** 디스크에서 마이그레이션 디렉토리 스캔, 미적용만 반환 (정렬순) */
+function getPendingMigrations(applied: Set<string>): Migration[] {
+  if (!fs.existsSync(MIGRATIONS_DIR)) {
+    console.warn(`[migrate] migrations dir not found: ${MIGRATIONS_DIR}`);
+    return [];
+  }
 
-  // kpi_cache
-  await client.query(`
-    CREATE TABLE IF NOT EXISTS "kpi_cache" (
-      "key" TEXT NOT NULL,
-      "value" JSONB NOT NULL,
-      "expires_at" TIMESTAMP(3) NOT NULL,
-      "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT "kpi_cache_pkey" PRIMARY KEY ("key")
-    )
-  `);
+  const dirs = fs.readdirSync(MIGRATIONS_DIR, { withFileTypes: true })
+    .filter(d => d.isDirectory())
+    .map(d => d.name)
+    .sort();
 
-  // campaign_profile
-  await client.query(`
-    CREATE TABLE IF NOT EXISTS "campaign_profile" (
-      "id" TEXT NOT NULL DEFAULT 'main',
-      "candidate_name" TEXT NOT NULL DEFAULT '후보자명',
-      "candidate_title" TEXT NOT NULL DEFAULT 'OO시장 후보',
-      "org_name" TEXT NOT NULL DEFAULT '선거대책본부',
-      "photo_url" TEXT,
-      "module_images" JSONB NOT NULL DEFAULT '{}',
-      "careers" JSONB NOT NULL DEFAULT '[]',
-      "slogans" JSONB NOT NULL DEFAULT '[]',
-      "address" TEXT,
-      "phone" TEXT,
-      "email" TEXT,
-      "hours" TEXT,
-      "description" TEXT,
-      "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT "campaign_profile_pkey" PRIMARY KEY ("id")
-    )
-  `);
+  const pending: Migration[] = [];
 
-  // quick_buttons
-  await client.query(`
-    CREATE TABLE IF NOT EXISTS "quick_buttons" (
-      "id" TEXT NOT NULL,
-      "label" TEXT NOT NULL,
-      "url" TEXT NOT NULL,
-      "icon" TEXT,
-      "category" "QuickButtonCategory" NOT NULL DEFAULT 'default',
-      "order" INTEGER NOT NULL DEFAULT 0,
-      "is_active" BOOLEAN NOT NULL DEFAULT true,
-      "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT "quick_buttons_pkey" PRIMARY KEY ("id")
-    )
-  `);
+  for (const dirName of dirs) {
+    if (applied.has(dirName)) continue;
 
-  // tenant_preferences
-  await client.query(`
-    CREATE TABLE IF NOT EXISTS "tenant_preferences" (
-      "key" TEXT NOT NULL,
-      "value" JSONB NOT NULL,
-      "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT "tenant_preferences_pkey" PRIMARY KEY ("key")
-    )
-  `);
+    const sqlPath = path.join(MIGRATIONS_DIR, dirName, 'migration.sql');
+    if (!fs.existsSync(sqlPath)) continue;
 
-  // Indexes
-  await client.query(`CREATE INDEX IF NOT EXISTS "alerts_created_at_idx" ON "alerts"("created_at")`);
-  await client.query(`CREATE INDEX IF NOT EXISTS "alerts_type_idx" ON "alerts"("type")`);
-  await client.query(`CREATE INDEX IF NOT EXISTS "quick_buttons_order_idx" ON "quick_buttons"("order")`);
-  await client.query(`CREATE INDEX IF NOT EXISTS "quick_buttons_category_idx" ON "quick_buttons"("category")`);
+    const sql = fs.readFileSync(sqlPath, 'utf-8');
+    const checksum = crypto.createHash('sha256').update(sql).digest('hex');
+
+    pending.push({ name: dirName, sql, checksum });
+  }
+
+  return pending;
+}
+
+/** 단일 마이그레이션 적용 */
+async function applyMigration(
+  client: pg.Client,
+  migration: Migration,
+  tenantId: string
+): Promise<void> {
+  console.log(`[tenant:${tenantId}] Applying: ${migration.name}`);
+
+  // 시작 레코드 삽입
+  const { rows } = await client.query(
+    `INSERT INTO "_prisma_migrations" ("id", "checksum", "migration_name", "started_at", "applied_steps_count")
+     VALUES (gen_random_uuid()::text, $1, $2, now(), 0)
+     RETURNING "id"`,
+    [migration.checksum, migration.name]
+  );
+  const migrationId = rows[0].id;
+
+  try {
+    await client.query(migration.sql);
+
+    // 완료 업데이트
+    await client.query(
+      `UPDATE "_prisma_migrations"
+       SET "finished_at" = now(), "applied_steps_count" = 1
+       WHERE "id" = $1`,
+      [migrationId]
+    );
+
+    console.log(`[tenant:${tenantId}] Applied: ${migration.name}`);
+  } catch (error) {
+    // 실패 로그 기록
+    const errMsg = error instanceof Error ? error.message : String(error);
+    await client.query(
+      `UPDATE "_prisma_migrations" SET "logs" = $1 WHERE "id" = $2`,
+      [errMsg, migrationId]
+    ).catch(() => {});
+
+    throw error;
+  }
 }

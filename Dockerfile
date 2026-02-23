@@ -54,6 +54,9 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
+# Copy tenant migration SQL files (runtime auto-migration)
+COPY --from=builder /app/prisma/tenant/migrations ./prisma/tenant/migrations
+
 # Copy sharp from global install
 RUN cp -r /usr/local/lib/node_modules/sharp ./node_modules/sharp || true
 

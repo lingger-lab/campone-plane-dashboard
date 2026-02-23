@@ -38,11 +38,11 @@ log "System schema → campone_system..."
 DATABASE_URL="postgresql://${DB_USER}:${DB_PASS}@localhost:${PROXY_PORT}/campone_system" \
   npx prisma db push --skip-generate --accept-data-loss
 
-# Tenant DBs
+# Tenant DBs (prisma migrate deploy)
 for DB_NAME in camp_dev_db camp_test_db; do
-  log "Tenant schema → ${DB_NAME}..."
-  DATABASE_URL="postgresql://${DB_USER}:${DB_PASS}@localhost:${PROXY_PORT}/${DB_NAME}" \
-    npx prisma db push --schema=prisma/tenant/schema.prisma --skip-generate --accept-data-loss
+  log "Tenant migrate → ${DB_NAME}..."
+  TENANT_DATABASE_URL="postgresql://${DB_USER}:${DB_PASS}@localhost:${PROXY_PORT}/${DB_NAME}" \
+    npx prisma migrate deploy --config=prisma/tenant/prisma.config.ts
 done
 
 log "모든 스키마 Push 완료!"
