@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { getTenantFromRequest } from '@/lib/api/tenant-helper';
+import { getTenantFromRequest, safeParseLimit, safeParseJson } from '@/lib/api/tenant-helper';
 import { isValidServiceKey } from '@/lib/api/service-auth';
 import { authOptions } from '@/lib/auth';
 import { getSystemPrisma, getTenantPrisma } from '@/lib/prisma';
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
     const { prisma } = await getTenantFromRequest();
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const limit = safeParseLimit(searchParams.get('limit'));
     const unreadOnly = searchParams.get('unread') === 'true';
 
     // 사용자별 알림 조회 (UserAlert join)
@@ -106,7 +106,8 @@ export async function POST(request: NextRequest) {
     if (!prisma) {
       prisma = await getTenantPrisma(tenantId);
     }
-    const body = await request.json();
+    const body = await safeParseJson(request);
+    if (body instanceof Response) return body;
     const {
       type = 'system',
       severity = 'info',

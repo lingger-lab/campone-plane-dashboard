@@ -91,11 +91,13 @@ export default withAuth(
       );
     }
 
-    // 요청 헤더에 테넌트 정보 주입
-    const response = NextResponse.next();
-    response.headers.set('X-Tenant-ID', tenantId);
+    // 요청 헤더에 테넌트 정보 주입 (서버 컴포넌트에서 headers()로 읽기 가능)
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set('X-Tenant-ID', tenantId);
 
-    return response;
+    return NextResponse.next({
+      request: { headers: requestHeaders },
+    });
   },
   {
     callbacks: {

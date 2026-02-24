@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getTenantFromRequest } from '@/lib/api/tenant-helper';
+import { getTenantFromRequest, safeParseJson } from '@/lib/api/tenant-helper';
 import { canEdit } from '@/lib/rbac';
 
 // 정적 라우트로 빌드되면 PUT이 무시되므로 강제 동적 설정
@@ -69,7 +69,8 @@ export async function PUT(request: NextRequest) {
     }
 
     const { prisma } = await getTenantFromRequest();
-    const body = await request.json();
+    const body = await safeParseJson(request);
+    if (body instanceof Response) return body;
     const { candidateName, candidateTitle, orgName, photoUrl, moduleImages, careers, slogans, address, phone, email, hours, description } = body;
 
     const profile = await prisma.campaignProfile.upsert({

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { getTenantFromRequest } from '@/lib/api/tenant-helper';
+import { getTenantFromRequest, safeParseJson } from '@/lib/api/tenant-helper';
 import { isValidServiceKey } from '@/lib/api/service-auth';
 import { authOptions } from '@/lib/auth';
 import { getTenantPrisma } from '@/lib/prisma';
@@ -97,7 +97,8 @@ export async function POST(request: NextRequest) {
     if (!prisma) {
       prisma = await getTenantPrisma(tenantId);
     }
-    const body = await request.json();
+    const body = await safeParseJson(request);
+    if (body instanceof Response) return body;
     const { module: moduleName, key, value, unit, change, expiresInMinutes } = body;
 
     if (!moduleName || !key) {

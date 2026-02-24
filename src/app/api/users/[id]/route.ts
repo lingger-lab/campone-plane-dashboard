@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import bcrypt from 'bcryptjs';
-import { getTenantFromRequest } from '@/lib/api/tenant-helper';
+import { getTenantFromRequest, safeParseJson } from '@/lib/api/tenant-helper';
 import { authOptions } from '@/lib/auth';
 
 // 개별 사용자 조회 (시스템 DB)
@@ -79,7 +79,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'User not found in this tenant' }, { status: 404 });
     }
 
-    const body = await request.json();
+    const body = await safeParseJson(request);
+    if (body instanceof Response) return body;
     const { name, role, password, isActive } = body;
 
     // 사용자 정보 업데이트

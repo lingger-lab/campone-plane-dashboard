@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { getTenantFromRequest } from '@/lib/api/tenant-helper';
+import { getTenantFromRequest, safeParseLimit, safeParseJson } from '@/lib/api/tenant-helper';
 import { isValidServiceKey } from '@/lib/api/service-auth';
 import { authOptions } from '@/lib/auth';
 import { getSystemPrisma } from '@/lib/prisma';
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
     const { systemDb, tenantId } = await getTenantFromRequest();
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const limit = safeParseLimit(searchParams.get('limit'));
 
     const auditLogs = await systemDb.auditLog.findMany({
       where: { tenantId },
@@ -79,7 +79,8 @@ export async function POST(request: NextRequest) {
     // systemDb가 없으면 직접 가져오기
     const db = systemDb || getSystemPrisma();
 
-    const body = await request.json();
+    const body = await safeParseJson(request);
+    if (body instanceof Response) return body;
     const { action, module: moduleName, target, details, userId } = body;
 
     if (!action) {

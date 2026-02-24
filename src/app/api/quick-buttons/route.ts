@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getTenantFromRequest } from '@/lib/api/tenant-helper';
+import { getTenantFromRequest, safeParseJson } from '@/lib/api/tenant-helper';
 import { canEdit } from '@/lib/rbac';
 
 // GET: 퀵버튼 목록 조회
@@ -41,7 +41,8 @@ export async function POST(request: NextRequest) {
     }
 
     const { prisma } = await getTenantFromRequest();
-    const body = await request.json();
+    const body = await safeParseJson(request);
+    if (body instanceof Response) return body;
     const { label, url, icon, category, order } = body;
 
     if (!label || !url) {
@@ -91,7 +92,8 @@ export async function PUT(request: NextRequest) {
     }
 
     const { prisma } = await getTenantFromRequest();
-    const body = await request.json();
+    const body = await safeParseJson(request);
+    if (body instanceof Response) return body;
     const { id, label, url, icon, category, order, isActive } = body;
 
     if (!id) {
@@ -167,7 +169,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     const { prisma } = await getTenantFromRequest();
-    const body = await request.json();
+    const body = await safeParseJson(request);
+    if (body instanceof Response) return body;
     const { buttons } = body;
 
     if (!Array.isArray(buttons)) {

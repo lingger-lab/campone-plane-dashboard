@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getTenantFromRequest } from '@/lib/api/tenant-helper';
+import { getTenantFromRequest, safeParseJson } from '@/lib/api/tenant-helper';
 import { canEdit } from '@/lib/rbac';
 
 // 기본 채널 데이터 (DB가 비어있을 때 사용)
@@ -74,7 +74,8 @@ export async function PUT(request: NextRequest) {
     }
 
     const { prisma } = await getTenantFromRequest();
-    const body = await request.json();
+    const body = await safeParseJson(request);
+    if (body instanceof Response) return body;
     const { key, url, label, visible, order } = body;
 
     if (!key) {
@@ -121,7 +122,8 @@ export async function POST(request: NextRequest) {
     }
 
     const { prisma } = await getTenantFromRequest();
-    const body = await request.json();
+    const body = await safeParseJson(request);
+    if (body instanceof Response) return body;
     const { channels } = body;
 
     if (!Array.isArray(channels)) {

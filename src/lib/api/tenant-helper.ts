@@ -23,7 +23,9 @@ export interface TenantContext {
  * @returns {Promise<TenantContext>} 테넌트 컨텍스트
  */
 export async function getTenantFromRequest(): Promise<TenantContext> {
-  // 1. 헤더에서 X-Tenant-ID 추출 (미들웨어가 주입)
+  // 1. 헤더에서 X-Tenant-ID 추출
+  //    - 페이지 라우트: 미들웨어가 request header로 주입
+  //    - API 라우트: 서비스 간 호출 시 클라이언트가 직접 전송
   const headersList = await headers();
   const tenantIdFromHeader = headersList.get('X-Tenant-ID');
 
@@ -127,4 +129,35 @@ export function createUnauthorizedResponse(message: string = 'Unauthorized') {
  */
 export function createForbiddenResponse(message: string = 'Access denied') {
   return Response.json({ error: message }, { status: 403 });
+}
+
+/**
+ * request.json()을 안전하게 파싱합니다.
+ * 잘못된 JSON이면 400 응답을 반환합니다.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function safeParseJson<T = Record<string, any>>(
+  request: Request
+): Promise<T | Response> {
+  try {
+    return (await request.json()) as T;
+  } catch {
+    return Response.json(
+      { error: 'Invalid JSON in request body' },
+      { status: 400 }
+    );
+  }
+}
+
+/**
+ * limit 파라미터를 안전하게 파싱합니다.
+ */
+export function safeParseLimit(
+  value: string | null,
+  defaultValue = 20,
+  max = 100
+): number {
+  const parsed = parseInt(value || String(defaultValue), 10);
+  if (isNaN(parsed) || parsed < 1) return defaultValue;
+  return Math.min(parsed, max);
 }

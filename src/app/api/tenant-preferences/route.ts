@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { getTenantFromRequest } from '@/lib/api/tenant-helper';
+import { getTenantFromRequest, safeParseJson } from '@/lib/api/tenant-helper';
 import { authOptions } from '@/lib/auth';
 import { canEdit } from '@/lib/rbac';
 
@@ -49,7 +49,8 @@ export async function PUT(request: NextRequest) {
     }
 
     const { prisma } = await getTenantFromRequest();
-    const body = await request.json();
+    const body = await safeParseJson(request);
+    if (body instanceof Response) return body;
     const { key, value } = body;
 
     if (!key) {
