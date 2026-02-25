@@ -65,6 +65,18 @@ model Tenant {
 }
 
 // ============================================
+// 플랫폼 설정 (서비스 점검 모드 등)
+// ============================================
+
+model PlatformConfig {
+  key       String   @id @db.VarChar(200)
+  value     Json
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("platform_config")
+}
+
+// ============================================
 // 감사 로그 (중앙 관리)
 // ============================================
 

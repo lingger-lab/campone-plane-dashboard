@@ -1,7 +1,10 @@
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { getSystemPrisma } from '@/lib/prisma';
+import { checkMaintenance, checkTenantStatus } from '@/lib/service-guard';
 import type { NextAuthOptions } from 'next-auth';
+
+const SERVICE_NAME = 'dashboard';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -19,9 +22,15 @@ export const authOptions: NextAuthOptions = {
         const { email, password } = credentials;
 
         try {
+          // 0. 서비스 점검 모드 확인
+          const maintenance = await checkMaintenance();
+          if (maintenance.maintenance) {
+            return null;
+          }
+
           const systemDb = getSystemPrisma();
 
-          // 1. 시스템 DB에서 사용자 조회
+          // 1. 시스템 DB에서 사용자 조회 + isActive 확인
           const user = await systemDb.user.findUnique({
             where: { email },
           });
@@ -44,13 +53,27 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (memberships.length === 0) {
-            // 소속 캠프 없음
             return null;
           }
 
           const defaultMembership = memberships[0];
 
-          // 4. updatedAt 갱신
+          // 4. 테넌트 활성 + 서비스 활성 확인
+          const tenantStatus = await checkTenantStatus(defaultMembership.tenantId);
+
+          if (!tenantStatus.isActive) {
+            return null;
+          }
+
+          const services = tenantStatus.enabledServices;
+          if (
+            Object.keys(services).length > 0 &&
+            services[SERVICE_NAME] === false
+          ) {
+            return null;
+          }
+
+          // 5. updatedAt 갱신
           await systemDb.user.update({
             where: { id: user.id },
             data: { updatedAt: new Date() },

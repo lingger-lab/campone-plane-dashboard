@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getTenantFromRequest, safeParseJson } from '@/lib/api/tenant-helper';
+import { getTenantFromRequest, safeParseJson, handleRouteError } from '@/lib/api/tenant-helper';
 import { canEdit } from '@/lib/rbac';
 
 // 기본 채널 데이터 (DB가 비어있을 때 사용)
@@ -53,8 +53,7 @@ export async function GET() {
 
     return NextResponse.json({ channels: processedChannels });
   } catch (error) {
-    console.error('Failed to fetch channels:', error);
-    return NextResponse.json({ error: 'Failed to fetch channels' }, { status: 500 });
+    return handleRouteError(error, 'Failed to fetch channels:');
   }
 }
 
@@ -101,8 +100,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ channel });
   } catch (error) {
-    console.error('Failed to update channel:', error);
-    return NextResponse.json({ error: 'Failed to update channel' }, { status: 500 });
+    return handleRouteError(error, 'Failed to update channel:');
   }
 }
 
@@ -165,7 +163,6 @@ export async function POST(request: NextRequest) {
     // results[0]은 deleteMany 결과, 나머지가 upsert 결과
     return NextResponse.json({ channels: results.slice(1) });
   } catch (error) {
-    console.error('Failed to save channels:', error);
-    return NextResponse.json({ error: 'Failed to save channels' }, { status: 500 });
+    return handleRouteError(error, 'Failed to save channels:');
   }
 }

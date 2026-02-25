@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { getTenantFromRequest } from '@/lib/api/tenant-helper';
+import { getTenantFromRequest, handleRouteError } from '@/lib/api/tenant-helper';
 import { authOptions } from '@/lib/auth';
 
 // 알림 읽음 처리
@@ -39,10 +39,6 @@ export async function POST(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to mark alert as read:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    );
+    return handleRouteError(error, 'Failed to mark alert as read:');
   }
 }

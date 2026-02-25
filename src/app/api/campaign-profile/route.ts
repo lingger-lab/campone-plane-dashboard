@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getTenantFromRequest, safeParseJson } from '@/lib/api/tenant-helper';
+import { getTenantFromRequest, safeParseJson, handleRouteError } from '@/lib/api/tenant-helper';
 import { canEdit } from '@/lib/rbac';
 
 // 정적 라우트로 빌드되면 PUT이 무시되므로 강제 동적 설정
@@ -48,8 +48,7 @@ export async function GET() {
 
     return NextResponse.json({ profile });
   } catch (error) {
-    console.error('Failed to fetch campaign profile:', error);
-    return NextResponse.json({ profile: defaultProfile });
+    return handleRouteError(error, 'Failed to fetch campaign profile:');
   }
 }
 
@@ -108,7 +107,6 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ profile });
   } catch (error) {
-    console.error('Failed to update campaign profile:', error);
-    return NextResponse.json({ error: 'Failed to update campaign profile' }, { status: 500 });
+    return handleRouteError(error, 'Failed to update campaign profile:');
   }
 }

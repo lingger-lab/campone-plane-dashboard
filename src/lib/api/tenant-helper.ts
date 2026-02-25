@@ -1,7 +1,9 @@
 import { headers } from 'next/headers';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getSystemPrisma, getTenantPrisma } from '@/lib/prisma';
+import { assertServiceAvailable, ServiceGuardError } from '@/lib/service-guard';
 import { getTenantConfig, createDefaultTenantConfig } from '@/lib/tenant/config-loader';
 import type { TenantConfig } from '@/lib/tenant/types';
 import type { PrismaClient as SystemPrismaClient } from '@prisma/client';
@@ -74,7 +76,10 @@ export async function getTenantFromRequest(): Promise<TenantContext> {
     throw new Error(`Tenant config not found: ${tenantId}`);
   }
 
-  // 6. DB 클라이언트
+  // 6. 서비스 가드: 점검 모드 + 테넌트 활성 + 서비스 활성 확인 (60초 캐시)
+  await assertServiceAvailable(tenantId);
+
+  // 7. DB 클라이언트
   const systemDb = getSystemPrisma();
   const prisma = await getTenantPrisma(tenantId);
 
@@ -160,4 +165,28 @@ export function safeParseLimit(
   const parsed = parseInt(value || String(defaultValue), 10);
   if (isNaN(parsed) || parsed < 1) return defaultValue;
   return Math.min(parsed, max);
+}
+
+/**
+ * API 라우트 catch 블록에서 사용하는 에러 핸들러.
+ *
+ * ServiceGuardError(점검/비활성) → 503/403
+ * 그 외 → 500
+ */
+export function handleRouteError(
+  error: unknown,
+  context?: string
+): NextResponse {
+  if (error instanceof ServiceGuardError) {
+    return NextResponse.json(
+      { error: error.code, message: error.message },
+      { status: error.status }
+    );
+  }
+
+  console.error(context || 'API error:', error);
+  return NextResponse.json(
+    { error: 'Internal Server Error' },
+    { status: 500 }
+  );
 }

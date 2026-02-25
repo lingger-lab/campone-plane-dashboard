@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { getTenantFromRequest, safeParseLimit, safeParseJson } from '@/lib/api/tenant-helper';
+import { getTenantFromRequest, safeParseLimit, safeParseJson, handleRouteError } from '@/lib/api/tenant-helper';
 import { isValidServiceKey } from '@/lib/api/service-auth';
 import { authOptions } from '@/lib/auth';
 import { getSystemPrisma, getTenantPrisma } from '@/lib/prisma';
@@ -59,12 +59,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ alerts, unreadCount });
   } catch (error) {
-    console.error('Failed to fetch alerts:', error);
-    const errorMessage =
-      process.env.NODE_ENV === 'development' && error instanceof Error
-        ? error.message
-        : 'Internal Server Error';
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    return handleRouteError(error, 'Failed to fetch alerts:');
   }
 }
 
@@ -175,10 +170,6 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Failed to create alert:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    );
+    return handleRouteError(error, 'Failed to create alert:');
   }
 }

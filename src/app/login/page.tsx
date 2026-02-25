@@ -23,6 +23,12 @@ function LoginForm() {
       setError('유효하지 않은 캠프입니다.');
     } else if (errorParam === 'tenant_mismatch') {
       setError('다른 캠프에 접근 권한이 없습니다.');
+    } else if (errorParam === 'maintenance') {
+      setError('서비스 점검 중입니다. 잠시 후 다시 시도해주세요.');
+    } else if (errorParam === 'tenant_inactive') {
+      setError('현재 서비스가 중지된 상태입니다. 관리자에게 문의하세요.');
+    } else if (errorParam === 'service_disabled') {
+      setError('이 캠프에서는 대시보드 서비스를 사용할 수 없습니다.');
     }
   }, [errorParam]);
 
@@ -33,6 +39,21 @@ function LoginForm() {
     setIsLoading(true);
 
     try {
+      // 1. 서비스 점검 모드 사전 확인
+      try {
+        const statusRes = await fetch('/api/auth/service-status');
+        const status = await statusRes.json();
+        if (status.maintenance) {
+          setError(
+            status.message || '서비스 점검 중입니다. 잠시 후 다시 시도해주세요.'
+          );
+          return;
+        }
+      } catch {
+        // 점검 확인 실패 시 로그인 진행 (서비스 가용성 우선)
+      }
+
+      // 2. 로그인 시도
       const result = await signIn('credentials', {
         email,
         password,
@@ -43,7 +64,6 @@ function LoginForm() {
         setError('이메일 또는 비밀번호가 올바르지 않습니다.');
       } else {
         // 로그인 성공 → 세션에서 tenantId 가져와서 리다이렉트
-        // NextAuth가 JWT에 tenantId를 넣어주므로 세션 fetch
         const sessionRes = await fetch('/api/auth/session');
         const session = await sessionRes.json();
         const tenantId = session?.user?.tenantId;

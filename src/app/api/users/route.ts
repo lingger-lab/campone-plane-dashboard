@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import bcrypt from 'bcryptjs';
-import { getTenantFromRequest, safeParseJson } from '@/lib/api/tenant-helper';
+import { getTenantFromRequest, safeParseJson, handleRouteError } from '@/lib/api/tenant-helper';
 import { authOptions } from '@/lib/auth';
 
 // 사용자 목록 조회 (시스템 DB - 현재 테넌트 소속 사용자만)
@@ -47,11 +47,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ users });
   } catch (error) {
-    console.error('Failed to fetch users:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    );
+    return handleRouteError(error, 'Failed to fetch users:');
   }
 }
 
@@ -132,10 +128,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ user: { ...user, role } }, { status: 201 });
   } catch (error) {
-    console.error('Failed to create user:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    );
+    return handleRouteError(error, 'Failed to create user:');
   }
 }

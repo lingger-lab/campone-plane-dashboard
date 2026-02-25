@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { getTenantFromRequest, safeParseJson } from '@/lib/api/tenant-helper';
+import { getTenantFromRequest, safeParseJson, handleRouteError } from '@/lib/api/tenant-helper';
 import { authOptions } from '@/lib/auth';
 import { canEdit } from '@/lib/rbac';
 
@@ -30,8 +30,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ key: pref.key, value: pref.value });
   } catch (error) {
-    console.error('Failed to fetch tenant preference:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return handleRouteError(error, 'Failed to fetch tenant preference:');
   }
 }
 
@@ -65,7 +64,6 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true, key: pref.key, value: pref.value });
   } catch (error) {
-    console.error('Failed to save tenant preference:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return handleRouteError(error, 'Failed to save tenant preference:');
   }
 }

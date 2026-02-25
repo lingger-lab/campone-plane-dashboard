@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { getTenantFromRequest, safeParseJson } from '@/lib/api/tenant-helper';
+import { getTenantFromRequest, safeParseJson, handleRouteError } from '@/lib/api/tenant-helper';
 import { isValidServiceKey } from '@/lib/api/service-auth';
 import { authOptions } from '@/lib/auth';
 import { getTenantPrisma } from '@/lib/prisma';
@@ -53,11 +53,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ kpi: formattedData });
   } catch (error) {
-    console.error('Failed to fetch KPI data:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    );
+    return handleRouteError(error, 'Failed to fetch KPI data:');
   }
 }
 
@@ -145,11 +141,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('Failed to save KPI data:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    );
+    return handleRouteError(error, 'Failed to save KPI data:');
   }
 }
 
@@ -189,10 +181,6 @@ export async function DELETE(request: NextRequest) {
       { status: 400 }
     );
   } catch (error) {
-    console.error('Failed to delete KPI data:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    );
+    return handleRouteError(error, 'Failed to delete KPI data:');
   }
 }

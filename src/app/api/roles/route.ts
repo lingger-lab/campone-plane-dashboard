@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { getTenantFromRequest } from '@/lib/api/tenant-helper';
+import { getTenantFromRequest, handleRouteError } from '@/lib/api/tenant-helper';
 import { authOptions } from '@/lib/auth';
 
 const ROLE_INFO: Record<string, { label: string; description: string }> = {
@@ -42,10 +42,6 @@ export async function GET() {
 
     return NextResponse.json({ roles });
   } catch (error) {
-    console.error('Failed to fetch roles:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    );
+    return handleRouteError(error, 'Failed to fetch roles:');
   }
 }

@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { Storage } from '@google-cloud/storage';
 import { authOptions } from '@/lib/auth';
 import { canEdit } from '@/lib/rbac';
-import { getTenantFromRequest } from '@/lib/api/tenant-helper';
+import { getTenantFromRequest, handleRouteError } from '@/lib/api/tenant-helper';
 
 export const dynamic = 'force-dynamic';
 
@@ -109,10 +109,6 @@ export async function POST(request: NextRequest) {
       type: file.type,
     });
   } catch (error) {
-    console.error('Upload failed:', error);
-    return NextResponse.json(
-      { error: 'Failed to upload file' },
-      { status: 500 }
-    );
+    return handleRouteError(error, 'Upload failed:');
   }
 }

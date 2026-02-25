@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import bcrypt from 'bcryptjs';
-import { getTenantFromRequest, safeParseJson } from '@/lib/api/tenant-helper';
+import { getTenantFromRequest, safeParseJson, handleRouteError } from '@/lib/api/tenant-helper';
 import { authOptions } from '@/lib/auth';
 
 // 개별 사용자 조회 (시스템 DB)
@@ -46,11 +46,7 @@ export async function GET(
       user: { ...membership.user, role: membership.role },
     });
   } catch (error) {
-    console.error('Failed to fetch user:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    );
+    return handleRouteError(error, 'Failed to fetch user:');
   }
 }
 
@@ -129,11 +125,7 @@ export async function PATCH(
       user: membership ? { ...membership.user, role: membership.role } : null,
     });
   } catch (error) {
-    console.error('Failed to update user:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    );
+    return handleRouteError(error, 'Failed to update user:');
   }
 }
 
@@ -176,10 +168,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to deactivate user:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    );
+    return handleRouteError(error, 'Failed to deactivate user:');
   }
 }

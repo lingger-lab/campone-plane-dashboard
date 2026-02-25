@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { getTenantFromRequest, safeParseLimit, safeParseJson } from '@/lib/api/tenant-helper';
+import { getTenantFromRequest, safeParseLimit, safeParseJson, handleRouteError } from '@/lib/api/tenant-helper';
 import { isValidServiceKey } from '@/lib/api/service-auth';
 import { authOptions } from '@/lib/auth';
 import { getSystemPrisma } from '@/lib/prisma';
@@ -40,11 +40,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ activities });
   } catch (error) {
-    console.error('Failed to fetch activities:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    );
+    return handleRouteError(error, 'Failed to fetch activities:');
   }
 }
 
@@ -105,10 +101,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, activity }, { status: 201 });
   } catch (error) {
-    console.error('Failed to create activity:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    );
+    return handleRouteError(error, 'Failed to create activity:');
   }
 }
