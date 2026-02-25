@@ -95,9 +95,15 @@ export default withAuth(
     const requestHeaders = new Headers(req.headers);
     requestHeaders.set('X-Tenant-ID', tenantId);
 
-    return NextResponse.next({
+    const response = NextResponse.next({
       request: { headers: requestHeaders },
     });
+
+    // 로그아웃 후 뒤로가기로 캐시된 페이지 노출 방지
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+
+    return response;
   },
   {
     callbacks: {

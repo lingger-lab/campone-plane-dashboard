@@ -6,10 +6,10 @@ import { canEdit } from '@/lib/rbac';
 
 // 기본 채널 데이터 (DB가 비어있을 때 사용)
 const defaultChannels = [
-  { key: 'youtube', label: '유튜브', url: 'https://www.youtube.com/@CampOne-w9p', icon: 'youtube', visible: true, order: 0 },
-  { key: 'kakao', label: '카카오', url: 'https://open.kakao.com/o/gQ9XBl9h', icon: 'kakao', visible: true, order: 1 },
-  { key: 'instagram', label: '인스타', url: 'https://instagram.com/hongdemo', icon: 'instagram', visible: true, order: 2 },
-  { key: 'naver', label: '네이버', url: 'https://blog.naver.com/nineuri/224131041233', icon: 'naver', visible: true, order: 3 },
+  { key: 'youtube', label: '유튜브', url: '', icon: 'youtube', visible: false, order: 0 },
+  { key: 'kakao', label: '카카오', url: '', icon: 'kakao', visible: false, order: 1 },
+  { key: 'instagram', label: '인스타', url: '', icon: 'instagram', visible: false, order: 2 },
+  { key: 'naver', label: '네이버', url: '', icon: 'naver', visible: false, order: 3 },
 ];
 
 // key → icon 자동 매핑 (icon이 null일 때 사용)

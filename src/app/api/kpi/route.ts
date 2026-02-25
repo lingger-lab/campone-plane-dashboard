@@ -4,6 +4,7 @@ import { getTenantFromRequest, safeParseJson } from '@/lib/api/tenant-helper';
 import { isValidServiceKey } from '@/lib/api/service-auth';
 import { authOptions } from '@/lib/auth';
 import { getTenantPrisma } from '@/lib/prisma';
+import { canEdit } from '@/lib/rbac';
 
 // KPI 데이터 조회
 export async function GET(request: NextRequest) {
@@ -158,6 +159,11 @@ export async function DELETE(request: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const userRole = (session.user as { role?: string }).role || 'viewer';
+    if (!canEdit(userRole)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const { prisma } = await getTenantFromRequest();

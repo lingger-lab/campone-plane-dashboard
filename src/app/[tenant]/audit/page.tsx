@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, Filter, Download, RefreshCw, X, Bell, Activity } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { Search, Filter, Download, RefreshCw, X, Bell, Activity, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,6 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useActivities, formatRelativeTime } from '@/hooks/useActivities';
 import { useAlerts, getAlertStyles, Alert } from '@/hooks/useAlerts';
+import { canEdit } from '@/lib/rbac';
 import { cn } from '@/lib/utils';
 
 const MODULES = ['Dashboard', 'Pulse', 'Studio', 'Policy', 'Ops', 'Hub', 'System'];
@@ -121,6 +123,35 @@ const getActionBadge = (action: string) => {
 type TabType = 'activities' | 'alerts';
 
 export default function AuditPage() {
+  const { data: session, status } = useSession();
+  const userRole = (session?.user as { role?: string })?.role || 'viewer';
+
+  if (status === 'loading') {
+    return (
+      <div className="container max-w-6xl mx-auto p-6">
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!canEdit(userRole)) {
+    return (
+      <div className="container max-w-4xl mx-auto p-6">
+        <Card>
+          <CardContent className="p-12 text-center">
+            <ShieldAlert className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <h2 className="text-xl font-semibold mb-2">권한이 없습니다</h2>
+            <p className="text-muted-foreground">
+              감사 로그는 편집자(Editor) 이상 권한이 필요합니다.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <Suspense fallback={
       <div className="container max-w-6xl mx-auto p-6">

@@ -88,7 +88,7 @@ export function AppFooter({ sidebarCollapsed = false, className }: AppFooterProp
                     className={cn('transition-transform hover:scale-110', item.color)}
                     title={item.label}
                   >
-                    <IconComponent className="h-5 w-5" />
+                    <IconComponent className={cn('h-5 w-5', item.color)} />
                   </Link>
                 );
               })}
