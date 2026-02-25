@@ -22,15 +22,9 @@ export const authOptions: NextAuthOptions = {
         const { email, password } = credentials;
 
         try {
-          // 0. 서비스 점검 모드 확인
-          const maintenance = await checkMaintenance();
-          if (maintenance.maintenance) {
-            return null;
-          }
-
           const systemDb = getSystemPrisma();
 
-          // 1. 시스템 DB에서 사용자 조회 + isActive 확인
+          // 1. 사용자 인증 (조회 + isActive + 비밀번호)
           const user = await systemDb.user.findUnique({
             where: { email },
           });
@@ -39,10 +33,14 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
-          // 2. 비밀번호 검증
           const isValidPassword = await bcrypt.compare(password, user.passwordHash);
-
           if (!isValidPassword) {
+            return null;
+          }
+
+          // 2. 서비스 점검 모드 확인 — 시스템 관리자는 우회
+          const maintenance = await checkMaintenance();
+          if (maintenance.maintenance && !user.isSystemAdmin) {
             return null;
           }
 
@@ -58,7 +56,7 @@ export const authOptions: NextAuthOptions = {
 
           const defaultMembership = memberships[0];
 
-          // 4. 테넌트 활성 + 서비스 활성 확인
+          // 4. 테넌트 활성 + 서비스 활성 확인 (관리자도 동일 적용)
           const tenantStatus = await checkTenantStatus(defaultMembership.tenantId);
 
           if (!tenantStatus.isActive) {

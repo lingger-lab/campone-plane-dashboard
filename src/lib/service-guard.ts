@@ -151,12 +151,17 @@ export class ServiceGuardError extends Error {
 /**
  * 서비스 접근 가능 여부 확인
  *
+ * @param tenantId 테넌트 ID
+ * @param isSystemAdmin 시스템 관리자 여부 — true이면 점검 모드를 우회
  * @throws {ServiceGuardError} 점검/비활성/미사용 시
  */
-export async function assertServiceAvailable(tenantId: string): Promise<void> {
-  // 1. 점검 모드 확인
+export async function assertServiceAvailable(
+  tenantId: string,
+  isSystemAdmin = false
+): Promise<void> {
+  // 1. 점검 모드 확인 — 시스템 관리자는 우회
   const maintenance = await checkMaintenance();
-  if (maintenance.maintenance) {
+  if (maintenance.maintenance && !isSystemAdmin) {
     throw new ServiceGuardError(
       'MAINTENANCE',
       maintenance.message || '서비스 점검 중입니다. 잠시 후 다시 시도해주세요.',

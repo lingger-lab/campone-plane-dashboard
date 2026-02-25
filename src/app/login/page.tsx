@@ -15,6 +15,7 @@ function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [maintenanceMessage, setMaintenanceMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   // URL 에러 파라미터 처리
@@ -32,6 +33,20 @@ function LoginForm() {
     }
   }, [errorParam]);
 
+  // 페이지 로드 시 점검 모드 확인 (경고 배너용 — 로그인 자체는 차단하지 않음)
+  useEffect(() => {
+    fetch('/api/auth/service-status')
+      .then((res) => res.json())
+      .then((status) => {
+        if (status.maintenance) {
+          setMaintenanceMessage(
+            status.message || '서비스 점검 중입니다. 잠시 후 다시 시도해주세요.'
+          );
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -39,21 +54,6 @@ function LoginForm() {
     setIsLoading(true);
 
     try {
-      // 1. 서비스 점검 모드 사전 확인
-      try {
-        const statusRes = await fetch('/api/auth/service-status');
-        const status = await statusRes.json();
-        if (status.maintenance) {
-          setError(
-            status.message || '서비스 점검 중입니다. 잠시 후 다시 시도해주세요.'
-          );
-          return;
-        }
-      } catch {
-        // 점검 확인 실패 시 로그인 진행 (서비스 가용성 우선)
-      }
-
-      // 2. 로그인 시도
       const result = await signIn('credentials', {
         email,
         password,
@@ -99,6 +99,15 @@ function LoginForm() {
           관리자 계정으로 로그인하세요
         </p>
       </div>
+
+      {/* 점검 모드 경고 배너 */}
+      {maintenanceMessage && (
+        <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4">
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+            {maintenanceMessage}
+          </p>
+        </div>
+      )}
 
       {/* Login Form */}
       <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

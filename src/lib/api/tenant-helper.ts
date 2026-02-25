@@ -77,7 +77,9 @@ export async function getTenantFromRequest(): Promise<TenantContext> {
   }
 
   // 6. 서비스 가드: 점검 모드 + 테넌트 활성 + 서비스 활성 확인 (60초 캐시)
-  await assertServiceAvailable(tenantId);
+  //    시스템 관리자는 점검 모드를 우회
+  const isSystemAdmin = !!(session?.user as { isSystemAdmin?: boolean })?.isSystemAdmin;
+  await assertServiceAvailable(tenantId, isSystemAdmin);
 
   // 7. DB 클라이언트
   const systemDb = getSystemPrisma();
