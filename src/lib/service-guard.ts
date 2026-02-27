@@ -60,13 +60,15 @@ export async function checkMaintenance(): Promise<MaintenanceStatus> {
 
   try {
     const systemDb = getSystemPrisma();
-    const config = await systemDb.platformConfig.findUnique({
-      where: { key: `maintenance.${SERVICE_NAME}` },
-    });
+    const key = `maintenance.${SERVICE_NAME}`;
+    const rows = await systemDb.$queryRaw<Array<{ value: unknown }>>`
+      SELECT value FROM platform_config WHERE key = ${key}
+    `;
 
-    const data = config
-      ? parseMaintenanceValue(config.value)
-      : { maintenance: false, message: '' };
+    const data =
+      rows.length > 0
+        ? parseMaintenanceValue(rows[0].value)
+        : { maintenance: false, message: '' };
 
     maintenanceCache = { data, expiresAt: Date.now() + CACHE_TTL };
     return data;

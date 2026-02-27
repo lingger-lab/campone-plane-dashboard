@@ -13,7 +13,6 @@ export async function GET() {
     return NextResponse.json(status);
   } catch (error) {
     console.error('Service status check failed:', error);
-    // 장애 시 정상으로 간주 (서비스 가용성 우선)
     return NextResponse.json({ maintenance: false, message: '' });
   }
 }
