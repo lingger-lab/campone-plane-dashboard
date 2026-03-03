@@ -3,12 +3,12 @@
  *
  * 가이드: docs/SERVICE_MAINTENANCE_GUIDE.md
  *
- * 데이터 소스: 시스템 DB (campone_system)
- *  - platform_config 테이블: 점검 모드 (key: maintenance.dashboard)
- *  - tenants 테이블: 테넌트 활성/서비스 사용 여부
+ * 데이터 소스:
+ *  - 점검/예고: Control API (GET /api/services/status?service=dashboard)
+ *  - 테넌트 상태: 시스템 DB (tenants 테이블)
  *
  * 두 종류의 캐시 (60초 TTL):
- *  1. maintenanceCache — platform_config 조회 결과
+ *  1. maintenanceCache — Control API 조회 결과
  *  2. tenantStatusCache — tenants 조회 결과
  */
 
@@ -16,30 +16,23 @@ import { getSystemPrisma } from '@/lib/prisma';
 
 const SERVICE_NAME = 'dashboard';
 const CACHE_TTL = 60_000; // 60초
+const CONTROL_URL = process.env.CONTROL_URL;
 
 // ============================================
-// 1. 점검 모드 (Maintenance) — platform_config 테이블
+// 1. 점검 모드 (Maintenance) — Control API
 // ============================================
 
 export interface MaintenanceStatus {
   maintenance: boolean;
   message: string;
+  notice: string;
 }
 
-/**
- * Prisma JsonValue에서 점검 상태를 안전하게 파싱
- */
-function parseMaintenanceValue(value: unknown): MaintenanceStatus {
-  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
-    return { maintenance: false, message: '' };
-  }
-
-  const obj = value as Record<string, unknown>;
-  return {
-    maintenance: obj.enabled === true,
-    message: typeof obj.message === 'string' ? obj.message : '',
-  };
-}
+const DEFAULT_STATUS: MaintenanceStatus = {
+  maintenance: false,
+  message: '',
+  notice: '',
+};
 
 let maintenanceCache: {
   data: MaintenanceStatus;
@@ -47,35 +40,45 @@ let maintenanceCache: {
 } | null = null;
 
 /**
- * 서비스 점검 모드 확인 (60초 캐시)
+ * 서비스 점검/예고 상태 확인 (60초 캐시)
  *
- * platform_config 테이블에서 key = 'maintenance.dashboard' 조회
- * value: { "enabled": true/false, "message": "점검 안내 메시지" }
+ * Control API: GET {CONTROL_URL}/api/services/status?service=dashboard
+ * 응답: { maintenance: boolean, message: string, notice: string }
  */
 export async function checkMaintenance(): Promise<MaintenanceStatus> {
-  // 캐시 유효하면 즉시 반환
   if (maintenanceCache && maintenanceCache.expiresAt > Date.now()) {
     return maintenanceCache.data;
   }
 
-  try {
-    const systemDb = getSystemPrisma();
-    const key = `maintenance.${SERVICE_NAME}`;
-    const rows = await systemDb.$queryRaw<Array<{ value: unknown }>>`
-      SELECT value FROM platform_config WHERE key = ${key}
-    `;
+  if (!CONTROL_URL) {
+    console.warn('[service-guard] CONTROL_URL not configured');
+    return DEFAULT_STATUS;
+  }
 
-    const data =
-      rows.length > 0
-        ? parseMaintenanceValue(rows[0].value)
-        : { maintenance: false, message: '' };
+  try {
+    const res = await fetch(
+      `${CONTROL_URL}/api/services/status?service=${SERVICE_NAME}`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+
+    if (!res.ok) {
+      console.warn(`[service-guard] Control API returned ${res.status}`);
+      return DEFAULT_STATUS;
+    }
+
+    const json = await res.json();
+    const data: MaintenanceStatus = {
+      maintenance: json.maintenance === true,
+      message: typeof json.message === 'string' ? json.message : '',
+      notice: typeof json.notice === 'string' ? json.notice : '',
+    };
 
     maintenanceCache = { data, expiresAt: Date.now() + CACHE_TTL };
     return data;
   } catch (error) {
-    // DB 장애 시 점검 아님으로 간주 (서비스 가용성 우선)
+    // Control 장애 시 점검 아님으로 간주 (서비스 가용성 우선)
     console.warn('[service-guard] Failed to check maintenance:', error);
-    return { maintenance: false, message: '' };
+    return DEFAULT_STATUS;
   }
 }
 

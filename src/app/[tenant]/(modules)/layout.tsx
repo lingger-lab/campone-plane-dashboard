@@ -14,6 +14,7 @@ export default function ModulesLayout({
 }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [noticeMessage, setNoticeMessage] = useState('');
   const { resolvedTheme } = useTheme();
 
   // iframe 모듈들로부터 메시지 수신 (활동/알림/KPI 자동 저장)
@@ -25,6 +26,18 @@ export default function ModulesLayout({
   useEffect(() => {
     broadcastThemeChange(resolvedTheme);
   }, [resolvedTheme]);
+
+  // 점검 예고 배너 조회
+  useEffect(() => {
+    fetch('/api/auth/service-status')
+      .then((res) => res.json())
+      .then((status) => {
+        if (status.notice) {
+          setNoticeMessage(status.notice);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleMobileClose = useCallback(() => {
     setMobileOpen(false);
@@ -49,6 +62,13 @@ export default function ModulesLayout({
           sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-60'
         )}
       >
+        {noticeMessage && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800 px-4 py-3">
+            <p className="text-sm text-blue-800 dark:text-blue-300 text-center">
+              {noticeMessage}
+            </p>
+          </div>
+        )}
         {children}
       </main>
 

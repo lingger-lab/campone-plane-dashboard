@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { checkMaintenance } from '@/lib/service-guard';
 
+// 빌드 시 프리렌더 방지 — 런타임에 DB 조회 필요
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/auth/service-status
  *

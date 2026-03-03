@@ -16,6 +16,7 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [maintenanceMessage, setMaintenanceMessage] = useState('');
+  const [noticeMessage, setNoticeMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   // URL 에러 파라미터 처리
@@ -43,6 +44,9 @@ function LoginForm() {
             status.message || '서비스 점검 중입니다. 잠시 후 다시 시도해주세요.'
           );
         }
+        if (status.notice) {
+          setNoticeMessage(status.notice);
+        }
       })
       .catch(() => {});
   }, []);
@@ -61,7 +65,12 @@ function LoginForm() {
       });
 
       if (result?.error) {
-        setError('이메일 또는 비밀번호가 올바르지 않습니다.');
+        // 점검 중 로그인 실패 → 점검 안내 (시스템 관리자만 우회 가능)
+        if (maintenanceMessage) {
+          setError('서비스 점검 중입니다. 시스템 관리자만 로그인할 수 있습니다.');
+        } else {
+          setError('이메일 또는 비밀번호가 올바르지 않습니다.');
+        }
       } else {
         // 로그인 성공 → 세션에서 tenantId 가져와서 리다이렉트
         const sessionRes = await fetch('/api/auth/session');
@@ -105,6 +114,15 @@ function LoginForm() {
         <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4">
           <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
             {maintenanceMessage}
+          </p>
+        </div>
+      )}
+
+      {/* 점검 예고 배너 */}
+      {noticeMessage && !maintenanceMessage && (
+        <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4">
+          <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
+            {noticeMessage}
           </p>
         </div>
       )}
