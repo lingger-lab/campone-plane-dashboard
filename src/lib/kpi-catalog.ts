@@ -21,31 +21,36 @@ export interface KpiDefinition {
 }
 
 export const KPI_CATALOG: KpiDefinition[] = [
-  // Insights (pulse)
-  { dbKey: 'Insights:trend_index', label: '여론 트렌드', unit: 'pt', changeLabel: '전주 대비', source: 'GT/Naver/SNS', service: 'insight', defaultValue: 0 },
+  // ── Insights (pulse) ──
   { dbKey: 'Insights:positive_ratio', label: '긍정 여론', unit: '%', changeLabel: '전주 대비', source: 'SNS 분석', service: 'insight', defaultValue: 0 },
   { dbKey: 'Insights:negative_ratio', label: '부정 여론', unit: '%', changeLabel: '전주 대비', source: 'SNS 분석', service: 'insight', defaultValue: 0 },
   { dbKey: 'Insights:mention_count', label: '언급량', unit: '건', changeLabel: '전주 대비', source: 'GT/Naver/SNS', service: 'insight', defaultValue: 0 },
-  // Civic Hub
-  { dbKey: 'Hub:total_questions', label: '시민 질문', unit: '건', changeLabel: '누적', source: 'Civic Hub', service: 'hub', defaultValue: 0 },
+  { dbKey: 'Insights:recognition_score', label: '인지도', unit: '점', changeLabel: '전주 대비', source: 'Insights', service: 'insight', defaultValue: 0 },
+  { dbKey: 'Insights:support_score', label: '지지도', unit: '점', changeLabel: '전주 대비', source: 'Insights', service: 'insight', defaultValue: 0 },
+  { dbKey: 'Insights:total_risks', label: '리스크', unit: '건', changeLabel: '분석 결과', source: 'Insights', service: 'insight', defaultValue: 0 },
+  // ── Civic Hub ──
+  { dbKey: 'Hub:pending_questions', label: '대기 질문', unit: '건', changeLabel: '현재', source: 'Civic Hub', service: 'hub', defaultValue: 0 },
   { dbKey: 'Hub:response_rate', label: '응답률', unit: '%', changeLabel: '전주 대비', source: 'Civic Hub', service: 'hub', defaultValue: 0 },
-  { dbKey: 'Hub:messages_sent', label: '발송 메시지', unit: '건', changeLabel: '전주 대비', source: 'Civic Hub', service: 'hub', defaultValue: 0 },
-  // Policy Lab
-  { dbKey: 'Policy:pledges_published', label: '공약 발표', unit: '건', changeLabel: '진행률', source: 'Policy Lab', service: 'policy', defaultValue: 0 },
-  { dbKey: 'Policy:pledges_progress', label: '공약 이행률', unit: '%', changeLabel: '목표 대비', source: 'Policy Lab', service: 'policy', defaultValue: 0 },
-  // Ops
-  { dbKey: 'Ops:tasks_completed', label: '완료 업무', unit: '건', changeLabel: '이번 주', source: 'Ops', service: 'ops', defaultValue: 0 },
+  // ── Policy Lab ──
+  { dbKey: 'Policy:completed_phases', label: '완료 단계', unit: '단계', changeLabel: '6단계 중', source: 'Policy Lab', service: 'policy', defaultValue: 0 },
+  { dbKey: 'Policy:analysis_progress', label: '분석 진행률', unit: '%', changeLabel: '전체 대비', source: 'Policy Lab', service: 'policy', defaultValue: 0 },
+  // ── Ops ──
+  { dbKey: 'Ops:task_completion', label: '업무 완료율', unit: '%', changeLabel: '현재', source: 'Ops', service: 'ops', defaultValue: 0 },
+  { dbKey: 'Ops:pending_tasks', label: '대기 업무', unit: '건', changeLabel: '현재', source: 'Ops', service: 'ops', defaultValue: 0 },
+  { dbKey: 'Ops:urgent_tasks', label: '긴급 업무', unit: '건', changeLabel: '현재', source: 'Ops', service: 'ops', defaultValue: 0 },
   { dbKey: 'Ops:upcoming_events', label: '예정 일정', unit: '건', changeLabel: '이번 주', source: 'Ops', service: 'ops', defaultValue: 0 },
-  // Studio
+  // ── Studio ──
   { dbKey: 'Studio:contents_published', label: '발행 콘텐츠', unit: '건', changeLabel: '이번 주', source: 'Studio', service: 'studio', defaultValue: 0 },
 ];
 
 /** 기본 선택 KPI (설정 없을 때 하위 호환) */
 export const DEFAULT_SELECTED_KPIS = [
-  'Insights:trend_index',
   'Insights:positive_ratio',
-  'Hub:total_questions',
-  'Policy:pledges_published',
+  'Insights:mention_count',
+  'Hub:pending_questions',
+  'Policy:analysis_progress',
+  'Ops:task_completion',
+  'Ops:upcoming_events',
 ];
 
 /** service → 서비스 한글명 매핑 */
