@@ -80,17 +80,64 @@ export function useCreateActivity() {
 }
 
 /**
- * 액션 텍스트 정규화 (영어 → 한글)
+ * 액션 텍스트 정규화 (영어/dot-notation → 한글)
+ *
+ * 서비스별 액션 형식:
+ * - Ops: dot-notation (task.created, schedule.changed)
+ * - Hub 서버: dot-notation (question.approved, ticket.resolved)
+ * - Hub 클라이언트: 한글 (승인, 반려)
+ * - Policy: 혼용 (update, 분석 완료)
+ * - Insights: 한글 (분석 시작, 분석 완료)
  */
 export function normalizeActionText(action: string): string {
   const actionLower = action.toLowerCase();
 
-  // 영어 → 한글 매핑
-  const mappings: [string[], string][] = [
+  // 1. 정확한 dot-notation 매핑 (우선)
+  const exactMappings: Record<string, string> = {
+    'task.created': '업무 생성',
+    'task.updated': '업무 수정',
+    'task.deleted': '업무 삭제',
+    'task.pending': '업무 대기',
+    'task.started': '업무 시작',
+    'task.reviewing': '업무 검토',
+    'task.completed': '업무 완료',
+    'schedule.created': '일정 생성',
+    'schedule.changed': '일정 변경',
+    'schedule.deleted': '일정 삭제',
+    'checklist.created': '체크리스트 생성',
+    'checklist.updated': '체크리스트 수정',
+    'checklist.deleted': '체크리스트 삭제',
+    'question.approved': '질문 승인',
+    'question.rejected': '질문 반려',
+    'inquiry.responded': '문의 답변',
+    'ticket.resolved': '티켓 처리',
+    'feedback.received': '피드백 접수',
+    'policy.analyzed': '정책 분석',
+    'policy.analysis_failed': '분석 실패',
+    'policy.updated': '정책 수정',
+    'policy.uploaded': '정책 업로드',
+    'strategy.generated': '전략 생성',
+    'strategy.failed': '전략 실패',
+    'analysis.completed': '분석 완료',
+    'analysis.failed': '분석 실패',
+    'analysis.partial_completed': '부분 분석 완료',
+  };
+
+  if (exactMappings[actionLower]) {
+    return exactMappings[actionLower];
+  }
+
+  // 2. 이미 한글이면 그대로 반환
+  if (/[가-힣]/.test(action)) {
+    return action;
+  }
+
+  // 3. 단순 영어 키워드 매핑 (fallback)
+  const keywordMappings: [string[], string][] = [
     [['download', 'export'], '다운로드'],
-    [['upload'], '업로드'],
+    [['upload', 'import'], '업로드'],
     [['create', 'add', 'new'], '생성'],
-    [['update', 'edit', 'modify'], '수정'],
+    [['update', 'edit', 'modify', 'change'], '수정'],
     [['delete', 'remove'], '삭제'],
     [['login', 'sign in'], '로그인'],
     [['logout', 'sign out'], '로그아웃'],
@@ -98,16 +145,23 @@ export function normalizeActionText(action: string): string {
     [['send', 'publish'], '발송'],
     [['approve'], '승인'],
     [['reject'], '반려'],
-    [['complete', 'finish'], '완료'],
+    [['complete', 'finish', 'resolve'], '완료'],
+    [['respond', 'reply'], '답변'],
+    [['receive'], '접수'],
+    [['start', 'begin'], '시작'],
+    [['cancel'], '취소'],
+    [['analyze', 'analys'], '분석'],
+    [['generate'], '생성'],
+    [['fail', 'error'], '실패'],
   ];
 
-  for (const [patterns, korean] of mappings) {
+  for (const [patterns, korean] of keywordMappings) {
     if (patterns.some(p => actionLower === p || actionLower.includes(p))) {
       return korean;
     }
   }
 
-  return action; // 매핑 없으면 원본 반환
+  return action;
 }
 
 /**
