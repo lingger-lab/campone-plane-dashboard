@@ -20,6 +20,7 @@ import { useActivities, formatRelativeTime } from '@/hooks/useActivities';
 import { useAlerts, getAlertStyles, Alert } from '@/hooks/useAlerts';
 import { canEdit } from '@/lib/rbac';
 import { cn } from '@/lib/utils';
+import { useTenant } from '@/lib/tenant/TenantContext';
 
 const MODULES = ['Dashboard', 'Pulse', 'Studio', 'Policy', 'Ops', 'Hub', 'System'];
 
@@ -168,6 +169,7 @@ export default function AuditPage() {
 function AuditPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { tenantId } = useTenant();
   const initialTab = (searchParams.get('tab') as TabType) || 'activities';
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
 
@@ -194,7 +196,7 @@ function AuditPageContent() {
 
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
-    router.push(`/audit?tab=${tab}`, { scroll: false });
+    router.push(`/${tenantId}/audit?tab=${tab}`, { scroll: false });
     setPage(1);
     setSearchQuery('');
     setSelectedModules([]);
