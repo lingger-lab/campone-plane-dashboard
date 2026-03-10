@@ -92,7 +92,10 @@ export const prisma = systemClient;
 
 // ============================================
 // 테넌트 DB (camp_{tenant}_db)
+// LRU 캐시: 최대 MAX_TENANT_CLIENTS개 유지, 초과 시 가장 오래된 클라이언트 disconnect
 // ============================================
+
+const MAX_TENANT_CLIENTS = parseInt(process.env.MAX_TENANT_CLIENTS || "20", 10);
 
 const tenantClients =
   globalForPrisma.tenantClients ?? new Map<string, TenantPrismaClient>();
@@ -105,17 +108,41 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 /**
- * 테넌트별 Prisma 클라이언트 가져오기
+ * LRU 방식으로 가장 오래된 테넌트 클라이언트를 제거합니다.
+ * Map은 삽입 순서를 유지하므로 첫 번째 항목이 가장 오래된 것입니다.
+ */
+async function evictOldestTenantClient(): Promise<void> {
+  if (tenantClients.size < MAX_TENANT_CLIENTS) return;
+
+  const oldestKey = tenantClients.keys().next().value;
+  if (!oldestKey) return;
+
+  const oldClient = tenantClients.get(oldestKey);
+  tenantClients.delete(oldestKey);
+
+  if (oldClient) {
+    oldClient.$disconnect().catch((err) =>
+      console.warn(`[prisma] Failed to disconnect tenant ${oldestKey}:`, err)
+    );
+    console.log(`[prisma] Evicted tenant client: ${oldestKey} (cache size: ${tenantClients.size})`);
+  }
+}
+
+/**
+ * 테넌트별 Prisma 클라이언트 가져오기 (LRU 캐시)
  *
  * - 개발 환경(USE_SINGLE_DB=true): TENANT_DATABASE_URL 또는 DATABASE_URL 사용
  * - 프로덕션: 시스템 DB의 tenants.db_name으로 URL 조합
+ * - 최대 MAX_TENANT_CLIENTS개 캐시, 초과 시 LRU 제거
  */
 export async function getTenantPrisma(
   tenantId: string
 ): Promise<TenantPrismaClient> {
-  // 1. 완성된 클라이언트 캐시 확인
+  // 1. 완성된 클라이언트 캐시 확인 (LRU: 접근 시 Map 끝으로 이동)
   const cached = tenantClients.get(tenantId);
   if (cached) {
+    tenantClients.delete(tenantId);
+    tenantClients.set(tenantId, cached);
     return cached;
   }
 
@@ -155,6 +182,9 @@ export async function getTenantPrisma(
 
     // 테이블 자동 생성 (최초 접속 시 1회만 실행)
     await ensureTenantTables(connectionString, tenantId);
+
+    // LRU 제한 초과 시 가장 오래된 클라이언트 제거
+    await evictOldestTenantClient();
 
     const client = createTenantClient(connectionString);
 

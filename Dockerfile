@@ -31,9 +31,8 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Install sharp for image optimization
-RUN apk add --no-cache libc6-compat
-RUN npm install -g sharp
+# sharp 이미지 최적화에 필요한 네이티브 의존성
+RUN apk add --no-cache libc6-compat vips-dev
 
 # Set environment variables
 ENV NODE_ENV=production
@@ -57,8 +56,8 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 # Copy tenant migration SQL files (runtime auto-migration)
 COPY --from=builder /app/prisma/tenant/migrations ./prisma/tenant/migrations
 
-# Copy sharp from global install
-RUN cp -r /usr/local/lib/node_modules/sharp ./node_modules/sharp || true
+# sharp를 standalone에 직접 설치 (네이티브 바인딩 보장)
+RUN cd /app && npm install --os=linux --cpu=x64 sharp
 
 # Set correct permissions
 RUN chown -R nextjs:nodejs /app

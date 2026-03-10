@@ -59,6 +59,7 @@ model UserAlert {
   alert Alert @relation(fields: [alertId], references: [id], onDelete: Cascade)
 
   @@id([userId, alertId])
+  @@index([userId, read])
   @@map("user_alerts")
 }
 

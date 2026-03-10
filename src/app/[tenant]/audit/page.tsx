@@ -16,7 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useActivities, formatRelativeTime } from '@/hooks/useActivities';
+import { useActivities, formatRelativeTime, normalizeModuleName, normalizeSeverity } from '@/hooks/useActivities';
 import { useAlerts, getAlertStyles, Alert } from '@/hooks/useAlerts';
 import { canEdit } from '@/lib/rbac';
 import { cn } from '@/lib/utils';
@@ -390,7 +390,7 @@ function AuditPageContent() {
                   checked={selectedModules.includes(module)}
                   onCheckedChange={() => handleModuleToggle(module)}
                 >
-                  {module}
+                  {normalizeModuleName(module)}
                 </DropdownMenuCheckboxItem>
               ))}
             </DropdownMenuContent>
@@ -415,7 +415,7 @@ function AuditPageContent() {
               className="cursor-pointer"
               onClick={() => handleModuleToggle(module)}
             >
-              {module}
+              {normalizeModuleName(module)}
               <X className="ml-1 h-3 w-3" />
             </Badge>
           ))}
@@ -470,7 +470,7 @@ function AuditPageContent() {
                     <td className="p-4 font-medium">{log.userName}</td>
                     <td className="p-4">{getActionBadge(log.action)}</td>
                     <td className="p-4">
-                      <Badge variant="outline">{log.module}</Badge>
+                      <Badge variant="outline">{normalizeModuleName(log.module)}</Badge>
                     </td>
                     <td className="p-4 text-muted-foreground max-w-xs truncate">
                       {log.target}
@@ -500,11 +500,11 @@ function AuditPageContent() {
                             {alert.title}
                           </p>
                           <Badge variant="outline" className="text-xs">
-                            {alert.severity}
+                            {normalizeSeverity(alert.severity)}
                           </Badge>
                           {alert.source && (
                             <Badge variant="secondary" className="text-xs">
-                              {alert.source}
+                              {normalizeModuleName(alert.source)}
                             </Badge>
                           )}
                           {!alert.read && (

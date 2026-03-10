@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { RefreshCw, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useActivities, formatRelativeTime, normalizeActionText } from '@/hooks/useActivities';
+import { useActivities, formatRelativeTime, normalizeActionText, normalizeModuleName } from '@/hooks/useActivities';
 import { useTenant } from '@/lib/tenant/TenantContext';
 
 export function RecentActivity() {
@@ -75,7 +75,7 @@ export function RecentActivity() {
                 )}
                 <div className="flex items-center gap-2 ml-auto shrink-0">
                   <Badge variant="outline" className="text-xs">
-                    {item.module}
+                    {normalizeModuleName(item.module)}
                   </Badge>
                   <span className="text-muted-foreground text-xs">
                     {formatRelativeTime(item.createdAt)}

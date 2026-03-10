@@ -18,36 +18,40 @@ export async function GET(request: NextRequest) {
     const limit = safeParseLimit(searchParams.get('limit'));
     const unreadOnly = searchParams.get('unread') === 'true';
 
-    // 사용자별 알림 조회 (UserAlert join)
+    // 사용자별 알림 조회 (만료 필터 + 정렬을 DB에서 처리)
+    const now = new Date();
     const userAlerts = await prisma.userAlert.findMany({
       where: {
         userId: session.user.id,
         ...(unreadOnly ? { read: false } : {}),
+        alert: {
+          OR: [
+            { expiresAt: null },
+            { expiresAt: { gt: now } },
+          ],
+        },
       },
       include: {
         alert: true,
       },
-      take: limit * 2,
+      orderBy: {
+        alert: { createdAt: 'desc' },
+      },
+      take: limit,
     });
 
-    // 만료되지 않은 알림만 필터링, 정렬, limit 적용
-    const now = new Date();
-    const alerts = userAlerts
-      .filter((ua) => !ua.alert.expiresAt || ua.alert.expiresAt > now)
-      .sort((a, b) => b.alert.createdAt.getTime() - a.alert.createdAt.getTime())
-      .slice(0, limit)
-      .map((ua) => ({
-        id: ua.alert.id,
-        type: ua.alert.type,
-        severity: ua.alert.severity,
-        title: ua.alert.title,
-        message: ua.alert.message,
-        source: ua.alert.source,
-        pinned: ua.alert.pinned,
-        read: ua.read,
-        readAt: ua.readAt,
-        createdAt: ua.alert.createdAt,
-      }));
+    const alerts = userAlerts.map((ua) => ({
+      id: ua.alert.id,
+      type: ua.alert.type,
+      severity: ua.alert.severity,
+      title: ua.alert.title,
+      message: ua.alert.message,
+      source: ua.alert.source,
+      pinned: ua.alert.pinned,
+      read: ua.read,
+      readAt: ua.readAt,
+      createdAt: ua.alert.createdAt,
+    }));
 
     // 읽지 않은 알림 수
     const unreadCount = await prisma.userAlert.count({

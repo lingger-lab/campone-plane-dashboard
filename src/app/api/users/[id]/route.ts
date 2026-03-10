@@ -79,7 +79,7 @@ export async function PATCH(
     if (body instanceof Response) return body;
     const { name, role, password, isActive } = body;
 
-    // 사용자 정보 업데이트
+    // 사용자 정보 + 역할을 트랜잭션으로 일괄 업데이트
     const userUpdate: Record<string, string | boolean> = {};
     if (name !== undefined) userUpdate.name = name;
     if (isActive !== undefined) userUpdate.isActive = isActive;
@@ -87,22 +87,23 @@ export async function PATCH(
       userUpdate.passwordHash = await bcrypt.hash(password, 10);
     }
 
-    if (Object.keys(userUpdate).length > 0) {
-      await systemDb.user.update({
-        where: { id: params.id },
-        data: userUpdate,
-      });
-    }
+    await systemDb.$transaction(async (tx) => {
+      if (Object.keys(userUpdate).length > 0) {
+        await tx.user.update({
+          where: { id: params.id },
+          data: userUpdate,
+        });
+      }
 
-    // 역할 업데이트 (user_tenants)
-    if (role !== undefined) {
-      await systemDb.userTenant.update({
-        where: {
-          userId_tenantId: { userId: params.id, tenantId },
-        },
-        data: { role },
-      });
-    }
+      if (role !== undefined) {
+        await tx.userTenant.update({
+          where: {
+            userId_tenantId: { userId: params.id, tenantId },
+          },
+          data: { role },
+        });
+      }
+    });
 
     const membership = await systemDb.userTenant.findUnique({
       where: {

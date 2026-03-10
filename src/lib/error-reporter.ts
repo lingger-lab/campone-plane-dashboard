@@ -37,6 +37,7 @@ export function reportError(report: ErrorReport): void {
       Authorization: `Bearer ${SERVICE_API_KEY}`,
     },
     body: JSON.stringify(report),
+    signal: AbortSignal.timeout(5000),
   }).catch(() => {});
 }
 
@@ -77,5 +78,6 @@ function flushErrorBuffer(): void {
       Authorization: `Bearer ${SERVICE_API_KEY}`,
     },
     body: JSON.stringify({ records }),
+    signal: AbortSignal.timeout(5000),
   }).catch(() => {});
 }

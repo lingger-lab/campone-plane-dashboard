@@ -7,6 +7,7 @@ import { RefreshCw, Check, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAlerts, useMarkAlertAsRead, getAlertStyles } from '@/hooks/useAlerts';
+import { normalizeModuleName } from '@/hooks/useActivities';
 import { cn } from '@/lib/utils';
 import { useTenant } from '@/lib/tenant/TenantContext';
 
@@ -93,7 +94,7 @@ export function AlertCenter() {
                     </p>
                     {alert.source && (
                       <span className="text-xs text-muted-foreground">
-                        from {alert.source}
+                        {normalizeModuleName(alert.source)}
                       </span>
                     )}
                   </div>

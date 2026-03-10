@@ -80,6 +80,61 @@ export function useCreateActivity() {
 }
 
 /**
+ * 모듈 코드 → 한글 표시명 정규화
+ *
+ * 서비스별 모듈명 형식이 다양함:
+ * - 대문자: "Ops", "Hub", "Policy", "Studio", "Insights"
+ * - 소문자: "ops", "hub", "policy", "studio", "insights"
+ * - 별칭: "Pulse" (Insights의 라우트명), "civichub"
+ */
+export function normalizeModuleName(module: string): string {
+  if (!module) return '';
+
+  const moduleLower = module.toLowerCase().trim();
+
+  const moduleMap: Record<string, string> = {
+    ops: '운영',
+    hub: '시민소통',
+    civichub: '시민소통',
+    'civic hub': '시민소통',
+    'civic-hub': '시민소통',
+    policy: '정책',
+    'policy lab': '정책',
+    'policy-lab': '정책',
+    studio: '스튜디오',
+    insights: '여론분석',
+    pulse: '여론분석',
+    dashboard: '대시보드',
+    system: '시스템',
+  };
+
+  if (moduleMap[moduleLower]) {
+    return moduleMap[moduleLower];
+  }
+
+  // 이미 한글이면 그대로
+  if (/[가-힣]/.test(module)) {
+    return module;
+  }
+
+  return module;
+}
+
+/**
+ * 알림 severity → 한글 라벨
+ */
+export function normalizeSeverity(severity: string): string {
+  const map: Record<string, string> = {
+    info: '정보',
+    warning: '주의',
+    error: '오류',
+    success: '성공',
+    critical: '긴급',
+  };
+  return map[severity?.toLowerCase()] || severity;
+}
+
+/**
  * 액션 텍스트 정규화 (영어/dot-notation → 한글)
  *
  * 서비스별 액션 형식:
