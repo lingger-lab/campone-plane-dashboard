@@ -1,6 +1,7 @@
 import type { PrismaClient } from '@prisma/client';
 import openai from '@/lib/openai/client';
 import { isOpenAIConfigured } from '@/lib/openai/client';
+import { reportUsage } from '@/lib/usage-reporter';
 
 const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL || 'text-embedding-3-small';
 const MAX_EMBEDDING_GENERATIONS_PER_REQUEST = 5;
@@ -26,6 +27,7 @@ export async function retrieveRelevantSources(
   db: PrismaClient,
   questionText: string,
   topK: number = 5,
+  tenantId?: string,
 ): Promise<RetrievedSource[]> {
   const count = await db.helpDocument.count({ where: { isActive: true } });
   if (count === 0) {
@@ -37,7 +39,7 @@ export async function retrieveRelevantSources(
   }
 
   try {
-    return await searchByEmbedding(db, questionText, topK);
+    return await searchByEmbedding(db, questionText, topK, tenantId);
   } catch {
     try {
       return await searchByKeyword(db, questionText, topK);
@@ -68,12 +70,26 @@ async function searchByEmbedding(
   db: PrismaClient,
   questionText: string,
   topK: number,
+  tenantId?: string,
 ): Promise<RetrievedSource[]> {
+  const startTime = Date.now();
   const embeddingResponse = await openai.embeddings.create({
     model: EMBEDDING_MODEL,
     input: questionText,
   });
   const questionEmbedding = embeddingResponse.data[0].embedding;
+
+  // 질문 임베딩 사용량 보고
+  if (tenantId && embeddingResponse.usage) {
+    reportUsage({
+      tenantId,
+      feature: 'help_embedding',
+      model: EMBEDDING_MODEL,
+      inputTokens: embeddingResponse.usage.prompt_tokens,
+      outputTokens: 0,
+      latencyMs: Date.now() - startTime,
+    });
+  }
 
   const documents = await db.helpDocument.findMany({
     where: { isActive: true },

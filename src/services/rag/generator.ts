@@ -1,5 +1,6 @@
 import openai from '@/lib/openai/client';
 import { isOpenAIConfigured } from '@/lib/openai/client';
+import { reportUsage } from '@/lib/usage-reporter';
 import type { RetrievedSource } from './retriever';
 
 const RAG_MODEL = process.env.RAG_MODEL || 'gpt-4o-mini';
@@ -15,6 +16,7 @@ export class RAGGenerationError extends Error {
 }
 
 export interface GenerateAnswerParams {
+  tenantId?: string;
   questionText: string;
   sources: RetrievedSource[];
   phase?: 'quick' | 'detailed';
@@ -33,6 +35,7 @@ export async function generateAnswer(params: GenerateAnswerParams): Promise<stri
       : buildDetailedPrompt(params.questionText, params.sources);
 
   const maxTokens = phase === 'quick' ? 300 : 1500;
+  const startTime = Date.now();
 
   const response = await openai.chat.completions.create({
     model: RAG_MODEL,
@@ -43,6 +46,18 @@ export async function generateAnswer(params: GenerateAnswerParams): Promise<stri
     temperature: 0.5,
     max_tokens: maxTokens,
   });
+
+  // 사용량 보고
+  if (params.tenantId && response.usage) {
+    reportUsage({
+      tenantId: params.tenantId,
+      feature: phase === 'quick' ? 'help_quick' : 'help_detailed',
+      model: RAG_MODEL,
+      inputTokens: response.usage.prompt_tokens,
+      outputTokens: response.usage.completion_tokens,
+      latencyMs: Date.now() - startTime,
+    });
+  }
 
   const content = response.choices[0]?.message?.content;
   if (!content) {
@@ -69,6 +84,7 @@ export async function* generateAnswerStream(
         : buildDetailedPrompt(params.questionText, params.sources);
 
     const maxTokens = phase === 'quick' ? 300 : 1500;
+    const startTime = Date.now();
 
     const stream = await openai.chat.completions.create({
       model: RAG_MODEL,
@@ -79,13 +95,31 @@ export async function* generateAnswerStream(
       temperature: 0.5,
       max_tokens: maxTokens,
       stream: true,
+      stream_options: { include_usage: true },
     });
+
+    let streamUsage: { prompt_tokens?: number; completion_tokens?: number } | null = null;
 
     for await (const chunk of stream) {
       const content = chunk.choices[0]?.delta?.content;
       if (content) {
         yield { type: 'chunk', content };
       }
+      if (chunk.usage) {
+        streamUsage = chunk.usage;
+      }
+    }
+
+    // 사용량 보고
+    if (params.tenantId && streamUsage) {
+      reportUsage({
+        tenantId: params.tenantId,
+        feature: phase === 'quick' ? 'help_quick' : 'help_detailed',
+        model: RAG_MODEL,
+        inputTokens: streamUsage.prompt_tokens || 0,
+        outputTokens: streamUsage.completion_tokens || 0,
+        latencyMs: Date.now() - startTime,
+      });
     }
 
     yield { type: 'done' };

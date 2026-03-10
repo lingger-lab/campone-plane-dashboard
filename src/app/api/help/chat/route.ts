@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
         };
 
         try {
-          const sources = await retrieveRelevantSources(systemDb, questionText, 5);
+          const sources = await retrieveRelevantSources(systemDb, questionText, 5, tenantId);
 
           if (sources.length === 0) {
             sendEvent({ type: 'error', error: '관련 문서를 찾을 수 없습니다.' });
@@ -62,6 +62,7 @@ export async function POST(req: NextRequest) {
 
           let fullContent = '';
           for await (const chunk of generateAnswerStream({
+            tenantId,
             questionText,
             sources,
             phase,
