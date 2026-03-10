@@ -2,6 +2,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { getSystemPrisma } from '@/lib/prisma';
 import { checkMaintenance, checkTenantStatus } from '@/lib/service-guard';
+import { reportError } from '@/lib/error-reporter';
 import type { NextAuthOptions } from 'next-auth';
 
 const SERVICE_NAME = 'dashboard';
@@ -87,6 +88,13 @@ export const authOptions: NextAuthOptions = {
           };
         } catch (error) {
           console.error('Auth error:', error);
+          reportError({
+            service: 'dashboard',
+            level: 'error',
+            message: 'Auth error',
+            stack: error instanceof Error ? error.stack : undefined,
+            meta: { email: credentials?.email },
+          });
           return null;
         }
       },

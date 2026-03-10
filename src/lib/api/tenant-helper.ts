@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getSystemPrisma, getTenantPrisma } from '@/lib/prisma';
 import { assertServiceAvailable, ServiceGuardError } from '@/lib/service-guard';
+import { reportErrorBatched } from '@/lib/error-reporter';
 import { getTenantConfig, createDefaultTenantConfig } from '@/lib/tenant/config-loader';
 import type { TenantConfig } from '@/lib/tenant/types';
 import type { PrismaClient as SystemPrismaClient } from '@prisma/client';
@@ -187,6 +188,15 @@ export function handleRouteError(
   }
 
   console.error(context || 'API error:', error);
+
+  reportErrorBatched({
+    service: 'dashboard',
+    level: 'error',
+    message: context || 'API error',
+    stack: error instanceof Error ? error.stack : undefined,
+    meta: { errorType: error instanceof Error ? error.name : typeof error },
+  });
+
   return NextResponse.json(
     { error: 'Internal Server Error' },
     { status: 500 }

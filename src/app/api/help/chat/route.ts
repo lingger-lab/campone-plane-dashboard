@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getSystemPrisma } from '@/lib/prisma';
 import { getTenantIdFromRequest } from '@/lib/api/tenant-helper';
+import { reportError } from '@/lib/error-reporter';
 import { retrieveRelevantSources } from '@/services/rag/retriever';
 import { generateAnswerStream, scaleRelevanceScore } from '@/services/rag/generator';
 import { validateQuality } from '@/lib/quality-gate/validator';
@@ -114,10 +115,23 @@ export async function POST(req: NextRequest) {
 
           controller.close();
         } catch (error) {
-          const message =
-            error instanceof Error && error.message.includes('등록된 문서가 없습니다')
-              ? '아직 등록된 도움말 문서가 없습니다. 관리자에게 문의해주세요.'
-              : '스트리밍 중 오류가 발생했습니다.';
+          const isNoDocError =
+            error instanceof Error && error.message.includes('등록된 문서가 없습니다');
+          const message = isNoDocError
+            ? '아직 등록된 도움말 문서가 없습니다. 관리자에게 문의해주세요.'
+            : '스트리밍 중 오류가 발생했습니다.';
+
+          if (!isNoDocError) {
+            reportError({
+              service: 'dashboard',
+              tenantId,
+              level: 'error',
+              message: 'RAG streaming error',
+              stack: error instanceof Error ? error.stack : undefined,
+              meta: { phase, questionLength: questionText.length },
+            });
+          }
+
           sendEvent({ type: 'error', error: message });
           controller.close();
         }

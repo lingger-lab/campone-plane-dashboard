@@ -10,6 +10,7 @@ import pg from 'pg';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { reportError } from '@/lib/error-reporter';
 
 const migratedTenants = new Set<string>();
 
@@ -70,6 +71,13 @@ export async function ensureTenantTables(
     migratedTenants.add(tenantId);
   } catch (error) {
     console.error(`[tenant:${tenantId}] Auto-migration FAILED for ${dbName}:`, error);
+    reportError({
+      service: 'dashboard',
+      tenantId,
+      level: 'error',
+      message: `Auto-migration FAILED for ${dbName}`,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     // 마이그레이션 실패를 전파하여 깨진 클라이언트가 캐시되는 것을 방지
     // getTenantPrisma에서 catch → 다음 요청 시 재시도
     throw error;
