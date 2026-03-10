@@ -558,7 +558,7 @@ export default function CampaignProfilePage() {
                 setAddress(e.target.value);
                 handleFieldChange();
               }}
-              placeholder="예: 경남 사천시 사천읍 중앙로 123"
+              placeholder="예: OO시 OO구 OO로 123"
               disabled={!canEdit}
             />
           </div>
@@ -574,7 +574,7 @@ export default function CampaignProfilePage() {
                   setPhone(e.target.value);
                   handleFieldChange();
                 }}
-                placeholder="예: 055-123-4567"
+                placeholder="예: 000-1234-5678"
                 disabled={!canEdit}
               />
             </div>

@@ -335,10 +335,10 @@ export const handlers = [
     await delay(DELAY_MS);
     return HttpResponse.json({
       spikes: [
-        { date: '2025-01-04', source: 'google', keyword: '유해남 후보', rate: 0.23 },
+        { date: '2025-01-04', source: 'google', keyword: '홍길동 후보', rate: 0.23 },
         { date: '2025-01-07', source: 'sns', keyword: '타운홀', rate: 0.28 },
       ],
-      topKeywords: ['유해남', '타운홀', '청년정책', '출정식', '경제공약'],
+      topKeywords: ['홍길동', '타운홀', '청년정책', '출정식', '경제공약'],
     });
   }),
 

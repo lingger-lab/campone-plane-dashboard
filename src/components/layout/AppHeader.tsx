@@ -84,15 +84,15 @@ export function AppHeader({ onMenuClick, className }: AppHeaderProps) {
           />
         </Link>
 
-        {/* 캠페인/테넌트 표시 */}
+        {/* 캠페인/테넌트 표시 (정보 표시 전용, 인터랙티브 아님) */}
         <div className="hidden items-center gap-2 md:flex">
           <span className="text-sm text-muted-foreground">|</span>
-          <Button variant="ghost" size="sm" className="gap-1">
+          <span className="flex items-center gap-1 px-2 text-sm text-muted-foreground">
             {config?.displayName || config?.name || tenantId || '캠페인'}
             <Badge variant="success" className="ml-1">
               Active
             </Badge>
-          </Button>
+          </span>
         </div>
       </div>
 

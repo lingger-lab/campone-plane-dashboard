@@ -344,7 +344,7 @@ export default function LegalSettingsPage() {
                   <Input
                     value={doc.contactInfo?.phone || ''}
                     onChange={(e) => updateContactInfo('phone', e.target.value)}
-                    placeholder="예: 055-123-4567"
+                    placeholder="예: 000-1234-5678"
                     disabled={!canEdit}
                   />
                 </div>

@@ -182,7 +182,7 @@ export const DEFAULT_PRIVACY: LegalDocument = {
   contactInfo: {
     name: '홍길동',
     position: '선거대책본부 사무국장',
-    phone: '055-123-4567',
+    phone: '000-1234-5678',
     email: 'privacy@hongdemo.com',
   },
 };

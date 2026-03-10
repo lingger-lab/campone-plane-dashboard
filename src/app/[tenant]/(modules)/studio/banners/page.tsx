@@ -23,7 +23,7 @@ export default function BannerDesignerPage() {
   const tenant = params.tenant as string;
   const [selectedPreset, setSelectedPreset] = useState<string | null>('bp001');
   const [formData, setFormData] = useState({
-    candidate: '유해남',
+    candidate: '홍길동',
     title: '시장 후보',
     slogan: '변화를 만드는 힘',
     contact: '02-1234-5678',
@@ -104,7 +104,7 @@ export default function BannerDesignerPage() {
                 <Input
                   value={formData.candidate}
                   onChange={(e) => handleInputChange('candidate', e.target.value)}
-                  placeholder="유해남"
+                  placeholder="홍길동"
                 />
               </div>
               <div>

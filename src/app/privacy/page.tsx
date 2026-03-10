@@ -119,7 +119,7 @@ export default function PrivacyPage() {
               <p><strong>개인정보 보호책임자</strong></p>
               <p className="mt-2">성명: 홍길동</p>
               <p>직책: 선거대책본부 사무국장</p>
-              <p>연락처: 055-123-4567</p>
+              <p>연락처: 000-1234-5678</p>
               <p>이메일: privacy@hongdemo.com</p>
             </div>
           </section>
