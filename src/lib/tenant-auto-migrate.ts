@@ -70,6 +70,9 @@ export async function ensureTenantTables(
     migratedTenants.add(tenantId);
   } catch (error) {
     console.error(`[tenant:${tenantId}] Auto-migration FAILED for ${dbName}:`, error);
+    // 마이그레이션 실패를 전파하여 깨진 클라이언트가 캐시되는 것을 방지
+    // getTenantPrisma에서 catch → 다음 요청 시 재시도
+    throw error;
   } finally {
     await client.query('SELECT pg_advisory_unlock($1)', [LOCK_ID]).catch(() => {});
     await client.end().catch(() => {});

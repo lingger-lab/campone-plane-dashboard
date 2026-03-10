@@ -124,5 +124,6 @@ export const authOptions: NextAuthOptions = {
 };
 
 if (!process.env.NEXTAUTH_SECRET) {
+  // NextAuth는 production에서 NEXTAUTH_SECRET 없으면 자체적으로 에러 발생
   console.error('FATAL: NEXTAUTH_SECRET is not set. Sessions will not be secure.');
 }
