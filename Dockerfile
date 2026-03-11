@@ -56,8 +56,8 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 # Copy tenant migration SQL files (runtime auto-migration)
 COPY --from=builder /app/prisma/tenant/migrations ./prisma/tenant/migrations
 
-# sharp를 standalone에 직접 설치 (alpine용 prebuilt)
-RUN cd /app && npm install --os=linux --libc=musl --cpu=x64 sharp
+# sharp 이미지 최적화 (alpine 환경 자동 감지)
+RUN npm install sharp
 
 # Set correct permissions
 RUN chown -R nextjs:nodejs /app
