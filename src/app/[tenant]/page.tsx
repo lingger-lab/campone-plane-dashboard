@@ -153,13 +153,16 @@ function mapKpiToDisplay(
   source?: string;
 } {
   const [moduleName, key] = def.dbKey.split(':');
+  const moduleLC = moduleName.toLowerCase();
   const kpiData = kpiList.find(
-    (k) => k.module === moduleName && k.key === key
+    (k) => k.module.toLowerCase() === moduleLC && k.key === key
   );
 
-  const value = kpiData?.value?.value ?? def.defaultValue;
+  // 실제 DB 데이터가 없으면 '-' 표시 (기본값 0과 구분)
+  const hasData = !!kpiData;
+  const value = hasData ? (kpiData.value?.value ?? def.defaultValue) : '-';
   const change = kpiData?.value?.change ?? def.defaultChange ?? 0;
-  const unit = kpiData?.value?.unit ?? def.unit;
+  const unit = hasData ? (kpiData.value?.unit ?? def.unit) : def.unit;
 
   let status: 'success' | 'warning' | 'danger' = 'success';
   if (change < -20) {
@@ -173,7 +176,7 @@ function mapKpiToDisplay(
     value,
     unit,
     change,
-    changeLabel: def.changeLabel,
+    changeLabel: hasData ? def.changeLabel : '연동 대기',
     status,
     source: def.source,
   };
@@ -193,9 +196,7 @@ export default function DashboardPage() {
   });
 
   // iframe 모듈들로부터 메시지 수신 (활동/알림 자동 저장)
-  useModuleMessages({
-    onReady: (source) => console.log(`[Dashboard] ${source} module ready`),
-  });
+  useModuleMessages({});
 
   // 선택된 KPI 설정 조회
   const { data: selectedKpiKeys } = useTenantPreference<string[]>('selected_kpis');
@@ -601,7 +602,7 @@ export default function DashboardPage() {
               )}
             </motion.div>
             <motion.div
-              className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7"
+              className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"
               variants={containerVariants}
               initial="hidden"
               animate="show"

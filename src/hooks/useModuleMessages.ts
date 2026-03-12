@@ -132,7 +132,6 @@ export function useModuleMessages(options: UseModuleMessagesOptions = {}) {
       }
 
       const message = event.data as ModuleMessage;
-      console.log(`[Dashboard] Received from ${message.source}:`, message);
 
       switch (message.type) {
         case 'ACTIVITY':
@@ -155,7 +154,6 @@ export function useModuleMessages(options: UseModuleMessagesOptions = {}) {
           break;
 
         case 'READY':
-          console.log(`[Dashboard] Module ${message.source} is ready`);
           optionsRef.current.onReady?.(message.source);
           break;
 
@@ -178,11 +176,9 @@ export function useModuleMessages(options: UseModuleMessagesOptions = {}) {
   // 이벤트 리스너 등록
   useEffect(() => {
     window.addEventListener('message', handleMessage);
-    console.log('[Dashboard] Module message listener registered');
 
     return () => {
       window.removeEventListener('message', handleMessage);
-      console.log('[Dashboard] Module message listener removed');
     };
   }, [handleMessage]);
 }

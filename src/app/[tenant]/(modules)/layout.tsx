@@ -18,9 +18,7 @@ export default function ModulesLayout({
   const { resolvedTheme } = useTheme();
 
   // iframe 모듈들로부터 메시지 수신 (활동/알림/KPI 자동 저장)
-  useModuleMessages({
-    onReady: (source) => console.log(`[Modules] ${source} module ready`),
-  });
+  useModuleMessages({});
 
   // 테마 변경 시 iframe들에 알림
   useEffect(() => {

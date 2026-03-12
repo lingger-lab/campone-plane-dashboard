@@ -197,8 +197,6 @@ export function sendToDashboard<T extends ModuleMessageType>(
 
   // Dashboard로 메시지 전송
   window.parent.postMessage(message, '*');
-
-  console.log(`[Module:${source}] Sent message:`, message);
 }
 
 // ============================================
@@ -231,6 +229,4 @@ export function broadcastThemeChange(theme: ThemeValue): void {
       console.warn('[Dashboard] Failed to send theme to iframe:', e);
     }
   });
-
-  console.log(`[Dashboard] Broadcast theme change:`, theme);
 }

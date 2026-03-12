@@ -89,34 +89,34 @@ export function KPICard({
   };
 
   return (
-    <Card className={cn('card-hover-lift bg-white/90 dark:bg-card/90 backdrop-blur-sm', className)}>
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">{label}</p>
+    <Card className={cn('card-hover-lift bg-white/90 dark:bg-card/90 backdrop-blur-sm overflow-hidden', className)}>
+      <CardContent className="p-4 min-w-0">
+        <div className="flex items-start justify-between gap-1">
+          <div className="space-y-1 min-w-0">
+            <p className="text-sm text-muted-foreground truncate">{label}</p>
             <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-bold tabular-nums">
+              <span className="text-2xl font-bold tabular-nums truncate">
                 {typeof value === 'number' ? value.toLocaleString('ko-KR') : value}
               </span>
-              {unit && <span className="text-sm text-muted-foreground">{unit}</span>}
+              {unit && <span className="text-sm text-muted-foreground shrink-0">{unit}</span>}
             </div>
           </div>
-          {sparkline && <div className="pt-1">{renderSparkline()}</div>}
+          {sparkline && <div className="pt-1 shrink-0">{renderSparkline()}</div>}
         </div>
 
         {/* 변화율 & 소스 */}
-        <div className="mt-3 flex items-center justify-between">
+        <div className="mt-3 flex items-center justify-between gap-1 min-w-0">
           {change !== undefined && (
-            <div className={cn('flex items-center gap-1 text-sm', getStatusColor())}>
-              {getTrendIcon()}
-              <span className="font-medium">{formatChange(change)}</span>
+            <div className={cn('flex items-center gap-1 text-sm min-w-0', getStatusColor())}>
+              <span className="shrink-0">{getTrendIcon()}</span>
+              <span className="font-medium shrink-0">{formatChange(change)}</span>
               {changeLabel && (
-                <span className="text-muted-foreground">{changeLabel}</span>
+                <span className="text-muted-foreground truncate">{changeLabel}</span>
               )}
             </div>
           )}
           {source && (
-            <span className="text-xs text-muted-foreground">{source}</span>
+            <span className="text-xs text-muted-foreground truncate shrink-0">{source}</span>
           )}
         </div>
       </CardContent>
