@@ -14,7 +14,8 @@ import type { TenantServices } from '@/lib/tenant/types';
 
 export const SERVICE_URL_INSIGHTS = 'https://insight-frontend-i2syevvyaq-du.a.run.app';
 export const SERVICE_URL_INSIGHTS_BACKEND = 'https://insight-backend-i2syevvyaq-du.a.run.app';
-export const SERVICE_URL_STUDIO = 'https://campone-studio-i2syevvyaq-du.a.run.app';
+export const SERVICE_URL_STUDIO = 'https://campone-studio-web-i2syevvyaq-du.a.run.app';
+export const SERVICE_URL_STUDIO_BACKEND = 'https://campone-studio-backend-i2syevvyaq-du.a.run.app';
 export const SERVICE_URL_POLICY = 'https://campone-policy-i2syevvyaq-du.a.run.app';
 export const SERVICE_URL_OPS = 'https://campone-ops-i2syevvyaq-du.a.run.app';
 export const SERVICE_URL_HUB = 'https://campone-civichub-i2syevvyaq-du.a.run.app';
@@ -44,6 +45,7 @@ export const PRODUCTION_ORIGINS = [
   SERVICE_URL_INSIGHTS,
   SERVICE_URL_INSIGHTS_BACKEND,
   SERVICE_URL_STUDIO,
+  SERVICE_URL_STUDIO_BACKEND,
   SERVICE_URL_POLICY,
   SERVICE_URL_OPS,
   SERVICE_URL_HUB,
