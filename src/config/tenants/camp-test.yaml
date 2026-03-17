@@ -48,7 +48,7 @@ branding:
 # 외부 서비스 URL
 services:
   insights: "https://insight-frontend-i2syevvyaq-du.a.run.app"
-  studio: "https://campone-studio-i2syevvyaq-du.a.run.app"
+  studio: "https://campone-studio-web-i2syevvyaq-du.a.run.app"
   policy: "https://campone-policy-i2syevvyaq-du.a.run.app"
   ops: "https://campone-ops-i2syevvyaq-du.a.run.app"
   hub: "https://campone-civichub-i2syevvyaq-du.a.run.app"
