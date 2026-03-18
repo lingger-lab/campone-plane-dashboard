@@ -46,10 +46,12 @@ export async function POST(req: NextRequest) {
       signal: AbortSignal.timeout(10_000),
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : {};
 
     if (!res.ok) {
-      return NextResponse.json({ error: data.error || '문의 제출에 실패했습니다.' }, { status: res.status });
+      console.error(`[inquiries] Control POST ${res.status}:`, text.slice(0, 200));
+      return NextResponse.json({ error: data.error || `Control API 오류 (${res.status})` }, { status: res.status });
     }
 
     return NextResponse.json(data, { status: 201 });
@@ -89,10 +91,12 @@ export async function GET(req: NextRequest) {
       signal: AbortSignal.timeout(10_000),
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : {};
 
     if (!res.ok) {
-      return NextResponse.json({ error: data.error || '목록을 가져올 수 없습니다.' }, { status: res.status });
+      console.error(`[inquiries] Control GET ${res.status}:`, text.slice(0, 200));
+      return NextResponse.json({ error: data.error || `Control API 오류 (${res.status})` }, { status: res.status });
     }
 
     return NextResponse.json(data);
