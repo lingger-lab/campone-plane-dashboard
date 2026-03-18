@@ -31,6 +31,12 @@ export const KPI_CATALOG: KpiDefinition[] = [
   { dbKey: 'Insights:high_risks', label: '고위험 리스크', unit: '건', changeLabel: '분석 결과', source: 'Insights', service: 'insight', defaultValue: 0 },
   { dbKey: 'Insights:visibility_score', label: '디지털 가시성', unit: '점', changeLabel: '평균', source: 'Insights', service: 'insight', defaultValue: 0 },
   { dbKey: 'Insights:sentiment_score', label: '감성 점수', unit: '%', changeLabel: '전체 평균', source: 'SNS 분석', service: 'insight', defaultValue: 0 },
+  { dbKey: 'Insights:trend_index', label: '종합 여론 지수', unit: '점', changeLabel: '전주 대비', source: 'GT/Naver/SNS', service: 'insight', defaultValue: 0 },
+  { dbKey: 'Insights:top_issues_count', label: '주요 이슈', unit: '개', changeLabel: '분석 결과', source: 'Insights', service: 'insight', defaultValue: 0 },
+  { dbKey: 'Insights:emerging_issues', label: '부상 이슈', unit: '개', changeLabel: '분석 결과', source: 'Insights', service: 'insight', defaultValue: 0 },
+  { dbKey: 'Insights:analyzed_regions', label: '분석 지역', unit: '개', changeLabel: '분석 결과', source: 'Insights', service: 'insight', defaultValue: 0 },
+  { dbKey: 'Insights:visibility_candidates', label: '가시성 후보', unit: '명', changeLabel: '분석 결과', source: 'Insights', service: 'insight', defaultValue: 0 },
+  { dbKey: 'Insights:spike_count', label: '고위험 리스크', unit: '건', changeLabel: '분석 결과', source: 'Insights', service: 'insight', defaultValue: 0 },
   // ── Civic Hub ──
   { dbKey: 'Hub:pending_review', label: '대기 질문', unit: '건', changeLabel: '현재', source: 'Civic Hub', service: 'hub', defaultValue: 0 },
   { dbKey: 'Hub:pending_inquiries', label: '대기 민원', unit: '건', changeLabel: '현재', source: 'Civic Hub', service: 'hub', defaultValue: 0 },
