@@ -13,9 +13,7 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const ALLOWED_CATEGORIES = ['profile', 'module'] as const;
 const ALLOWED_MODULE_KEYS = ['pulse', 'studio', 'policy', 'ops', 'hub'] as const;
 
-function getStorage(): Storage {
-  return new Storage();
-}
+const storage = new Storage();
 
 export async function POST(request: NextRequest) {
   try {
@@ -88,7 +86,6 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(arrayBuffer);
 
     // GCS 업로드
-    const storage = getStorage();
     const bucket = storage.bucket(BUCKET_NAME);
     const blob = bucket.file(gcsPath);
 
