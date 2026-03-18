@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { RefreshCw, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useEmbedToken, getEmbedUrl, getStudioEmbedUrl, ThemeType } from '@/hooks/useEmbedToken';
+import { useEmbedToken, getEmbedUrl, ThemeType } from '@/hooks/useEmbedToken';
 import { useTheme } from '@/components/theme-provider';
 import { useTenant } from '@/lib/tenant/TenantContext';
 import { ALLOWED_ORIGINS } from '@/lib/module-protocol';
@@ -41,16 +41,12 @@ export function EmbedIframe({ title, subtitle, serviceKey, iframeTitle }: EmbedI
   const serviceUrl = config.services[serviceKey];
 
   // iframe URL 생성
-  const iframeSrc = (() => {
-    if (!token) return serviceUrl;
-    if (serviceKey === 'studio') {
-      return getStudioEmbedUrl(serviceUrl, token, { theme: resolvedTheme as ThemeType });
-    }
-    return getEmbedUrl(serviceUrl, token, {
-      tenantId: tenantId || tokenTenantId,
-      theme: resolvedTheme as ThemeType,
-    });
-  })();
+  const iframeSrc = token
+    ? getEmbedUrl(serviceUrl, token, {
+        tenantId: tenantId || tokenTenantId,
+        theme: resolvedTheme as ThemeType,
+      })
+    : serviceUrl;
 
   // postMessage로 토큰 전달 (서드파티 쿠키 우회)
   const sendTokenViaPostMessage = useCallback(() => {

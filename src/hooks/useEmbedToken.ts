@@ -87,22 +87,3 @@ export function getEmbedUrl(
 
   return url.toString();
 }
-
-/**
- * Studio 전용 URL 생성 (?embed=true&token=xxx 형식)
- */
-export function getStudioEmbedUrl(
-  baseUrl: string,
-  token: string | null,
-  options?: { theme?: ThemeType }
-): string {
-  if (!token) return baseUrl;
-
-  const url = new URL(baseUrl);
-  url.searchParams.set('embed', 'true');
-  url.searchParams.set('token', token);
-  if (options?.theme) {
-    url.searchParams.set('theme', options.theme);
-  }
-  return url.toString();
-}
