@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { getTenantIdFromRequest } from '@/lib/api/tenant-helper';
 
 const CONTROL_URL = process.env.CONTROL_URL;
-const SERVICE_API_KEY = process.env.SERVICE_API_KEY;
+const SERVICE_API_KEY = process.env.CONTROL_SERVICE_API_KEY;
 
 function controlHeaders() {
   return {
