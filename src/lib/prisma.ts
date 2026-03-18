@@ -34,7 +34,7 @@ function createSystemClient(): SystemPrismaClient {
   const pool = new pg.Pool({
     connectionString,
     ssl: isCloudSqlSocket(connectionString) ? false : { rejectUnauthorized: false },
-    max: 10,
+    max: 3,
   });
 
   const adapter = new PrismaPg(pool);
@@ -55,7 +55,7 @@ function createTenantClient(connectionString: string): TenantPrismaClient {
   const pool = new pg.Pool({
     connectionString,
     ssl: isCloudSqlSocket(connectionString) ? false : { rejectUnauthorized: false },
-    max: 10,
+    max: 2,
   });
 
   const adapter = new PrismaPg(pool);
@@ -95,7 +95,7 @@ export const prisma = systemClient;
 // LRU 캐시: 최대 MAX_TENANT_CLIENTS개 유지, 초과 시 가장 오래된 클라이언트 disconnect
 // ============================================
 
-const MAX_TENANT_CLIENTS = parseInt(process.env.MAX_TENANT_CLIENTS || "20", 10);
+const MAX_TENANT_CLIENTS = parseInt(process.env.MAX_TENANT_CLIENTS || "5", 10);
 
 const tenantClients =
   globalForPrisma.tenantClients ?? new Map<string, TenantPrismaClient>();
@@ -108,20 +108,18 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 /**
- * LRU 방식으로 가장 오래된 테넌트 클라이언트를 제거합니다.
- * Map은 삽입 순서를 유지하므로 첫 번째 항목이 가장 오래된 것입니다.
+ * LRU 방식으로 MAX_TENANT_CLIENTS 초과분을 동기적으로 제거합니다.
+ * 동기 실행으로 동시 요청 간 race condition(MAX 일시 초과)을 방지합니다.
  */
-async function evictOldestTenantClient(): Promise<void> {
-  if (tenantClients.size < MAX_TENANT_CLIENTS) return;
+function evictIfNeeded(): void {
+  while (tenantClients.size >= MAX_TENANT_CLIENTS) {
+    const oldestKey = tenantClients.keys().next().value;
+    if (!oldestKey) break;
 
-  const oldestKey = tenantClients.keys().next().value;
-  if (!oldestKey) return;
+    const oldClient = tenantClients.get(oldestKey);
+    tenantClients.delete(oldestKey);
 
-  const oldClient = tenantClients.get(oldestKey);
-  tenantClients.delete(oldestKey);
-
-  if (oldClient) {
-    oldClient.$disconnect().catch((err) =>
+    oldClient?.$disconnect().catch((err) =>
       console.warn(`[prisma] Failed to disconnect tenant ${oldestKey}:`, err)
     );
     console.log(`[prisma] Evicted tenant client: ${oldestKey} (cache size: ${tenantClients.size})`);
@@ -183,8 +181,8 @@ export async function getTenantPrisma(
     // 테이블 자동 생성 (최초 접속 시 1회만 실행)
     await ensureTenantTables(connectionString, tenantId);
 
-    // LRU 제한 초과 시 가장 오래된 클라이언트 제거
-    await evictOldestTenantClient();
+    // LRU 제한 초과 시 가장 오래된 클라이언트 제거 (동기 실행으로 race condition 방지)
+    evictIfNeeded();
 
     const client = createTenantClient(connectionString);
 
