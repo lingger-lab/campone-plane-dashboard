@@ -101,10 +101,8 @@ export function useModuleMessages(options: UseModuleMessagesOptions = {}) {
         });
 
         if (response.ok) {
-          // KPI 캐시 무효화
+          // KPI 캐시 무효화 (하위 키 포함 전체 invalidate)
           queryClient.invalidateQueries({ queryKey: ['kpi'] });
-          // 개별 KPI 캐시도 업데이트
-          queryClient.setQueryData(['kpi', source, payload.key], payload);
         }
       } catch (error) {
         console.error('[Dashboard] Failed to save KPI:', error);
@@ -127,7 +125,10 @@ export function useModuleMessages(options: UseModuleMessagesOptions = {}) {
 
       // 메시지 형식 검증
       if (!isValidModuleMessage(event.data)) {
-        // React DevTools 등 다른 메시지는 무시
+        // type 필드가 있는 경우만 로그 (React DevTools 등 노이즈 제외)
+        if (event.data?.type && typeof event.data.type === 'string') {
+          console.warn('[Dashboard] Dropped invalid module message:', event.data);
+        }
         return;
       }
 

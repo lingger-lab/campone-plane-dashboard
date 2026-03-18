@@ -4,6 +4,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { AppHeader, Sidebar, AppFooter } from '@/components/layout';
 import { cn } from '@/lib/utils';
 import { useModuleMessages } from '@/hooks/useModuleMessages';
+import { useKpiAll } from '@/hooks/useKpi';
 import { useTheme } from '@/components/theme-provider';
 import { broadcastThemeChange } from '@/lib/module-protocol';
 
@@ -19,6 +20,9 @@ export default function ModulesLayout({
 
   // iframe 모듈들로부터 메시지 수신 (활동/알림/KPI 자동 저장)
   useModuleMessages({});
+
+  // KPI 쿼리를 미리 구독 → invalidate 시 메인 대시보드로 돌아가지 않아도 즉시 refetch
+  useKpiAll();
 
   // 테마 변경 시 iframe들에 알림
   useEffect(() => {
