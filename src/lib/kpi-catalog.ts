@@ -36,7 +36,7 @@ export const KPI_CATALOG: KpiDefinition[] = [
   { dbKey: 'Insights:emerging_issues', label: '부상 이슈', unit: '개', changeLabel: '분석 결과', source: 'Insights', service: 'insight', defaultValue: 0 },
   { dbKey: 'Insights:analyzed_regions', label: '분석 지역', unit: '개', changeLabel: '분석 결과', source: 'Insights', service: 'insight', defaultValue: 0 },
   { dbKey: 'Insights:visibility_candidates', label: '가시성 후보', unit: '명', changeLabel: '분석 결과', source: 'Insights', service: 'insight', defaultValue: 0 },
-  { dbKey: 'Insights:spike_count', label: '고위험 리스크', unit: '건', changeLabel: '분석 결과', source: 'Insights', service: 'insight', defaultValue: 0 },
+  { dbKey: 'Insights:spike_count', label: '바이럴 스파이크', unit: '건', changeLabel: '분석 결과', source: 'Insights', service: 'insight', defaultValue: 0 },
   // ── Civic Hub ──
   { dbKey: 'Hub:pending_review', label: '대기 질문', unit: '건', changeLabel: '현재', source: 'Civic Hub', service: 'hub', defaultValue: 0 },
   { dbKey: 'Hub:pending_inquiries', label: '대기 민원', unit: '건', changeLabel: '현재', source: 'Civic Hub', service: 'hub', defaultValue: 0 },
