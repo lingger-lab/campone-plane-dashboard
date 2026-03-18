@@ -13,6 +13,7 @@ import {
   History,
   Settings,
   HelpCircle,
+  MessageCircle,
   ChevronLeft,
   X,
   PenTool,
@@ -47,6 +48,7 @@ const menuItemsBase = [
 const bottomItemsBase = [
   { icon: History, label: '활동 & 알림', pathSuffix: '/audit' },
   { icon: Settings, label: '설정', pathSuffix: '/settings' },
+  { icon: MessageCircle, label: '문의/건의', pathSuffix: '/inquiries' },
   { icon: HelpCircle, label: '도움말', pathSuffix: '/help' },
 ];
 
