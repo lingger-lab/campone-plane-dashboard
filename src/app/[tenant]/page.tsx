@@ -151,6 +151,7 @@ function mapKpiToDisplay(
   changeLabel: string;
   status: 'success' | 'warning' | 'danger';
   source?: string;
+  service: string;
 } {
   const [moduleName, key] = def.dbKey.split(':');
   const moduleLC = moduleName.toLowerCase();
@@ -179,6 +180,7 @@ function mapKpiToDisplay(
     changeLabel: hasData ? def.changeLabel : '연동 대기',
     status,
     source: def.source,
+    service: def.service,
   };
 }
 
@@ -617,6 +619,7 @@ export default function DashboardPage() {
                     changeLabel={kpi.changeLabel}
                     status={kpi.status}
                     source={kpi.source}
+                    service={kpi.service}
                   />
                 </motion.div>
               ))}
