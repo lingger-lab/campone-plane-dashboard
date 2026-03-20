@@ -6,11 +6,24 @@ import { getTenantIdFromRequest } from '@/lib/api/tenant-helper';
 const CONTROL_URL = process.env.CONTROL_URL;
 const SERVICE_API_KEY = process.env.CONTROL_SERVICE_API_KEY;
 
+const VALID_STATUSES = ['OPEN', 'REPLIED', 'CLOSED'];
+
 function controlHeaders() {
   return {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${SERVICE_API_KEY}`,
   };
+}
+
+/** Control API 응답 텍스트를 안전하게 JSON 파싱 */
+function safeParseResponse(text: string): Record<string, unknown> {
+  if (!text) return {};
+  try {
+    return JSON.parse(text);
+  } catch {
+    console.error('[inquiries] JSON parse error, raw:', text.slice(0, 200));
+    return {};
+  }
 }
 
 // ── 문의 제출 ──────────────────────────────────────────────────────────────
@@ -29,7 +42,10 @@ export async function POST(req: NextRequest) {
     const tenantId = await getTenantIdFromRequest();
     const user = session.user as { id?: string; name?: string; email?: string };
 
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || !body.title?.trim() || !body.content?.trim()) {
+      return NextResponse.json({ error: 'title과 content는 필수입니다.' }, { status: 400 });
+    }
 
     const res = await fetch(`${CONTROL_URL}/api/inquiries`, {
       method: 'POST',
@@ -40,14 +56,14 @@ export async function POST(req: NextRequest) {
         userName: user.name || '',
         userEmail: user.email || '',
         category: body.category || 'general',
-        title: body.title,
-        content: body.content,
+        title: body.title.trim(),
+        content: body.content.trim(),
       }),
       signal: AbortSignal.timeout(10_000),
     });
 
     const text = await res.text();
-    const data = text ? JSON.parse(text) : {};
+    const data = safeParseResponse(text);
 
     if (!res.ok) {
       console.error(`[inquiries] Control POST ${res.status}:`, text.slice(0, 200));
@@ -78,12 +94,18 @@ export async function GET(req: NextRequest) {
     const user = session.user as { id?: string };
     const { searchParams } = new URL(req.url);
 
+    // status 파라미터 검증
+    const statusParam = searchParams.get('status');
+    if (statusParam && !VALID_STATUSES.includes(statusParam)) {
+      return NextResponse.json({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` }, { status: 400 });
+    }
+
     const query = new URLSearchParams({
       userId: user.id || '',
       tenantId,
       ...(searchParams.get('page') && { page: searchParams.get('page')! }),
       ...(searchParams.get('pageSize') && { pageSize: searchParams.get('pageSize')! }),
-      ...(searchParams.get('status') && { status: searchParams.get('status')! }),
+      ...(statusParam && { status: statusParam }),
     });
 
     const res = await fetch(`${CONTROL_URL}/api/inquiries?${query}`, {
@@ -92,7 +114,7 @@ export async function GET(req: NextRequest) {
     });
 
     const text = await res.text();
-    const data = text ? JSON.parse(text) : {};
+    const data = safeParseResponse(text);
 
     if (!res.ok) {
       console.error(`[inquiries] Control GET ${res.status}:`, text.slice(0, 200));

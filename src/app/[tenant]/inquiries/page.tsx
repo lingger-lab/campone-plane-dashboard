@@ -66,7 +66,10 @@ async function fetchInquiries(status?: InquiryStatus): Promise<InquiriesResponse
   const params = new URLSearchParams({ pageSize: '50' });
   if (status) params.set('status', status);
   const res = await fetch(`/api/inquiries?${params}`);
-  if (!res.ok) throw new Error((await res.json()).error || '문의 목록을 가져올 수 없습니다.');
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || '문의 목록을 가져올 수 없습니다.');
+  }
   return res.json();
 }
 
@@ -80,7 +83,10 @@ async function submitInquiry(body: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error((await res.json()).error || '문의 제출에 실패했습니다.');
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || '문의 제출에 실패했습니다.');
+  }
   return res.json();
 }
 
