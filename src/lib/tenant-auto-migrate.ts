@@ -104,10 +104,12 @@ async function ensureMigrationsTable(client: pg.Client): Promise<void> {
   `);
 }
 
-/** 이미 적용된 마이그레이션 이름 Set */
+/** 이미 적용된 마이그레이션 이름 Set (완료된 것만) */
 async function getAppliedMigrations(client: pg.Client): Promise<Set<string>> {
+  // finished_at IS NOT NULL: 실패한 마이그레이션은 제외해야 재시도 가능
   const { rows } = await client.query(
-    `SELECT "migration_name" FROM "_prisma_migrations" WHERE "rolled_back_at" IS NULL`
+    `SELECT "migration_name" FROM "_prisma_migrations"
+     WHERE "rolled_back_at" IS NULL AND "finished_at" IS NOT NULL`
   );
   return new Set(rows.map((r: { migration_name: string }) => r.migration_name));
 }
@@ -148,6 +150,13 @@ async function applyMigration(
   tenantId: string
 ): Promise<void> {
   console.log(`[tenant:${tenantId}] Applying: ${migration.name}`);
+
+  // 이전 실패 레코드 정리 (재시도 시 중복 방지)
+  await client.query(
+    `DELETE FROM "_prisma_migrations"
+     WHERE "migration_name" = $1 AND "finished_at" IS NULL AND "rolled_back_at" IS NULL`,
+    [migration.name]
+  );
 
   // 시작 레코드 삽입
   const { rows } = await client.query(

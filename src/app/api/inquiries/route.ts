@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// ── 본인 문의 목록 조회 ────────────────────────────────────────────────────
+// ── 테넌트 문의 목록 조회 ────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -91,7 +91,6 @@ export async function GET(req: NextRequest) {
     }
 
     const tenantId = await getTenantIdFromRequest();
-    const user = session.user as { id?: string };
     const { searchParams } = new URL(req.url);
 
     // status 파라미터 검증
@@ -100,8 +99,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` }, { status: 400 });
     }
 
+    // userId 없이 tenantId만 전달 → 테넌트 전체 문의 조회
     const query = new URLSearchParams({
-      userId: user.id || '',
       tenantId,
       ...(searchParams.get('page') && { page: searchParams.get('page')! }),
       ...(searchParams.get('pageSize') && { pageSize: searchParams.get('pageSize')! }),

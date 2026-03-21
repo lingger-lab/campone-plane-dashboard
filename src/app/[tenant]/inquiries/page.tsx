@@ -23,6 +23,7 @@ interface Inquiry {
   reply: string | null;
   repliedAt: string | null;
   createdAt: string;
+  userName?: string;
 }
 
 interface InquiriesResponse {
@@ -298,6 +299,11 @@ export default function InquiriesPage() {
                       <span className="truncate text-sm font-medium">{item.title}</span>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
+                      {item.userName && (
+                        <span className="text-xs text-muted-foreground hidden sm:inline">
+                          {item.userName}
+                        </span>
+                      )}
                       <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', STATUS_COLORS[item.status])}>
                         {STATUS_LABELS[item.status]}
                       </span>
@@ -317,7 +323,12 @@ export default function InquiriesPage() {
                   <div className="border-t px-4 py-4 space-y-4">
                     {/* 원본 문의 */}
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">문의 내용</p>
+                      <p className="text-xs text-muted-foreground mb-1">
+                        문의 내용
+                        {item.userName && (
+                          <span className="ml-2 font-medium text-foreground">{item.userName}</span>
+                        )}
+                      </p>
                       <p className="text-sm whitespace-pre-wrap">{item.content}</p>
                     </div>
 

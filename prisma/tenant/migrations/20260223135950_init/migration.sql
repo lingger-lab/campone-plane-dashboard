@@ -1,14 +1,21 @@
--- CreateEnum
-CREATE TYPE "AlertType" AS ENUM ('system', 'workflow');
+-- CreateEnum (idempotent)
+DO $$ BEGIN
+  CREATE TYPE "AlertType" AS ENUM ('system', 'workflow');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
--- CreateEnum
-CREATE TYPE "AlertSeverity" AS ENUM ('info', 'warning', 'error', 'success');
+DO $$ BEGIN
+  CREATE TYPE "AlertSeverity" AS ENUM ('info', 'warning', 'error', 'success');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
--- CreateEnum
-CREATE TYPE "QuickButtonCategory" AS ENUM ('video', 'blog', 'primary', 'default');
+DO $$ BEGIN
+  CREATE TYPE "QuickButtonCategory" AS ENUM ('video', 'blog', 'primary', 'default');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- CreateTable
-CREATE TABLE "alerts" (
+CREATE TABLE IF NOT EXISTS "alerts" (
     "id" TEXT NOT NULL,
     "type" "AlertType" NOT NULL,
     "severity" "AlertSeverity" NOT NULL,
@@ -24,7 +31,7 @@ CREATE TABLE "alerts" (
 );
 
 -- CreateTable
-CREATE TABLE "user_alerts" (
+CREATE TABLE IF NOT EXISTS "user_alerts" (
     "user_id" TEXT NOT NULL,
     "alert_id" TEXT NOT NULL,
     "read" BOOLEAN NOT NULL DEFAULT false,
@@ -34,7 +41,7 @@ CREATE TABLE "user_alerts" (
 );
 
 -- CreateTable
-CREATE TABLE "channel_links" (
+CREATE TABLE IF NOT EXISTS "channel_links" (
     "key" TEXT NOT NULL,
     "url" TEXT NOT NULL,
     "label" TEXT NOT NULL,
@@ -47,7 +54,7 @@ CREATE TABLE "channel_links" (
 );
 
 -- CreateTable
-CREATE TABLE "kpi_cache" (
+CREATE TABLE IF NOT EXISTS "kpi_cache" (
     "key" TEXT NOT NULL,
     "value" JSONB NOT NULL,
     "expires_at" TIMESTAMP(3) NOT NULL,
@@ -57,7 +64,7 @@ CREATE TABLE "kpi_cache" (
 );
 
 -- CreateTable
-CREATE TABLE "campaign_profile" (
+CREATE TABLE IF NOT EXISTS "campaign_profile" (
     "id" TEXT NOT NULL DEFAULT 'main',
     "candidate_name" TEXT NOT NULL DEFAULT '후보자명',
     "candidate_title" TEXT NOT NULL DEFAULT 'OO시장 후보',
@@ -77,7 +84,7 @@ CREATE TABLE "campaign_profile" (
 );
 
 -- CreateTable
-CREATE TABLE "quick_buttons" (
+CREATE TABLE IF NOT EXISTS "quick_buttons" (
     "id" TEXT NOT NULL,
     "label" TEXT NOT NULL,
     "url" TEXT NOT NULL,
@@ -92,7 +99,7 @@ CREATE TABLE "quick_buttons" (
 );
 
 -- CreateTable
-CREATE TABLE "tenant_preferences" (
+CREATE TABLE IF NOT EXISTS "tenant_preferences" (
     "key" TEXT NOT NULL,
     "value" JSONB NOT NULL,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -101,16 +108,19 @@ CREATE TABLE "tenant_preferences" (
 );
 
 -- CreateIndex
-CREATE INDEX "alerts_created_at_idx" ON "alerts"("created_at");
+CREATE INDEX IF NOT EXISTS "alerts_created_at_idx" ON "alerts"("created_at");
 
 -- CreateIndex
-CREATE INDEX "alerts_type_idx" ON "alerts"("type");
+CREATE INDEX IF NOT EXISTS "alerts_type_idx" ON "alerts"("type");
 
 -- CreateIndex
-CREATE INDEX "quick_buttons_order_idx" ON "quick_buttons"("order");
+CREATE INDEX IF NOT EXISTS "quick_buttons_order_idx" ON "quick_buttons"("order");
 
 -- CreateIndex
-CREATE INDEX "quick_buttons_category_idx" ON "quick_buttons"("category");
+CREATE INDEX IF NOT EXISTS "quick_buttons_category_idx" ON "quick_buttons"("category");
 
--- AddForeignKey
-ALTER TABLE "user_alerts" ADD CONSTRAINT "user_alerts_alert_id_fkey" FOREIGN KEY ("alert_id") REFERENCES "alerts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- AddForeignKey (idempotent)
+DO $$ BEGIN
+  ALTER TABLE "user_alerts" ADD CONSTRAINT "user_alerts_alert_id_fkey" FOREIGN KEY ("alert_id") REFERENCES "alerts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
