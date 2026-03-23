@@ -176,6 +176,23 @@ export function safeParseLimit(
  * ServiceGuardError(점검/비활성) → 503/403
  * 그 외 → 500
  */
+/** URL 프로토콜 안전성 검증 (javascript:, data: 등 차단) */
+export function isSafeUrl(url: string): boolean {
+  if (!url) return true;
+  const trimmed = url.trim().toLowerCase();
+  // 상대 경로는 허용
+  if (trimmed.startsWith('/')) return true;
+  // 허용 프로토콜만 통과
+  const allowed = ['http:', 'https:', 'mailto:', 'tel:'];
+  try {
+    const parsed = new URL(url);
+    return allowed.includes(parsed.protocol);
+  } catch {
+    // URL 파싱 실패 = 상대 경로나 빈 값
+    return !trimmed.includes(':');
+  }
+}
+
 export function handleRouteError(
   error: unknown,
   context?: string

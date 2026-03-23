@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getTenantFromRequest, safeParseJson, handleRouteError } from '@/lib/api/tenant-helper';
+import { getTenantFromRequest, safeParseJson, handleRouteError, isSafeUrl } from '@/lib/api/tenant-helper';
 import { canEdit } from '@/lib/rbac';
 
 // 기본 채널 데이터 (DB가 비어있을 때 사용)
@@ -81,6 +81,10 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Channel key is required' }, { status: 400 });
     }
 
+    if (url !== undefined && !isSafeUrl(url)) {
+      return NextResponse.json({ error: 'Invalid URL protocol' }, { status: 400 });
+    }
+
     const channel = await prisma.channelLink.upsert({
       where: { key },
       update: {
@@ -126,6 +130,11 @@ export async function POST(request: NextRequest) {
 
     if (!Array.isArray(channels)) {
       return NextResponse.json({ error: 'Channels array is required' }, { status: 400 });
+    }
+
+    const unsafeUrl = channels.find((ch: { url?: string }) => ch.url && !isSafeUrl(ch.url));
+    if (unsafeUrl) {
+      return NextResponse.json({ error: 'Invalid URL protocol' }, { status: 400 });
     }
 
     // 전송된 채널 key 목록

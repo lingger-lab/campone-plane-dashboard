@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getTenantFromRequest, safeParseJson, handleRouteError } from '@/lib/api/tenant-helper';
+import { getTenantFromRequest, safeParseJson, handleRouteError, isSafeUrl } from '@/lib/api/tenant-helper';
 import { canEdit } from '@/lib/rbac';
 
 // GET: 퀵버튼 목록 조회
@@ -46,6 +46,10 @@ export async function POST(request: NextRequest) {
 
     if (!label || !url) {
       return NextResponse.json({ error: 'label and url are required' }, { status: 400 });
+    }
+
+    if (!isSafeUrl(url)) {
+      return NextResponse.json({ error: 'Invalid URL protocol' }, { status: 400 });
     }
 
     // order가 없으면 마지막에 추가
@@ -96,6 +100,10 @@ export async function PUT(request: NextRequest) {
 
     if (!id) {
       return NextResponse.json({ error: 'id is required' }, { status: 400 });
+    }
+
+    if (url !== undefined && !isSafeUrl(url)) {
+      return NextResponse.json({ error: 'Invalid URL protocol' }, { status: 400 });
     }
 
     const button = await prisma.quickButton.update({

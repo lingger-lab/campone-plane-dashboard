@@ -19,6 +19,19 @@ function LoginForm() {
   const [noticeMessage, setNoticeMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // URL에서 stale 파라미터 정리 (tenant, error 등 제거)
+  useEffect(() => {
+    const hasStaleParams =
+      searchParams.get('tenant') || searchParams.get('error');
+    if (hasStaleParams) {
+      // 에러 메시지 설정 후 URL 파라미터 제거 (callbackUrl만 보존)
+      const cleanUrl = callbackUrl
+        ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
+        : '/login';
+      window.history.replaceState(null, '', cleanUrl);
+    }
+  }, [searchParams, callbackUrl]);
+
   // URL 에러 파라미터 처리
   useEffect(() => {
     if (errorParam === 'invalid_tenant') {
@@ -212,23 +225,25 @@ function LoginForm() {
           )}
         </button>
 
-        {/* Demo Credentials Info */}
-        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-2">
-            테스트 계정 (비밀번호: campone123!)
-          </p>
-          <div className="space-y-1">
-            <p className="text-xs text-blue-500 dark:text-blue-300">
-              <span className="font-medium">관리자:</span> admin@campone.kr
+        {/* Demo Credentials Info (개발 환경에서만 표시) */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-2">
+              테스트 계정 (비밀번호: campone123!)
             </p>
-            <p className="text-xs text-blue-500 dark:text-blue-300">
-              <span className="font-medium">분석가:</span> analyst@campone.kr
-            </p>
-            <p className="text-xs text-blue-500 dark:text-blue-300">
-              <span className="font-medium">멤버:</span> member@campone.kr
-            </p>
+            <div className="space-y-1">
+              <p className="text-xs text-blue-500 dark:text-blue-300">
+                <span className="font-medium">관리자:</span> admin@campone.kr
+              </p>
+              <p className="text-xs text-blue-500 dark:text-blue-300">
+                <span className="font-medium">분석가:</span> analyst@campone.kr
+              </p>
+              <p className="text-xs text-blue-500 dark:text-blue-300">
+                <span className="font-medium">멤버:</span> member@campone.kr
+              </p>
+            </div>
           </div>
-        </div>
+        )}
       </form>
     </div>
   );

@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SessionProvider } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import { ThemeProvider } from '@/components/theme-provider';
+import { SessionGuard } from '@/components/session-guard';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -28,7 +29,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <SessionProvider>
+    <SessionProvider refetchInterval={60} refetchOnWindowFocus={true}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider
           attribute="class"
@@ -36,6 +37,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           enableSystem
           disableTransitionOnChange
         >
+          <SessionGuard />
           {children}
         </ThemeProvider>
       </QueryClientProvider>

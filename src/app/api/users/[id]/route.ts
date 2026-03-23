@@ -4,6 +4,8 @@ import bcrypt from 'bcryptjs';
 import { getTenantFromRequest, safeParseJson, handleRouteError } from '@/lib/api/tenant-helper';
 import { authOptions } from '@/lib/auth';
 
+const VALID_ROLES = ['admin', 'editor', 'viewer'] as const;
+
 // 개별 사용자 조회 (시스템 DB)
 export async function GET(
   request: NextRequest,
@@ -78,6 +80,13 @@ export async function PATCH(
     const body = await safeParseJson(request);
     if (body instanceof Response) return body;
     const { name, role, password, isActive } = body;
+
+    if (role !== undefined && !VALID_ROLES.includes(role)) {
+      return NextResponse.json(
+        { error: `role must be one of: ${VALID_ROLES.join(', ')}` },
+        { status: 400 }
+      );
+    }
 
     // 사용자 정보 + 역할을 트랜잭션으로 일괄 업데이트
     const userUpdate: Record<string, string | boolean> = {};

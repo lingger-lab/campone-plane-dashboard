@@ -4,6 +4,8 @@ import bcrypt from 'bcryptjs';
 import { getTenantFromRequest, safeParseJson, handleRouteError } from '@/lib/api/tenant-helper';
 import { authOptions } from '@/lib/auth';
 
+const VALID_ROLES = ['admin', 'editor', 'viewer'] as const;
+
 // 사용자 목록 조회 (시스템 DB - 현재 테넌트 소속 사용자만)
 export async function GET(request: NextRequest) {
   try {
@@ -71,6 +73,13 @@ export async function POST(request: NextRequest) {
     if (!email || !name || !password) {
       return NextResponse.json(
         { error: 'email, name, password are required' },
+        { status: 400 }
+      );
+    }
+
+    if (!VALID_ROLES.includes(role)) {
+      return NextResponse.json(
+        { error: `role must be one of: ${VALID_ROLES.join(', ')}` },
         { status: 400 }
       );
     }

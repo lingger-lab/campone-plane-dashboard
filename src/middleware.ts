@@ -73,8 +73,12 @@ export default withAuth(
     const tenantId = extractTenantId(pathname);
 
     if (!tenantId) {
-      // 예약된 경로는 그대로 통과
-      return NextResponse.next();
+      // 예약된 경로 — 보안 헤더만 설정하고 통과
+      const response = NextResponse.next();
+      response.headers.set('X-Frame-Options', 'DENY');
+      response.headers.set('X-Content-Type-Options', 'nosniff');
+      response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+      return response;
     }
 
     // 테넌트 존재 확인
@@ -98,6 +102,15 @@ export default withAuth(
     const response = NextResponse.next({
       request: { headers: requestHeaders },
     });
+
+    // 보안 헤더
+    response.headers.set('X-Frame-Options', 'DENY');
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    if (process.env.NODE_ENV === 'production') {
+      response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    }
 
     // 로그아웃 후 뒤로가기로 캐시된 페이지 노출 방지
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
