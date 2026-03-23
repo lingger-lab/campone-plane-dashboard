@@ -9,7 +9,11 @@ export const metadata: Metadata = {
   title: 'CampOne Dashboard',
   description: 'CampOne - 선거 캠프 통합 관리 플랫폼',
   icons: {
-    icon: '/favicon.svg',
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon.svg', type: 'image/svg+xml', sizes: '32x32' },
+    ],
+    shortcut: '/favicon.svg',
   },
   openGraph: {
     type: 'website',
