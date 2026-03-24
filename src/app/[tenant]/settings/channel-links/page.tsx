@@ -17,8 +17,6 @@ import {
   Trash2,
   GripVertical,
 } from 'lucide-react';
-import { SiYoutube, SiKakaotalk, SiInstagram, SiNaver } from 'react-icons/si';
-import { PenTool } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -40,22 +38,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { useChannels, useSaveChannels, ChannelLink, getChannelIconColor } from '@/hooks/useChannels';
+import { useChannels, useSaveChannels, ChannelLink } from '@/hooks/useChannels';
+import { CHANNEL_ICONS, getChannelIcon, getChannelIconColor, getChannelIconBg } from '@/lib/channel-icons';
 import { canEdit as canEditRole } from '@/lib/rbac';
 
-// 아이콘 키 → 컴포넌트 매핑
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  youtube: SiYoutube,
-  kakao: SiKakaotalk,
-  instagram: SiInstagram,
-  naver: SiNaver,
-  banner: PenTool,
-};
-
-const ICON_OPTIONS = ['youtube', 'kakao', 'instagram', 'naver', 'banner'];
+const ICON_OPTIONS = Object.keys(CHANNEL_ICONS);
 
 function renderIcon(iconKey: string) {
-  const IconComponent = iconMap[iconKey] || LinkIcon;
+  const IconComponent = getChannelIcon(iconKey);
   const color = getChannelIconColor(iconKey);
   return <IconComponent className={cn('h-4 w-4', color)} />;
 }
@@ -289,8 +279,10 @@ export default function ChannelLinksPage() {
           ) : (
             <div className="space-y-2">
               {channels.map((channel, index) => {
-                const IconComponent = iconMap[channel.icon || ''] || LinkIcon;
-                const iconColor = getChannelIconColor(channel.icon);
+                const iconKey = channel.icon || channel.key;
+                const IconComponent = getChannelIcon(iconKey);
+                const iconColor = getChannelIconColor(iconKey);
+                const iconBg = getChannelIconBg(iconKey);
 
                 return (
                   <div
@@ -325,8 +317,8 @@ export default function ChannelLinksPage() {
                     )}
 
                     {/* 아이콘 */}
-                    <div className={cn('p-2 rounded-lg bg-muted', iconColor)}>
-                      <IconComponent className="h-5 w-5" />
+                    <div className={cn('p-2 rounded-lg', iconBg)}>
+                      <IconComponent className={cn('h-5 w-5', iconColor)} />
                     </div>
 
                     {/* 라벨 & URL */}
@@ -457,7 +449,7 @@ export default function ChannelLinksPage() {
                     <SelectItem key={icon} value={icon}>
                       <div className="flex items-center gap-2">
                         {renderIcon(icon)}
-                        <span>{icon}</span>
+                        <span>{CHANNEL_ICONS[icon]?.label || icon}</span>
                       </div>
                     </SelectItem>
                   ))}

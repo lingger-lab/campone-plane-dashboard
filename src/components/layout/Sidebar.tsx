@@ -16,13 +16,11 @@ import {
   MessageCircle,
   ChevronLeft,
   X,
-  PenTool,
-  Link as LinkIcon,
 } from 'lucide-react';
-import { SiYoutube, SiKakaotalk, SiInstagram, SiNaver } from 'react-icons/si';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useChannels, getChannelIconColor } from '@/hooks/useChannels';
+import { useChannels } from '@/hooks/useChannels';
+import { getChannelIcon, getChannelIconColor, getChannelIconBg } from '@/lib/channel-icons';
 import { useTenant } from '@/lib/tenant/TenantContext';
 import type { TenantFeatures } from '@/lib/tenant/types';
 
@@ -52,14 +50,6 @@ const bottomItemsBase = [
   { icon: HelpCircle, label: '도움말', pathSuffix: '/help' },
 ];
 
-// 아이콘 키 → 컴포넌트 매핑
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  youtube: SiYoutube,
-  kakao: SiKakaotalk,
-  instagram: SiInstagram,
-  naver: SiNaver,
-  banner: PenTool,
-};
 
 export function Sidebar({
   collapsed = false,
@@ -106,8 +96,9 @@ export function Sidebar({
         key: ch.key,
         label: ch.label,
         href: ch.url,
-        icon: iconMap[ch.icon || ''] || LinkIcon,
-        color: getChannelIconColor(ch.icon),
+        icon: getChannelIcon(ch.icon || ch.key),
+        color: getChannelIconColor(ch.icon || ch.key),
+        bg: getChannelIconBg(ch.icon || ch.key),
       }));
   }, [channelsData]);
 

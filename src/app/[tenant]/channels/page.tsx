@@ -9,27 +9,16 @@ import {
   Save,
   RefreshCw,
   AlertCircle,
-  Link as LinkIcon,
 } from 'lucide-react';
-import { SiYoutube, SiKakaotalk, SiInstagram, SiNaver } from 'react-icons/si';
-import { PenTool } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { useChannels, useSaveChannels, ChannelLink, getChannelIconColor } from '@/hooks/useChannels';
+import { useChannels, useSaveChannels, ChannelLink } from '@/hooks/useChannels';
+import { getChannelIcon, getChannelIconColor, getChannelIconBg } from '@/lib/channel-icons';
 import { canEdit as canEditRole } from '@/lib/rbac';
-
-// 아이콘 키 → 컴포넌트 매핑
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  youtube: SiYoutube,
-  kakao: SiKakaotalk,
-  instagram: SiInstagram,
-  naver: SiNaver,
-  banner: PenTool,
-};
 
 export default function ChannelsPage() {
   const { data: session } = useSession();
@@ -160,15 +149,17 @@ export default function ChannelsPage() {
 
       <div className="grid gap-4">
         {channels.map((channel) => {
-          const IconComponent = iconMap[channel.icon || ''] || LinkIcon;
-          const iconColor = getChannelIconColor(channel.icon);
+          const iconKey = channel.icon || channel.key;
+          const IconComponent = getChannelIcon(iconKey);
+          const iconColor = getChannelIconColor(iconKey);
+          const iconBg = getChannelIconBg(iconKey);
 
           return (
             <Card key={channel.key} className={cn(!channel.visible && 'opacity-50')}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
-                  <div className={cn('p-3 rounded-xl bg-muted', iconColor)}>
-                    <IconComponent className="h-6 w-6" />
+                  <div className={cn('p-3 rounded-xl', iconBg)}>
+                    <IconComponent className={cn('h-6 w-6', iconColor)} />
                   </div>
 
                   <div className="flex-1">

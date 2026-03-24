@@ -78,14 +78,5 @@ export function useSaveChannels() {
   });
 }
 
-// 아이콘 키 → 아이콘 컬러 매핑
-export function getChannelIconColor(iconKey?: string): string {
-  const colors: Record<string, string> = {
-    youtube: 'text-red-600',
-    kakao: 'text-yellow-500',
-    instagram: 'text-pink-600',
-    naver: 'text-[#03C75A]',
-    banner: 'text-primary',
-  };
-  return colors[iconKey || ''] || 'text-muted-foreground';
-}
+// 아이콘 관련 유틸은 @/lib/channel-icons 에서 import
+export { getChannelIconColor, getChannelIconBg, getChannelIcon } from '@/lib/channel-icons';
