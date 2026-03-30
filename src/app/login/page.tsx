@@ -9,7 +9,6 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const callbackUrl = searchParams.get('callbackUrl') || '';
   const errorParam = searchParams.get('error');
 
   const [email, setEmail] = useState('');
@@ -19,18 +18,16 @@ function LoginForm() {
   const [noticeMessage, setNoticeMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // URL에서 stale 파라미터 정리 (tenant, error 등 제거)
+  // URL에서 불필요한 파라미터 정리 (callbackUrl, tenant, error 등 제거)
   useEffect(() => {
     const hasStaleParams =
-      searchParams.get('tenant') || searchParams.get('error');
+      searchParams.get('callbackUrl') ||
+      searchParams.get('tenant') ||
+      searchParams.get('error');
     if (hasStaleParams) {
-      // 에러 메시지 설정 후 URL 파라미터 제거 (callbackUrl만 보존)
-      const cleanUrl = callbackUrl
-        ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
-        : '/login';
-      window.history.replaceState(null, '', cleanUrl);
+      window.history.replaceState(null, '', '/login');
     }
-  }, [searchParams, callbackUrl]);
+  }, [searchParams]);
 
   // URL 에러 파라미터 처리
   useEffect(() => {
@@ -85,13 +82,12 @@ function LoginForm() {
           setError('이메일 또는 비밀번호가 올바르지 않습니다.');
         }
       } else {
-        // 로그인 성공 → 세션에서 tenantId 가져와서 리다이렉트
+        // 로그인 성공 → 세션의 tenantId 기반으로 리다이렉트
         const sessionRes = await fetch('/api/auth/session');
         const session = await sessionRes.json();
         const tenantId = session?.user?.tenantId;
 
-        const redirectUrl = callbackUrl || (tenantId ? `/${tenantId}` : '/');
-        router.push(redirectUrl);
+        router.push(tenantId ? `/${tenantId}` : '/');
         router.refresh();
       }
     } catch {

@@ -81,6 +81,11 @@ export default withAuth(
       return response;
     }
 
+    // 미인증 시 callbackUrl 없이 깨끗한 /login으로 리다이렉트
+    if (!token) {
+      return NextResponse.redirect(new URL('/login', req.url));
+    }
+
     // 테넌트 존재 확인
     const tenantExists = validateTenant(tenantId);
     if (!tenantExists) {
@@ -134,8 +139,8 @@ export default withAuth(
           return true;
         }
 
-        // 그 외 경로는 인증 필요
-        return !!token;
+        // 미인증도 통과시키고, 미들웨어 본문에서 /login으로 리다이렉트 처리
+        return true;
       },
     },
     pages: {
